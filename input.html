@@ -13,7 +13,7 @@
       <a href="index.html" class="back-link">View results</a>
     </header>
     <div class="input-table-wrap">
-      <table class="input-table" aria-label="Metrics data">
+      <table class="input-table" aria-label="Metric data">
         <thead>
           <tr>
             <th scope="col">Display?</th>
@@ -27,44 +27,20 @@
         <tbody>
           <tr class="input-row" data-index="0">
             <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
-            <td><input type="text" name="heading" placeholder="Metric 1" /></td>
+            <td><input type="text" name="heading" placeholder="Metric name" /></td>
             <td><input type="text" name="goal" placeholder="Goal" /></td>
             <td><input type="text" name="current" placeholder="Current" /></td>
             <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
             <td class="display-as-cell"><label class="display-as-option"><input type="radio" name="displayAs_0" value="simple" /> Simple</label><label class="display-as-option"><input type="radio" name="displayAs_0" value="ranking" /> Ranking</label></td>
           </tr>
-          <tr class="input-row" data-index="1">
-            <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
-            <td><input type="text" name="heading" placeholder="Metric 2" /></td>
-            <td><input type="text" name="goal" placeholder="Goal" /></td>
-            <td><input type="text" name="current" placeholder="Current" /></td>
-            <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
-            <td class="display-as-cell"><label class="display-as-option"><input type="radio" name="displayAs_1" value="simple" /> Simple</label><label class="display-as-option"><input type="radio" name="displayAs_1" value="ranking" /> Ranking</label></td>
-          </tr>
-          <tr class="input-row" data-index="2">
-            <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
-            <td><input type="text" name="heading" placeholder="Metric 3" /></td>
-            <td><input type="text" name="goal" placeholder="Goal" /></td>
-            <td><input type="text" name="current" placeholder="Current" /></td>
-            <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
-            <td class="display-as-cell"><label class="display-as-option"><input type="radio" name="displayAs_2" value="simple" /> Simple</label><label class="display-as-option"><input type="radio" name="displayAs_2" value="ranking" /> Ranking</label></td>
-          </tr>
-          <tr class="input-row" data-index="3">
-            <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
-            <td><input type="text" name="heading" placeholder="Metric 4" /></td>
-            <td><input type="text" name="goal" placeholder="Goal" /></td>
-            <td><input type="text" name="current" placeholder="Current" /></td>
-            <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
-            <td class="display-as-cell"><label class="display-as-option"><input type="radio" name="displayAs_3" value="simple" /> Simple</label><label class="display-as-option"><input type="radio" name="displayAs_3" value="ranking" /> Ranking</label></td>
-          </tr>
         </tbody>
       </table>
     </div>
-    <p class="input-hint">Tick "Display?" to show a metric. Choose "Simple" (card with current/goal) or "Ranking" (list sorted by %, using the table below). "Display as %?" shows values as a percentage. When Current &ge; Goal, the card turns green.</p>
+    <p class="input-hint">Tick "Display?" to show the metric. Choose "Simple" (card with current/goal) or "Ranking" (list sorted by %, using the table below). "Display as %?" shows values as a percentage. When Current &ge; Goal, the card turns green.</p>
 
     <section class="ranking-section" aria-labelledby="ranking-heading">
       <h2 id="ranking-heading" class="ranking-heading">Ranking data</h2>
-      <p class="ranking-hint">Use this table for any metric set to "Ranking" above. Tick to show the table and enter names with goals and current values.</p>
+      <p class="ranking-hint">When the metric is set to "Ranking" above, this table is used. Tick to show the table and enter names with goals and current values.</p>
       <div class="ranking-toggles">
         <label class="toggle-row"><input type="checkbox" id="rankingEnabled" /> Ranking</label>
         <label class="toggle-row"><input type="checkbox" id="rankingDisplayAsPercent" /> Display as %?</label>
@@ -101,9 +77,9 @@
           try {
             var parsed = JSON.parse(raw);
             if (Array.isArray(parsed)) {
-              data.metrics = parsed;
+              data.metrics = parsed.length ? [parsed[0]] : [];
             } else if (parsed && parsed.metrics) {
-              data.metrics = parsed.metrics;
+              data.metrics = parsed.metrics.length ? [parsed.metrics[0]] : [];
               if (parsed.ranking) {
                 data.ranking.enabled = !!parsed.ranking.enabled;
                 data.ranking.displayAsPercent = !!parsed.ranking.displayAsPercent;
@@ -117,19 +93,17 @@
 
       function load() {
         var data = getData();
-        var rows = document.querySelectorAll('.input-row');
-        for (var i = 0; i < rows.length; i++) {
-          var row = rows[i];
-          var m = data.metrics[i] || {};
-          row.querySelector('input[name="display"]').checked = !!m.display;
-          row.querySelector('input[name="heading"]').value = m.heading || '';
-          row.querySelector('input[name="goal"]').value = m.goal !== undefined && m.goal !== null ? String(m.goal) : '';
-          row.querySelector('input[name="current"]').value = m.current !== undefined && m.current !== null ? String(m.current) : '';
-          row.querySelector('input[name="displayAsPercent"]').checked = !!m.displayAsPercent;
-          var displayAs = (m.displayAs === 'ranking') ? 'ranking' : 'simple';
-          var radio = row.querySelector('input[name="displayAs_' + i + '"][value="' + displayAs + '"]');
-          if (radio) radio.checked = true;
-        }
+        var row = document.querySelector('.input-row');
+        if (!row) return;
+        var m = data.metrics[0] || {};
+        row.querySelector('input[name="display"]').checked = !!m.display;
+        row.querySelector('input[name="heading"]').value = m.heading || '';
+        row.querySelector('input[name="goal"]').value = m.goal !== undefined && m.goal !== null ? String(m.goal) : '';
+        row.querySelector('input[name="current"]').value = m.current !== undefined && m.current !== null ? String(m.current) : '';
+        row.querySelector('input[name="displayAsPercent"]').checked = !!m.displayAsPercent;
+        var displayAs = (m.displayAs === 'ranking') ? 'ranking' : 'simple';
+        var radio = row.querySelector('input[name="displayAs_0"][value="' + displayAs + '"]');
+        if (radio) radio.checked = true;
 
         document.getElementById('rankingEnabled').checked = data.ranking.enabled;
         document.getElementById('rankingDisplayAsPercent').checked = data.ranking.displayAsPercent;
@@ -186,11 +160,10 @@
       }
 
       function save() {
+        var row = document.querySelector('.input-row');
         var metrics = [];
-        var rows = document.querySelectorAll('.input-row');
-        for (var i = 0; i < rows.length; i++) {
-          var row = rows[i];
-          var displayAsRadio = row.querySelector('input[name="displayAs_' + i + '"]:checked');
+        if (row) {
+          var displayAsRadio = row.querySelector('input[name="displayAs_0"]:checked');
           var displayAs = (displayAsRadio && displayAsRadio.value === 'ranking') ? 'ranking' : 'simple';
           metrics.push({
             display: row.querySelector('input[name="display"]').checked,
