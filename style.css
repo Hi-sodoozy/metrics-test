@@ -152,6 +152,104 @@
 
 .back-link:hover { text-decoration: underline; }
 
+/* Metric form (stacked layout) */
+.metric-form-wrap {
+  background: #fff;
+  border: 1px solid #e2e4e8;
+  border-radius: 8px;
+  padding: 20px 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.metric-form .form-block {
+  margin-bottom: 20px;
+}
+
+.metric-form .form-block:last-child {
+  margin-bottom: 0;
+}
+
+.metric-form .form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #5a5a5a;
+  margin-bottom: 8px;
+}
+
+.metric-form textarea {
+  width: 100%;
+  min-height: 2.6em;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font: inherit;
+  color: #2c2c2c;
+  line-height: 1.4;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.metric-form textarea:focus {
+  outline: none;
+  border-color: #6b9bd1;
+  box-shadow: 0 0 0 2px rgba(107,155,209,0.2);
+}
+
+.metric-form textarea:disabled {
+  background: #f0f0f0;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.goal-current-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.goal-current-fields textarea {
+  min-height: 3.2em;
+}
+
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 24px;
+}
+
+.option-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #2c2c2c;
+  cursor: pointer;
+}
+
+.option-check input { width: 18px; height: 18px; accent-color: #4a6fa5; }
+
+.show-as-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2c2c2c;
+  margin-right: 4px;
+}
+
+.option-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #2c2c2c;
+  cursor: pointer;
+}
+
+.option-radio input { accent-color: #4a6fa5; }
+
 .input-table-wrap {
   background: #fff;
   border: 1px solid #e2e4e8;
@@ -446,6 +544,39 @@
     font-size: 1.35rem;
   }
 
+  .metric-form-wrap {
+    padding: 16px;
+    border-radius: 6px;
+  }
+
+  .metric-form .form-block {
+    margin-bottom: 18px;
+  }
+
+  .metric-form textarea {
+    min-height: 2.5em;
+    padding: 10px;
+  }
+
+  .goal-current-fields {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .goal-current-fields textarea {
+    min-height: 3em;
+  }
+
+  .options-row {
+    gap: 12px 20px;
+  }
+
+  .option-check,
+  .option-radio {
+    min-height: 44px;
+    align-items: center;
+  }
+
   .input-table-wrap {
     border-radius: 6px;
     overflow-x: auto;
@@ -481,18 +612,6 @@
     padding: 10px;
     min-height: 44px;
   }
-
-  .display-as-cell {
-    white-space: normal;
-  }
-
-  .display-as-option {
-    display: flex;
-    margin-right: 0;
-    margin-bottom: 4px;
-  }
-
-  .display-as-option:last-of-type { margin-bottom: 0; }
 
   .input-hint {
     font-size: 12px;

@@ -12,29 +12,31 @@
       <h1>Metrics input</h1>
       <a href="index.html" class="back-link">View results</a>
     </header>
-    <div class="input-table-wrap">
-      <table class="input-table" aria-label="Metric data">
-        <thead>
-          <tr>
-            <th scope="col" class="metric-name-cell">Metric</th>
-            <th scope="col">Goal</th>
-            <th scope="col">Current</th>
-            <th scope="col">Display as %?</th>
-            <th scope="col">Display as</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="input-row" data-index="0">
-            <td class="metric-name-cell"><textarea name="heading" placeholder="Metric name" rows="1" aria-label="Metric name"></textarea></td>
-            <td class="goal-current-cell"><textarea name="goal" placeholder="Goal" rows="2" aria-label="Goal"></textarea></td>
-            <td class="goal-current-cell"><textarea name="current" placeholder="Current" rows="2" aria-label="Current"></textarea></td>
-            <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
-            <td class="display-as-cell"><label class="display-as-option"><input type="radio" name="displayAs_0" value="summary" /> Summary</label><label class="display-as-option"><input type="radio" name="displayAs_0" value="ranking" /> Ranking</label></td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="metric-form-wrap">
+      <div class="input-row metric-form" data-index="0">
+        <div class="form-block">
+          <label class="form-label" for="metric-heading">Metric name</label>
+          <textarea id="metric-heading" name="heading" placeholder="Metric name" rows="2" aria-label="Metric name"></textarea>
+        </div>
+        <div class="form-block goal-current-block">
+          <label class="form-label">Goal + Current</label>
+          <div class="goal-current-fields">
+            <textarea name="goal" placeholder="Goal" rows="2" aria-label="Goal"></textarea>
+            <textarea name="current" placeholder="Current" rows="2" aria-label="Current"></textarea>
+          </div>
+        </div>
+        <div class="form-block options-block">
+          <label class="form-label">Options</label>
+          <div class="options-row">
+            <label class="option-check"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /> Display as %?</label>
+            <span class="show-as-label">Show as</span>
+            <label class="option-radio"><input type="radio" name="displayAs_0" value="summary" /> Summary</label>
+            <label class="option-radio"><input type="radio" name="displayAs_0" value="ranking" /> Ranking</label>
+          </div>
+        </div>
+      </div>
     </div>
-    <p class="input-hint">Choose "Summary" (card with current/goal) or "Ranking" (totals from table below plus sorted list). When Ranking is selected, Goal and Current are calculated from the table. "Display as %?" shows values as a percentage. When Current &ge; Goal, the card turns green.</p>
+    <p class="input-hint">Choose "Summary" (card with current/goal) or "Ranking" (totals from table below plus sorted list). When Ranking is selected, Goal and Current are calculated from the table. When Current &ge; Goal, the card turns green.</p>
 
     <section class="ranking-section" aria-labelledby="ranking-heading">
       <h2 id="ranking-heading" class="ranking-heading">Ranking data</h2>
@@ -222,10 +224,10 @@
         });
       }
 
-      var inputs = document.querySelectorAll('.input-table:not(.ranking-table) input, .input-table:not(.ranking-table) textarea');
-      for (var j = 0; j < inputs.length; j++) {
-        inputs[j].addEventListener('change', save);
-        inputs[j].addEventListener('blur', save);
+      var formInputs = document.querySelectorAll('.metric-form input, .metric-form textarea');
+      for (var j = 0; j < formInputs.length; j++) {
+        formInputs[j].addEventListener('change', save);
+        formInputs[j].addEventListener('blur', save);
       }
 
       load();
