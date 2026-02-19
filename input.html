@@ -21,47 +21,52 @@
             <th scope="col">Goal</th>
             <th scope="col">Current</th>
             <th scope="col">Display as %?</th>
+            <th scope="col">Display as</th>
           </tr>
         </thead>
         <tbody>
-          <tr class="input-row">
+          <tr class="input-row" data-index="0">
             <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
             <td><input type="text" name="heading" placeholder="Metric 1" /></td>
             <td><input type="text" name="goal" placeholder="Goal" /></td>
             <td><input type="text" name="current" placeholder="Current" /></td>
             <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
+            <td class="display-as-cell"><label class="display-as-option"><input type="radio" name="displayAs_0" value="simple" /> Simple</label><label class="display-as-option"><input type="radio" name="displayAs_0" value="ranking" /> Ranking</label></td>
           </tr>
-          <tr class="input-row">
+          <tr class="input-row" data-index="1">
             <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
             <td><input type="text" name="heading" placeholder="Metric 2" /></td>
             <td><input type="text" name="goal" placeholder="Goal" /></td>
             <td><input type="text" name="current" placeholder="Current" /></td>
             <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
+            <td class="display-as-cell"><label class="display-as-option"><input type="radio" name="displayAs_1" value="simple" /> Simple</label><label class="display-as-option"><input type="radio" name="displayAs_1" value="ranking" /> Ranking</label></td>
           </tr>
-          <tr class="input-row">
+          <tr class="input-row" data-index="2">
             <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
             <td><input type="text" name="heading" placeholder="Metric 3" /></td>
             <td><input type="text" name="goal" placeholder="Goal" /></td>
             <td><input type="text" name="current" placeholder="Current" /></td>
             <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
+            <td class="display-as-cell"><label class="display-as-option"><input type="radio" name="displayAs_2" value="simple" /> Simple</label><label class="display-as-option"><input type="radio" name="displayAs_2" value="ranking" /> Ranking</label></td>
           </tr>
-          <tr class="input-row">
+          <tr class="input-row" data-index="3">
             <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
             <td><input type="text" name="heading" placeholder="Metric 4" /></td>
             <td><input type="text" name="goal" placeholder="Goal" /></td>
             <td><input type="text" name="current" placeholder="Current" /></td>
             <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
+            <td class="display-as-cell"><label class="display-as-option"><input type="radio" name="displayAs_3" value="simple" /> Simple</label><label class="display-as-option"><input type="radio" name="displayAs_3" value="ranking" /> Ranking</label></td>
           </tr>
         </tbody>
       </table>
     </div>
-    <p class="input-hint">Tick "Display?" to show a metric on the results page. "Display as %?" shows current/goal as a percentage. When Current is equal to or greater than Goal, the card turns green.</p>
+    <p class="input-hint">Tick "Display?" to show a metric. Choose "Simple" (card with current/goal) or "Ranking" (list sorted by %, using the table below). "Display as %?" shows values as a percentage. When Current &ge; Goal, the card turns green.</p>
 
     <section class="ranking-section" aria-labelledby="ranking-heading">
-      <h2 id="ranking-heading" class="ranking-heading">Ranking</h2>
+      <h2 id="ranking-heading" class="ranking-heading">Ranking data</h2>
+      <p class="ranking-hint">Use this table for any metric set to "Ranking" above. Tick to show the table and enter names with goals and current values.</p>
       <div class="ranking-toggles">
         <label class="toggle-row"><input type="checkbox" id="rankingEnabled" /> Ranking</label>
-        <label class="toggle-row"><input type="checkbox" id="rankingDisplay" /> Display?</label>
         <label class="toggle-row"><input type="checkbox" id="rankingDisplayAsPercent" /> Display as %?</label>
       </div>
       <div class="ranking-table-wrap" id="rankingTableWrap" hidden>
