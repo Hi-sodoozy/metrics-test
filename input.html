@@ -26,8 +26,8 @@
         <tbody>
           <tr class="input-row" data-index="0">
             <td class="metric-name-cell"><textarea name="heading" placeholder="Metric name" rows="1" aria-label="Metric name"></textarea></td>
-            <td><input type="text" name="goal" placeholder="Goal" /></td>
-            <td><input type="text" name="current" placeholder="Current" /></td>
+            <td class="goal-current-cell"><textarea name="goal" placeholder="Goal" rows="2" aria-label="Goal"></textarea></td>
+            <td class="goal-current-cell"><textarea name="current" placeholder="Current" rows="2" aria-label="Current"></textarea></td>
             <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
             <td class="display-as-cell"><label class="display-as-option"><input type="radio" name="displayAs_0" value="summary" /> Summary</label><label class="display-as-option"><input type="radio" name="displayAs_0" value="ranking" /> Ranking</label></td>
           </tr>
@@ -95,8 +95,8 @@
         if (!row) return;
         var m = data.metrics[0] || {};
         row.querySelector('textarea[name="heading"]').value = m.heading || '';
-        row.querySelector('input[name="goal"]').value = m.goal !== undefined && m.goal !== null ? String(m.goal) : '';
-        row.querySelector('input[name="current"]').value = m.current !== undefined && m.current !== null ? String(m.current) : '';
+        row.querySelector('textarea[name="goal"]').value = m.goal !== undefined && m.goal !== null ? String(m.goal) : '';
+        row.querySelector('textarea[name="current"]').value = m.current !== undefined && m.current !== null ? String(m.current) : '';
         row.querySelector('input[name="displayAsPercent"]').checked = !!m.displayAsPercent;
         var displayAs = (m.displayAs === 'ranking') ? 'ranking' : 'summary';
         var radio = row.querySelector('input[name="displayAs_0"][value="' + displayAs + '"]');
@@ -119,8 +119,8 @@
         var row = document.querySelector('.input-row');
         if (!row) return;
         var isRanking = (row.querySelector('input[name="displayAs_0"]:checked') || {}).value === 'ranking';
-        var goalInput = row.querySelector('input[name="goal"]');
-        var currentInput = row.querySelector('input[name="current"]');
+        var goalInput = row.querySelector('textarea[name="goal"]');
+        var currentInput = row.querySelector('textarea[name="current"]');
         goalInput.disabled = isRanking;
         currentInput.disabled = isRanking;
         goalInput.placeholder = isRanking ? 'From table' : 'Goal';
@@ -136,18 +136,18 @@
           tr.className = 'ranking-row';
           tr.innerHTML =
             '<td><input type="text" name="rankName" placeholder="Name" /></td>' +
-            '<td><input type="text" name="rankGoal" placeholder="Goal" /></td>' +
-            '<td><input type="text" name="rankCurrent" placeholder="Current" /></td>';
+            '<td class="goal-current-cell"><textarea name="rankGoal" placeholder="Goal" rows="2"></textarea></td>' +
+            '<td class="goal-current-cell"><textarea name="rankCurrent" placeholder="Current" rows="2"></textarea></td>';
           tr.querySelector('input[name="rankName"]').value = r.name || '';
-          tr.querySelector('input[name="rankGoal"]').value = r.goal !== undefined && r.goal !== null ? String(r.goal) : '';
-          tr.querySelector('input[name="rankCurrent"]').value = r.current !== undefined && r.current !== null ? String(r.current) : '';
+          tr.querySelector('textarea[name="rankGoal"]').value = r.goal !== undefined && r.goal !== null ? String(r.goal) : '';
+          tr.querySelector('textarea[name="rankCurrent"]').value = r.current !== undefined && r.current !== null ? String(r.current) : '';
           tbody.appendChild(tr);
         }
         bindRankingInputs();
       }
 
       function bindRankingInputs() {
-        var inputs = document.querySelectorAll('.ranking-table input');
+        var inputs = document.querySelectorAll('.ranking-table input, .ranking-table textarea');
         for (var i = 0; i < inputs.length; i++) {
           var el = inputs[i];
           el.removeEventListener('change', save);
@@ -162,8 +162,8 @@
         document.querySelectorAll('.ranking-row').forEach(function (tr) {
           arr.push({
             name: (tr.querySelector('input[name="rankName"]') || {}).value.trim(),
-            goal: (tr.querySelector('input[name="rankGoal"]') || {}).value.trim(),
-            current: (tr.querySelector('input[name="rankCurrent"]') || {}).value.trim()
+            goal: (tr.querySelector('textarea[name="rankGoal"]') || {}).value.trim(),
+            current: (tr.querySelector('textarea[name="rankCurrent"]') || {}).value.trim()
           });
         });
         return arr;
@@ -177,8 +177,8 @@
           var displayAs = (displayAsRadio && displayAsRadio.value === 'ranking') ? 'ranking' : 'summary';
           metrics.push({
             heading: row.querySelector('textarea[name="heading"]').value.trim(),
-            goal: row.querySelector('input[name="goal"]').value.trim(),
-            current: row.querySelector('input[name="current"]').value.trim(),
+            goal: row.querySelector('textarea[name="goal"]').value.trim(),
+            current: row.querySelector('textarea[name="current"]').value.trim(),
             displayAsPercent: row.querySelector('input[name="displayAsPercent"]').checked,
             displayAs: displayAs
           });

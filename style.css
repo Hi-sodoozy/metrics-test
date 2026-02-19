@@ -210,6 +210,20 @@
   box-shadow: 0 0 0 2px rgba(107,155,209,0.2);
 }
 
+.input-table textarea:disabled {
+  background: #f0f0f0;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.input-table td.goal-current-cell {
+  vertical-align: top;
+}
+
+.input-table td.goal-current-cell textarea {
+  min-height: 3.2em;
+}
+
 .input-table input[type="text"] {
   width: 100%;
   padding: 8px 10px;
@@ -457,6 +471,10 @@
   .input-table textarea {
     min-height: 2.5em;
     padding: 10px;
+  }
+
+  .input-table td.goal-current-cell textarea {
+    min-height: 3em;
   }
 
   .input-table input[type="text"] {
