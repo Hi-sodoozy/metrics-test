@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics – Results</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="metrics-page results-page">
+  <main class="results-main">
+    <div class="results-grid" id="resultsGrid"></div>
+    <a href="input.html" class="input-link">Input</a>
+  </main>
+  <script>
+    (function () {
+      function escapeHtml(s) {
+        var div = document.createElement('div');
+        div.textContent = s == null ? '' : s;
+        return div.innerHTML;
+      }
+
+      var KEY = 'metricsDashboard';
+      var grid = document.getElementById('resultsGrid');
+      if (!grid) return;
+
+      var raw;
+      try { raw = localStorage.getItem(KEY); } catch (e) { raw = null; }
+      var metrics = [];
+      if (raw) {
+        try { metrics = JSON.parse(raw); } catch (e) {}
+      }
+      if (!Array.isArray(metrics)) metrics = [];
+
+      var displayed = [];
+      for (var i = 0; i < metrics.length; i++) {
+        if (metrics[i] && metrics[i].display) displayed.push(metrics[i]);
+      }
+
+      if (displayed.length === 0) {
+        grid.classList.add('empty');
+        return;
+      }
+
+      grid.classList.remove('empty');
+      grid.classList.add('count-' + displayed.length);
+
+      for (var j = 0; j < displayed.length; j++) {
+        var m = displayed[j];
+        var currentNum = parseFloat(m.current, 10) || 0;
+        var goalNum = parseFloat(m.goal, 10) || 0;
+        var achieved = goalNum > 0 && currentNum >= goalNum;
+        var card = document.createElement('div');
+        card.className = 'result-card' + (achieved ? ' achieved' : '');
+        card.innerHTML =
+          '<h2 class="result-heading">' + escapeHtml(m.heading || 'Metric') + '</h2>' +
+          '<p class="result-values"><span class="current">' + escapeHtml(String(m.current)) + '</span> / <span class="goal">' + escapeHtml(String(m.goal)) + '</span></p>';
+        grid.appendChild(card);
+      }
+    })();
+  </script>
+</body>
+</html>

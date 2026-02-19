@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics – Input</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="metrics-page input-page">
+  <main class="input-main">
+    <header class="input-header">
+      <h1>Metrics input</h1>
+      <a href="index.html" class="back-link">View results</a>
+    </header>
+    <div class="input-table-wrap">
+      <table class="input-table" aria-label="Metrics data">
+        <thead>
+          <tr>
+            <th scope="col">Display?</th>
+            <th scope="col">Metric</th>
+            <th scope="col">Goal</th>
+            <th scope="col">Current</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="input-row">
+            <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
+            <td><input type="text" name="heading" placeholder="Metric 1" /></td>
+            <td><input type="text" name="goal" placeholder="Goal" /></td>
+            <td><input type="text" name="current" placeholder="Current" /></td>
+          </tr>
+          <tr class="input-row">
+            <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
+            <td><input type="text" name="heading" placeholder="Metric 2" /></td>
+            <td><input type="text" name="goal" placeholder="Goal" /></td>
+            <td><input type="text" name="current" placeholder="Current" /></td>
+          </tr>
+          <tr class="input-row">
+            <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
+            <td><input type="text" name="heading" placeholder="Metric 3" /></td>
+            <td><input type="text" name="goal" placeholder="Goal" /></td>
+            <td><input type="text" name="current" placeholder="Current" /></td>
+          </tr>
+          <tr class="input-row">
+            <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
+            <td><input type="text" name="heading" placeholder="Metric 4" /></td>
+            <td><input type="text" name="goal" placeholder="Goal" /></td>
+            <td><input type="text" name="current" placeholder="Current" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="input-hint">Tick "Display?" to show a metric on the results page. When Current is equal to or greater than Goal, the card turns green.</p>
+    <div class="input-actions">
+      <button type="button" class="btn-save" id="saveBtn">Save</button>
+    </div>
+  </main>
+  <script>
+    (function () {
+      var KEY = 'metricsDashboard';
+
+      function load() {
+        var raw;
+        try { raw = localStorage.getItem(KEY); } catch (e) { raw = null; }
+        var metrics = [];
+        if (raw) {
+          try { metrics = JSON.parse(raw); } catch (e) {}
+        }
+        if (!Array.isArray(metrics)) metrics = [];
+
+        var rows = document.querySelectorAll('.input-row');
+        for (var i = 0; i < rows.length; i++) {
+          var row = rows[i];
+          var m = metrics[i] || {};
+          row.querySelector('input[name="display"]').checked = !!m.display;
+          row.querySelector('input[name="heading"]').value = m.heading || '';
+          row.querySelector('input[name="goal"]').value = m.goal !== undefined && m.goal !== null ? String(m.goal) : '';
+          row.querySelector('input[name="current"]').value = m.current !== undefined && m.current !== null ? String(m.current) : '';
+        }
+      }
+
+      function save() {
+        var metrics = [];
+        var rows = document.querySelectorAll('.input-row');
+        for (var i = 0; i < rows.length; i++) {
+          var row = rows[i];
+          metrics.push({
+            display: row.querySelector('input[name="display"]').checked,
+            heading: row.querySelector('input[name="heading"]').value.trim(),
+            goal: row.querySelector('input[name="goal"]').value.trim(),
+            current: row.querySelector('input[name="current"]').value.trim()
+          });
+        }
+        try { localStorage.setItem(KEY, JSON.stringify(metrics)); } catch (e) {}
+      }
+
+      var saveBtn = document.getElementById('saveBtn');
+      if (saveBtn) {
+        saveBtn.addEventListener('click', function () {
+          save();
+          window.location.href = 'index.html';
+        });
+      }
+
+      var inputs = document.querySelectorAll('.input-table input');
+      for (var j = 0; j < inputs.length; j++) {
+        inputs[j].addEventListener('change', save);
+        inputs[j].addEventListener('blur', save);
+      }
+
+      load();
+    })();
+  </script>
+</body>
+</html>
