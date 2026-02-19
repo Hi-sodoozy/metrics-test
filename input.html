@@ -31,12 +31,12 @@
             <td><input type="text" name="goal" placeholder="Goal" /></td>
             <td><input type="text" name="current" placeholder="Current" /></td>
             <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
-            <td class="display-as-cell"><label class="display-as-option"><input type="radio" name="displayAs_0" value="simple" /> Simple</label><label class="display-as-option"><input type="radio" name="displayAs_0" value="ranking" /> Ranking</label></td>
+            <td class="display-as-cell"><label class="display-as-option"><input type="radio" name="displayAs_0" value="summary" /> Summary</label><label class="display-as-option"><input type="radio" name="displayAs_0" value="ranking" /> Ranking</label></td>
           </tr>
         </tbody>
       </table>
     </div>
-    <p class="input-hint">Tick "Display?" to show the metric. Choose "Simple" (card with current/goal) or "Ranking" (list sorted by %, using the table below). "Display as %?" shows values as a percentage. When Current &ge; Goal, the card turns green.</p>
+    <p class="input-hint">Tick "Display?" to show the metric. Choose "Summary" (card with current/goal) or "Ranking" (totals from table below plus sorted list). When Ranking is selected, Goal and Current are calculated from the table. "Display as %?" shows values as a percentage. When Current &ge; Goal, the card turns green.</p>
 
     <section class="ranking-section" aria-labelledby="ranking-heading">
       <h2 id="ranking-heading" class="ranking-heading">Ranking data</h2>
@@ -101,9 +101,10 @@
         row.querySelector('input[name="goal"]').value = m.goal !== undefined && m.goal !== null ? String(m.goal) : '';
         row.querySelector('input[name="current"]').value = m.current !== undefined && m.current !== null ? String(m.current) : '';
         row.querySelector('input[name="displayAsPercent"]').checked = !!m.displayAsPercent;
-        var displayAs = (m.displayAs === 'ranking') ? 'ranking' : 'simple';
+        var displayAs = (m.displayAs === 'ranking') ? 'ranking' : 'summary';
         var radio = row.querySelector('input[name="displayAs_0"][value="' + displayAs + '"]');
         if (radio) radio.checked = true;
+        updateSummaryInputsState();
 
         document.getElementById('rankingEnabled').checked = data.ranking.enabled;
         document.getElementById('rankingDisplayAsPercent').checked = data.ranking.displayAsPercent;
@@ -115,6 +116,18 @@
           return arr;
         })();
         renderRankingRows(rankingRows);
+      }
+
+      function updateSummaryInputsState() {
+        var row = document.querySelector('.input-row');
+        if (!row) return;
+        var isRanking = (row.querySelector('input[name="displayAs_0"]:checked') || {}).value === 'ranking';
+        var goalInput = row.querySelector('input[name="goal"]');
+        var currentInput = row.querySelector('input[name="current"]');
+        goalInput.disabled = isRanking;
+        currentInput.disabled = isRanking;
+        goalInput.placeholder = isRanking ? 'From table' : 'Goal';
+        currentInput.placeholder = isRanking ? 'From table' : 'Current';
       }
 
       function renderRankingRows(rowsData) {
@@ -164,7 +177,7 @@
         var metrics = [];
         if (row) {
           var displayAsRadio = row.querySelector('input[name="displayAs_0"]:checked');
-          var displayAs = (displayAsRadio && displayAsRadio.value === 'ranking') ? 'ranking' : 'simple';
+          var displayAs = (displayAsRadio && displayAsRadio.value === 'ranking') ? 'ranking' : 'summary';
           metrics.push({
             display: row.querySelector('input[name="display"]').checked,
             heading: row.querySelector('input[name="heading"]').value.trim(),
@@ -189,6 +202,14 @@
         save();
       });
       document.getElementById('rankingDisplayAsPercent').addEventListener('change', save);
+
+      var displayAsRadios = document.querySelectorAll('input[name="displayAs_0"]');
+      for (var r = 0; r < displayAsRadios.length; r++) {
+        displayAsRadios[r].addEventListener('change', function () {
+          updateSummaryInputsState();
+          save();
+        });
+      }
 
       document.getElementById('addRankingRow').addEventListener('click', function () {
         var data = getRankingRowsData();

@@ -198,6 +198,12 @@
   box-shadow: 0 0 0 2px rgba(107,155,209,0.2);
 }
 
+.input-table input[type="text"]:disabled {
+  background: #f0f0f0;
+  color: #888;
+  cursor: not-allowed;
+}
+
 .cell-label {
   display: flex;
   align-items: center;

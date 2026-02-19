@@ -46,7 +46,7 @@
         } catch (e) {}
       }
 
-      var simpleMetrics = [];
+      var summaryMetrics = [];
       var rankingMetrics = [];
       for (var i = 0; i < data.metrics.length; i++) {
         var m = data.metrics[i];
@@ -54,24 +54,24 @@
         if (m.displayAs === 'ranking') {
           rankingMetrics.push(m);
         } else {
-          simpleMetrics.push(m);
+          summaryMetrics.push(m);
         }
       }
 
       var hasRankingData = data.ranking.rows && data.ranking.rows.length > 0;
       var showRanking = rankingMetrics.length > 0 && hasRankingData;
 
-      if (simpleMetrics.length === 0 && !showRanking) {
+      if (summaryMetrics.length === 0 && !showRanking) {
         grid.classList.add('empty');
         rankingWrap.innerHTML = '';
         return;
       }
 
-      if (simpleMetrics.length > 0) {
+      if (summaryMetrics.length > 0 && !showRanking) {
         grid.classList.remove('empty');
-        grid.classList.add('count-' + simpleMetrics.length);
-        for (var j = 0; j < simpleMetrics.length; j++) {
-          var m = simpleMetrics[j];
+        grid.classList.add('count-' + summaryMetrics.length);
+        for (var j = 0; j < summaryMetrics.length; j++) {
+          var m = summaryMetrics[j];
           var currentNum = parseFloat(m.current, 10) || 0;
           var goalNum = parseFloat(m.goal, 10) || 0;
           var achieved = goalNum > 0 && currentNum >= goalNum;
@@ -91,12 +91,35 @@
             '</div>';
           grid.appendChild(card);
         }
-      } else {
-        grid.classList.add('empty');
-      }
-
-      if (showRanking) {
+      } else if (showRanking) {
         var rows = data.ranking.rows.filter(function (r) { return r && (String(r.name).trim() || String(r.goal).trim() || String(r.current).trim()); });
+        var totalGoal = 0;
+        var totalCurrent = 0;
+        for (var t = 0; t < rows.length; t++) {
+          totalGoal += parseFloat(rows[t].goal, 10) || 0;
+          totalCurrent += parseFloat(rows[t].current, 10) || 0;
+        }
+        var metric = rankingMetrics[0];
+        var displayAsPct = data.ranking.displayAsPercent;
+        var achieved = totalGoal > 0 && totalCurrent >= totalGoal;
+        var summaryValuesText;
+        if (displayAsPct && totalGoal > 0) {
+          var summaryPct = Math.round((totalCurrent / totalGoal) * 100);
+          summaryValuesText = '<span class="current">' + escapeHtml(String(summaryPct)) + '%</span>';
+        } else {
+          summaryValuesText = '<span class="current">' + escapeHtml(String(totalCurrent)) + '</span> / <span class="goal">' + escapeHtml(String(totalGoal)) + '</span>';
+        }
+        grid.classList.remove('empty');
+        grid.classList.add('count-1');
+        var summaryCard = document.createElement('div');
+        summaryCard.className = 'result-card' + (achieved ? ' achieved' : '');
+        summaryCard.innerHTML =
+          '<div class="result-card-inner">' +
+          '<h2 class="result-heading">' + escapeHtml(metric.heading || 'Summary') + '</h2>' +
+          '<p class="result-values">' + summaryValuesText + '</p>' +
+          '</div>';
+        grid.appendChild(summaryCard);
+
         var withPct = rows.map(function (r) {
           var cur = parseFloat(r.current, 10) || 0;
           var goal = parseFloat(r.goal, 10) || 0;
@@ -104,26 +127,23 @@
           return { name: r.name || '', goal: r.goal, current: r.current, pct: pct };
         });
         withPct.sort(function (a, b) { return b.pct - a.pct; });
-        var displayAsPct = data.ranking.displayAsPercent;
-        for (var r = 0; r < rankingMetrics.length; r++) {
-          var metric = rankingMetrics[r];
-          var list = document.createElement('div');
-          list.className = 'ranking-results';
-          list.innerHTML = '<h2 class="ranking-results-title">' + escapeHtml(metric.heading || 'Ranking') + '</h2>';
-          var ol = document.createElement('ol');
-          ol.className = 'ranking-list';
-          for (var k = 0; k < withPct.length; k++) {
-            var item = withPct[k];
-            var valText = displayAsPct ? (Math.round(item.pct) + '%') : (escapeHtml(String(item.current)) + ' / ' + escapeHtml(String(item.goal)));
-            var li = document.createElement('li');
-            li.className = 'ranking-list-item';
-            li.innerHTML = '<span class="ranking-name">' + escapeHtml(item.name) + '</span> <span class="ranking-value">' + valText + '</span>';
-            ol.appendChild(li);
-          }
-          list.appendChild(ol);
-          rankingWrap.appendChild(list);
+        var list = document.createElement('div');
+        list.className = 'ranking-results';
+        list.innerHTML = '<h2 class="ranking-results-title">' + escapeHtml(metric.heading || 'Ranking') + '</h2>';
+        var ol = document.createElement('ol');
+        ol.className = 'ranking-list';
+        for (var k = 0; k < withPct.length; k++) {
+          var item = withPct[k];
+          var valText = displayAsPct ? (Math.round(item.pct) + '%') : (escapeHtml(String(item.current)) + ' / ' + escapeHtml(String(item.goal)));
+          var li = document.createElement('li');
+          li.className = 'ranking-list-item';
+          li.innerHTML = '<span class="ranking-name">' + escapeHtml(item.name) + '</span> <span class="ranking-value">' + valText + '</span>';
+          ol.appendChild(li);
         }
+        list.appendChild(ol);
+        rankingWrap.appendChild(list);
       } else {
+        grid.classList.add('empty');
         rankingWrap.innerHTML = '';
       }
     })();
