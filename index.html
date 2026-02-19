@@ -52,8 +52,10 @@
         var card = document.createElement('div');
         card.className = 'result-card' + (achieved ? ' achieved' : '');
         card.innerHTML =
+          '<div class="result-card-inner">' +
           '<h2 class="result-heading">' + escapeHtml(m.heading || 'Metric') + '</h2>' +
-          '<p class="result-values"><span class="current">' + escapeHtml(String(m.current)) + '</span> / <span class="goal">' + escapeHtml(String(m.goal)) + '</span></p>';
+          '<p class="result-values"><span class="current">' + escapeHtml(String(m.current)) + '</span> / <span class="goal">' + escapeHtml(String(m.goal)) + '</span></p>' +
+          '</div>';
         grid.appendChild(card);
       }
     })();

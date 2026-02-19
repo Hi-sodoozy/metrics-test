@@ -63,8 +63,20 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 120px;
+  align-items: center;
+  min-height: 0;
+  height: 100%;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.result-card-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  width: 100%;
+  text-align: center;
 }
 
 .result-card.achieved {
@@ -72,14 +84,14 @@
   border-color: #c8e6c9;
 }
 
-.result-heading {
+.result-card-inner .result-heading {
   margin: 0 0 8px;
   font-size: 1.1rem;
   font-weight: 600;
   color: #1a1a1a;
 }
 
-.result-values {
+.result-card-inner .result-values {
   margin: 0;
   font-size: 1.25rem;
   color: #505050;
@@ -95,20 +107,14 @@
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 10px 20px;
   font-size: 13px;
-  color: #7a7a7a;
+  color: #9a9a9a;
   text-decoration: none;
-  border: 1px solid #d8d8d8;
-  border-radius: 6px;
-  background: rgba(255,255,255,0.85);
-  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  transition: color 0.2s;
 }
 
 .input-link:hover {
-  color: #2c2c2c;
-  border-color: #b0b0b0;
-  background: #fff;
+  color: #5a5a5a;
 }
 
 /* ----- Input page ----- */
