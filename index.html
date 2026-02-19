@@ -27,7 +27,7 @@
 
       var raw;
       try { raw = localStorage.getItem(KEY); } catch (e) { raw = null; }
-      var data = { metrics: [], ranking: { enabled: false, display: false, displayAsPercent: false, rows: [] } };
+      var data = { metrics: [], ranking: { enabled: false, displayAsPercent: false, rows: [] } };
       if (raw) {
         try {
           var parsed = JSON.parse(raw);
@@ -38,7 +38,6 @@
             if (parsed.ranking && Array.isArray(parsed.ranking.rows)) {
               data.ranking = {
                 enabled: !!parsed.ranking.enabled,
-                display: !!parsed.ranking.display,
                 displayAsPercent: !!parsed.ranking.displayAsPercent,
                 rows: parsed.ranking.rows
               };
@@ -47,24 +46,32 @@
         } catch (e) {}
       }
 
-      var displayed = [];
+      var simpleMetrics = [];
+      var rankingMetrics = [];
       for (var i = 0; i < data.metrics.length; i++) {
-        if (data.metrics[i] && data.metrics[i].display) displayed.push(data.metrics[i]);
+        var m = data.metrics[i];
+        if (!m || !m.display) continue;
+        if (m.displayAs === 'ranking') {
+          rankingMetrics.push(m);
+        } else {
+          simpleMetrics.push(m);
+        }
       }
 
-      var showRanking = data.ranking.enabled && data.ranking.display;
+      var hasRankingData = data.ranking.rows && data.ranking.rows.length > 0;
+      var showRanking = rankingMetrics.length > 0 && hasRankingData;
 
-      if (displayed.length === 0 && !showRanking) {
+      if (simpleMetrics.length === 0 && !showRanking) {
         grid.classList.add('empty');
         rankingWrap.innerHTML = '';
         return;
       }
 
-      if (displayed.length > 0) {
+      if (simpleMetrics.length > 0) {
         grid.classList.remove('empty');
-        grid.classList.add('count-' + displayed.length);
-        for (var j = 0; j < displayed.length; j++) {
-          var m = displayed[j];
+        grid.classList.add('count-' + simpleMetrics.length);
+        for (var j = 0; j < simpleMetrics.length; j++) {
+          var m = simpleMetrics[j];
           var currentNum = parseFloat(m.current, 10) || 0;
           var goalNum = parseFloat(m.goal, 10) || 0;
           var achieved = goalNum > 0 && currentNum >= goalNum;
@@ -98,21 +105,24 @@
         });
         withPct.sort(function (a, b) { return b.pct - a.pct; });
         var displayAsPct = data.ranking.displayAsPercent;
-        var list = document.createElement('div');
-        list.className = 'ranking-results';
-        list.innerHTML = '<h2 class="ranking-results-title">Ranking</h2>';
-        var ol = document.createElement('ol');
-        ol.className = 'ranking-list';
-        for (var k = 0; k < withPct.length; k++) {
-          var item = withPct[k];
-          var valText = displayAsPct ? (Math.round(item.pct) + '%') : (escapeHtml(String(item.current)) + ' / ' + escapeHtml(String(item.goal)));
-          var li = document.createElement('li');
-          li.className = 'ranking-list-item';
-          li.innerHTML = '<span class="ranking-name">' + escapeHtml(item.name) + '</span> <span class="ranking-value">' + valText + '</span>';
-          ol.appendChild(li);
+        for (var r = 0; r < rankingMetrics.length; r++) {
+          var metric = rankingMetrics[r];
+          var list = document.createElement('div');
+          list.className = 'ranking-results';
+          list.innerHTML = '<h2 class="ranking-results-title">' + escapeHtml(metric.heading || 'Ranking') + '</h2>';
+          var ol = document.createElement('ol');
+          ol.className = 'ranking-list';
+          for (var k = 0; k < withPct.length; k++) {
+            var item = withPct[k];
+            var valText = displayAsPct ? (Math.round(item.pct) + '%') : (escapeHtml(String(item.current)) + ' / ' + escapeHtml(String(item.goal)));
+            var li = document.createElement('li');
+            li.className = 'ranking-list-item';
+            li.innerHTML = '<span class="ranking-name">' + escapeHtml(item.name) + '</span> <span class="ranking-value">' + valText + '</span>';
+            ol.appendChild(li);
+          }
+          list.appendChild(ol);
+          rankingWrap.appendChild(list);
         }
-        list.appendChild(ol);
-        rankingWrap.appendChild(list);
       } else {
         rankingWrap.innerHTML = '';
       }

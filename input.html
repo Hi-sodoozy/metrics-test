@@ -91,13 +91,12 @@
   <script>
     (function () {
       var KEY = 'metricsDashboard';
-      var RANKING_ROWS_KEY = 'metricsDashboardRankingRows';
       var INITIAL_RANKING_ROWS = 10;
 
       function getData() {
         var raw;
         try { raw = localStorage.getItem(KEY); } catch (e) { raw = null; }
-        var data = { metrics: [], ranking: { enabled: false, display: false, displayAsPercent: false, rows: [] } };
+        var data = { metrics: [], ranking: { enabled: false, displayAsPercent: false, rows: [] } };
         if (raw) {
           try {
             var parsed = JSON.parse(raw);
@@ -107,7 +106,6 @@
               data.metrics = parsed.metrics;
               if (parsed.ranking) {
                 data.ranking.enabled = !!parsed.ranking.enabled;
-                data.ranking.display = !!parsed.ranking.display;
                 data.ranking.displayAsPercent = !!parsed.ranking.displayAsPercent;
                 data.ranking.rows = Array.isArray(parsed.ranking.rows) ? parsed.ranking.rows : [];
               }
@@ -128,10 +126,12 @@
           row.querySelector('input[name="goal"]').value = m.goal !== undefined && m.goal !== null ? String(m.goal) : '';
           row.querySelector('input[name="current"]').value = m.current !== undefined && m.current !== null ? String(m.current) : '';
           row.querySelector('input[name="displayAsPercent"]').checked = !!m.displayAsPercent;
+          var displayAs = (m.displayAs === 'ranking') ? 'ranking' : 'simple';
+          var radio = row.querySelector('input[name="displayAs_' + i + '"][value="' + displayAs + '"]');
+          if (radio) radio.checked = true;
         }
 
         document.getElementById('rankingEnabled').checked = data.ranking.enabled;
-        document.getElementById('rankingDisplay').checked = data.ranking.display;
         document.getElementById('rankingDisplayAsPercent').checked = data.ranking.displayAsPercent;
         document.getElementById('rankingTableWrap').hidden = !data.ranking.enabled;
 
@@ -190,17 +190,19 @@
         var rows = document.querySelectorAll('.input-row');
         for (var i = 0; i < rows.length; i++) {
           var row = rows[i];
+          var displayAsRadio = row.querySelector('input[name="displayAs_' + i + '"]:checked');
+          var displayAs = (displayAsRadio && displayAsRadio.value === 'ranking') ? 'ranking' : 'simple';
           metrics.push({
             display: row.querySelector('input[name="display"]').checked,
             heading: row.querySelector('input[name="heading"]').value.trim(),
             goal: row.querySelector('input[name="goal"]').value.trim(),
             current: row.querySelector('input[name="current"]').value.trim(),
-            displayAsPercent: row.querySelector('input[name="displayAsPercent"]').checked
+            displayAsPercent: row.querySelector('input[name="displayAsPercent"]').checked,
+            displayAs: displayAs
           });
         }
         var ranking = {
           enabled: document.getElementById('rankingEnabled').checked,
-          display: document.getElementById('rankingDisplay').checked,
           displayAsPercent: document.getElementById('rankingDisplayAsPercent').checked,
           rows: getRankingRowsData()
         };
@@ -213,7 +215,6 @@
         document.getElementById('rankingTableWrap').hidden = !this.checked;
         save();
       });
-      document.getElementById('rankingDisplay').addEventListener('change', save);
       document.getElementById('rankingDisplayAsPercent').addEventListener('change', save);
 
       document.getElementById('addRankingRow').addEventListener('click', function () {

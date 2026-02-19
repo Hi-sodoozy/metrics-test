@@ -211,6 +211,21 @@
   accent-color: #4a6fa5;
 }
 
+.display-as-cell {
+  white-space: nowrap;
+}
+
+.display-as-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.display-as-option input { accent-color: #4a6fa5; }
+
 .input-hint {
   margin: 16px 0 20px;
   font-size: 13px;
@@ -225,10 +240,16 @@
 }
 
 .ranking-heading {
-  margin: 0 0 16px;
+  margin: 0 0 8px;
   font-size: 1.25rem;
   font-weight: 600;
   color: #1a1a1a;
+}
+
+.ranking-hint {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: #6b6b6b;
 }
 
 .ranking-toggles {
