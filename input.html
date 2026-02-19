@@ -20,6 +20,7 @@
             <th scope="col">Metric</th>
             <th scope="col">Goal</th>
             <th scope="col">Current</th>
+            <th scope="col">Display as %?</th>
           </tr>
         </thead>
         <tbody>
@@ -28,29 +29,56 @@
             <td><input type="text" name="heading" placeholder="Metric 1" /></td>
             <td><input type="text" name="goal" placeholder="Goal" /></td>
             <td><input type="text" name="current" placeholder="Current" /></td>
+            <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
           </tr>
           <tr class="input-row">
             <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
             <td><input type="text" name="heading" placeholder="Metric 2" /></td>
             <td><input type="text" name="goal" placeholder="Goal" /></td>
             <td><input type="text" name="current" placeholder="Current" /></td>
+            <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
           </tr>
           <tr class="input-row">
             <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
             <td><input type="text" name="heading" placeholder="Metric 3" /></td>
             <td><input type="text" name="goal" placeholder="Goal" /></td>
             <td><input type="text" name="current" placeholder="Current" /></td>
+            <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
           </tr>
           <tr class="input-row">
             <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
             <td><input type="text" name="heading" placeholder="Metric 4" /></td>
             <td><input type="text" name="goal" placeholder="Goal" /></td>
             <td><input type="text" name="current" placeholder="Current" /></td>
+            <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
           </tr>
         </tbody>
       </table>
     </div>
-    <p class="input-hint">Tick "Display?" to show a metric on the results page. When Current is equal to or greater than Goal, the card turns green.</p>
+    <p class="input-hint">Tick "Display?" to show a metric on the results page. "Display as %?" shows current/goal as a percentage. When Current is equal to or greater than Goal, the card turns green.</p>
+
+    <section class="ranking-section" aria-labelledby="ranking-heading">
+      <h2 id="ranking-heading" class="ranking-heading">Ranking</h2>
+      <div class="ranking-toggles">
+        <label class="toggle-row"><input type="checkbox" id="rankingEnabled" /> Ranking</label>
+        <label class="toggle-row"><input type="checkbox" id="rankingDisplay" /> Display?</label>
+        <label class="toggle-row"><input type="checkbox" id="rankingDisplayAsPercent" /> Display as %?</label>
+      </div>
+      <div class="ranking-table-wrap" id="rankingTableWrap" hidden>
+        <table class="input-table ranking-table" aria-label="Ranking data">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Goal</th>
+              <th scope="col">Current</th>
+            </tr>
+          </thead>
+          <tbody id="rankingBody"></tbody>
+        </table>
+        <button type="button" class="btn-add-row" id="addRankingRow">Add more rows</button>
+      </div>
+    </section>
+
     <div class="input-actions">
       <button type="button" class="btn-save" id="saveBtn">Save</button>
     </div>
@@ -58,25 +86,98 @@
   <script>
     (function () {
       var KEY = 'metricsDashboard';
+      var RANKING_ROWS_KEY = 'metricsDashboardRankingRows';
+      var INITIAL_RANKING_ROWS = 10;
 
-      function load() {
+      function getData() {
         var raw;
         try { raw = localStorage.getItem(KEY); } catch (e) { raw = null; }
-        var metrics = [];
+        var data = { metrics: [], ranking: { enabled: false, display: false, displayAsPercent: false, rows: [] } };
         if (raw) {
-          try { metrics = JSON.parse(raw); } catch (e) {}
+          try {
+            var parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              data.metrics = parsed;
+            } else if (parsed && parsed.metrics) {
+              data.metrics = parsed.metrics;
+              if (parsed.ranking) {
+                data.ranking.enabled = !!parsed.ranking.enabled;
+                data.ranking.display = !!parsed.ranking.display;
+                data.ranking.displayAsPercent = !!parsed.ranking.displayAsPercent;
+                data.ranking.rows = Array.isArray(parsed.ranking.rows) ? parsed.ranking.rows : [];
+              }
+            }
+          } catch (e) {}
         }
-        if (!Array.isArray(metrics)) metrics = [];
+        return data;
+      }
 
+      function load() {
+        var data = getData();
         var rows = document.querySelectorAll('.input-row');
         for (var i = 0; i < rows.length; i++) {
           var row = rows[i];
-          var m = metrics[i] || {};
+          var m = data.metrics[i] || {};
           row.querySelector('input[name="display"]').checked = !!m.display;
           row.querySelector('input[name="heading"]').value = m.heading || '';
           row.querySelector('input[name="goal"]').value = m.goal !== undefined && m.goal !== null ? String(m.goal) : '';
           row.querySelector('input[name="current"]').value = m.current !== undefined && m.current !== null ? String(m.current) : '';
+          row.querySelector('input[name="displayAsPercent"]').checked = !!m.displayAsPercent;
         }
+
+        document.getElementById('rankingEnabled').checked = data.ranking.enabled;
+        document.getElementById('rankingDisplay').checked = data.ranking.display;
+        document.getElementById('rankingDisplayAsPercent').checked = data.ranking.displayAsPercent;
+        document.getElementById('rankingTableWrap').hidden = !data.ranking.enabled;
+
+        var rankingRows = data.ranking.rows.length >= INITIAL_RANKING_ROWS ? data.ranking.rows : (function () {
+          var arr = data.ranking.rows.slice();
+          while (arr.length < INITIAL_RANKING_ROWS) arr.push({ name: '', goal: '', current: '' });
+          return arr;
+        })();
+        renderRankingRows(rankingRows);
+      }
+
+      function renderRankingRows(rowsData) {
+        var tbody = document.getElementById('rankingBody');
+        tbody.innerHTML = '';
+        for (var i = 0; i < rowsData.length; i++) {
+          var r = rowsData[i] || {};
+          var tr = document.createElement('tr');
+          tr.className = 'ranking-row';
+          tr.innerHTML =
+            '<td><input type="text" name="rankName" placeholder="Name" /></td>' +
+            '<td><input type="text" name="rankGoal" placeholder="Goal" /></td>' +
+            '<td><input type="text" name="rankCurrent" placeholder="Current" /></td>';
+          tr.querySelector('input[name="rankName"]').value = r.name || '';
+          tr.querySelector('input[name="rankGoal"]').value = r.goal !== undefined && r.goal !== null ? String(r.goal) : '';
+          tr.querySelector('input[name="rankCurrent"]').value = r.current !== undefined && r.current !== null ? String(r.current) : '';
+          tbody.appendChild(tr);
+        }
+        bindRankingInputs();
+      }
+
+      function bindRankingInputs() {
+        var inputs = document.querySelectorAll('.ranking-table input');
+        for (var i = 0; i < inputs.length; i++) {
+          var el = inputs[i];
+          el.removeEventListener('change', save);
+          el.removeEventListener('blur', save);
+          el.addEventListener('change', save);
+          el.addEventListener('blur', save);
+        }
+      }
+
+      function getRankingRowsData() {
+        var arr = [];
+        document.querySelectorAll('.ranking-row').forEach(function (tr) {
+          arr.push({
+            name: (tr.querySelector('input[name="rankName"]') || {}).value.trim(),
+            goal: (tr.querySelector('input[name="rankGoal"]') || {}).value.trim(),
+            current: (tr.querySelector('input[name="rankCurrent"]') || {}).value.trim()
+          });
+        });
+        return arr;
       }
 
       function save() {
@@ -88,11 +189,34 @@
             display: row.querySelector('input[name="display"]').checked,
             heading: row.querySelector('input[name="heading"]').value.trim(),
             goal: row.querySelector('input[name="goal"]').value.trim(),
-            current: row.querySelector('input[name="current"]').value.trim()
+            current: row.querySelector('input[name="current"]').value.trim(),
+            displayAsPercent: row.querySelector('input[name="displayAsPercent"]').checked
           });
         }
-        try { localStorage.setItem(KEY, JSON.stringify(metrics)); } catch (e) {}
+        var ranking = {
+          enabled: document.getElementById('rankingEnabled').checked,
+          display: document.getElementById('rankingDisplay').checked,
+          displayAsPercent: document.getElementById('rankingDisplayAsPercent').checked,
+          rows: getRankingRowsData()
+        };
+        try {
+          localStorage.setItem(KEY, JSON.stringify({ metrics: metrics, ranking: ranking }));
+        } catch (e) {}
       }
+
+      document.getElementById('rankingEnabled').addEventListener('change', function () {
+        document.getElementById('rankingTableWrap').hidden = !this.checked;
+        save();
+      });
+      document.getElementById('rankingDisplay').addEventListener('change', save);
+      document.getElementById('rankingDisplayAsPercent').addEventListener('change', save);
+
+      document.getElementById('addRankingRow').addEventListener('click', function () {
+        var data = getRankingRowsData();
+        data.push({ name: '', goal: '', current: '' });
+        renderRankingRows(data);
+        save();
+      });
 
       var saveBtn = document.getElementById('saveBtn');
       if (saveBtn) {
@@ -102,7 +226,7 @@
         });
       }
 
-      var inputs = document.querySelectorAll('.input-table input');
+      var inputs = document.querySelectorAll('.input-table:not(.ranking-table) input');
       for (var j = 0; j < inputs.length; j++) {
         inputs[j].addEventListener('change', save);
         inputs[j].addEventListener('blur', save);

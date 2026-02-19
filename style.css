@@ -217,7 +217,62 @@
   color: #6b6b6b;
 }
 
-.input-actions { margin-top: 8px; }
+/* Ranking section (input page) */
+.ranking-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e4e8;
+}
+
+.ranking-heading {
+  margin: 0 0 16px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.ranking-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px 24px;
+  margin-bottom: 16px;
+}
+
+.toggle-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #2c2c2c;
+  cursor: pointer;
+}
+
+.toggle-row input { width: 18px; height: 18px; accent-color: #4a6fa5; }
+
+.ranking-table-wrap {
+  margin-bottom: 12px;
+}
+
+.ranking-table-wrap .input-table { margin-bottom: 0; }
+
+.btn-add-row {
+  margin-top: 12px;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: #4a6fa5;
+  background: transparent;
+  border: 1px solid #4a6fa5;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-add-row:hover {
+  background: #4a6fa5;
+  color: #fff;
+}
+
+.input-actions { margin-top: 24px; }
 
 .btn-save {
   padding: 10px 24px;
@@ -232,3 +287,43 @@
 }
 
 .btn-save:hover { background: #3d5d8c; }
+
+/* Ranking on results page */
+.ranking-results-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 20px 24px;
+}
+
+.ranking-results {
+  background: #fff;
+  border: 1px solid #e2e4e8;
+  border-radius: 8px;
+  padding: 24px 28px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.ranking-results-title {
+  margin: 0 0 16px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.ranking-list {
+  margin: 0;
+  padding-left: 1.5em;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #2c2c2c;
+}
+
+.ranking-list-item {
+  margin-bottom: 6px;
+}
+
+.ranking-list-item:last-child { margin-bottom: 0; }
+
+.ranking-name { font-weight: 600; }
+.ranking-value { color: #505050; margin-left: 0.25em; }

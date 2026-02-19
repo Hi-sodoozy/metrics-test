@@ -9,6 +9,7 @@
 <body class="metrics-page results-page">
   <main class="results-main">
     <div class="results-grid" id="resultsGrid"></div>
+    <div class="ranking-results-wrap" id="rankingResultsWrap"></div>
     <a href="input.html" class="input-link">Input</a>
   </main>
   <script>
@@ -21,42 +22,99 @@
 
       var KEY = 'metricsDashboard';
       var grid = document.getElementById('resultsGrid');
+      var rankingWrap = document.getElementById('rankingResultsWrap');
       if (!grid) return;
 
       var raw;
       try { raw = localStorage.getItem(KEY); } catch (e) { raw = null; }
-      var metrics = [];
+      var data = { metrics: [], ranking: { enabled: false, display: false, displayAsPercent: false, rows: [] } };
       if (raw) {
-        try { metrics = JSON.parse(raw); } catch (e) {}
+        try {
+          var parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            data.metrics = parsed;
+          } else if (parsed && parsed.metrics) {
+            data.metrics = parsed.metrics;
+            if (parsed.ranking && Array.isArray(parsed.ranking.rows)) {
+              data.ranking = {
+                enabled: !!parsed.ranking.enabled,
+                display: !!parsed.ranking.display,
+                displayAsPercent: !!parsed.ranking.displayAsPercent,
+                rows: parsed.ranking.rows
+              };
+            }
+          }
+        } catch (e) {}
       }
-      if (!Array.isArray(metrics)) metrics = [];
 
       var displayed = [];
-      for (var i = 0; i < metrics.length; i++) {
-        if (metrics[i] && metrics[i].display) displayed.push(metrics[i]);
+      for (var i = 0; i < data.metrics.length; i++) {
+        if (data.metrics[i] && data.metrics[i].display) displayed.push(data.metrics[i]);
       }
 
-      if (displayed.length === 0) {
+      var showRanking = data.ranking.enabled && data.ranking.display;
+
+      if (displayed.length === 0 && !showRanking) {
         grid.classList.add('empty');
+        rankingWrap.innerHTML = '';
         return;
       }
 
-      grid.classList.remove('empty');
-      grid.classList.add('count-' + displayed.length);
+      if (displayed.length > 0) {
+        grid.classList.remove('empty');
+        grid.classList.add('count-' + displayed.length);
+        for (var j = 0; j < displayed.length; j++) {
+          var m = displayed[j];
+          var currentNum = parseFloat(m.current, 10) || 0;
+          var goalNum = parseFloat(m.goal, 10) || 0;
+          var achieved = goalNum > 0 && currentNum >= goalNum;
+          var valuesText;
+          if (m.displayAsPercent && goalNum > 0) {
+            var pct = Math.round((currentNum / goalNum) * 100);
+            valuesText = '<span class="current">' + escapeHtml(String(pct)) + '%</span>';
+          } else {
+            valuesText = '<span class="current">' + escapeHtml(String(m.current)) + '</span> / <span class="goal">' + escapeHtml(String(m.goal)) + '</span>';
+          }
+          var card = document.createElement('div');
+          card.className = 'result-card' + (achieved ? ' achieved' : '');
+          card.innerHTML =
+            '<div class="result-card-inner">' +
+            '<h2 class="result-heading">' + escapeHtml(m.heading || 'Metric') + '</h2>' +
+            '<p class="result-values">' + valuesText + '</p>' +
+            '</div>';
+          grid.appendChild(card);
+        }
+      } else {
+        grid.classList.add('empty');
+      }
 
-      for (var j = 0; j < displayed.length; j++) {
-        var m = displayed[j];
-        var currentNum = parseFloat(m.current, 10) || 0;
-        var goalNum = parseFloat(m.goal, 10) || 0;
-        var achieved = goalNum > 0 && currentNum >= goalNum;
-        var card = document.createElement('div');
-        card.className = 'result-card' + (achieved ? ' achieved' : '');
-        card.innerHTML =
-          '<div class="result-card-inner">' +
-          '<h2 class="result-heading">' + escapeHtml(m.heading || 'Metric') + '</h2>' +
-          '<p class="result-values"><span class="current">' + escapeHtml(String(m.current)) + '</span> / <span class="goal">' + escapeHtml(String(m.goal)) + '</span></p>' +
-          '</div>';
-        grid.appendChild(card);
+      if (showRanking) {
+        var rows = data.ranking.rows.filter(function (r) { return r && (String(r.name).trim() || String(r.goal).trim() || String(r.current).trim()); });
+        var withPct = rows.map(function (r) {
+          var cur = parseFloat(r.current, 10) || 0;
+          var goal = parseFloat(r.goal, 10) || 0;
+          var pct = goal > 0 ? (cur / goal) * 100 : 0;
+          return { name: r.name || '', goal: r.goal, current: r.current, pct: pct };
+        });
+        withPct.sort(function (a, b) { return b.pct - a.pct; });
+        var displayAsPct = data.ranking.displayAsPercent;
+        var list = document.createElement('div');
+        list.className = 'ranking-results';
+        list.innerHTML = '<h2 class="ranking-results-title">Ranking</h2>';
+        var ol = document.createElement('ol');
+        ol.className = 'ranking-list';
+        for (var k = 0; k < withPct.length; k++) {
+          var item = withPct[k];
+          var valText = displayAsPct ? (Math.round(item.pct) + '%') : (escapeHtml(String(item.current)) + ' / ' + escapeHtml(String(item.goal)));
+          var li = document.createElement('li');
+          li.className = 'ranking-list-item';
+          li.innerHTML = '<span class="ranking-name">' + escapeHtml(item.name) + '</span> <span class="ranking-value">' + valText + '</span>';
+          ol.appendChild(li);
+        }
+        list.appendChild(ol);
+        rankingWrap.appendChild(list);
+      } else {
+        rankingWrap.innerHTML = '';
       }
     })();
   </script>
