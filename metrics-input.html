@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics – Input</title>
+  <link rel="stylesheet" href="metrics.css" />
+</head>
+<body class="metrics-page input-page">
+  <main class="input-main">
+    <header class="input-header">
+      <h1>Metrics input</h1>
+      <a href="metrics-results.html" class="back-link">View results</a>
+    </header>
+    <div class="input-table-wrap">
+      <table class="input-table" aria-label="Metrics data">
+        <thead>
+          <tr>
+            <th scope="col">Display?</th>
+            <th scope="col">Metric</th>
+            <th scope="col">Goal</th>
+            <th scope="col">Current</th>
+          </tr>
+        </thead>
+        <tbody id="inputBody">
+          <tr class="input-row" data-index="0">
+            <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
+            <td><input type="text" name="heading" placeholder="Metric 1" aria-label="Metric name" /></td>
+            <td><input type="text" name="goal" placeholder="Goal" aria-label="Goal" /></td>
+            <td><input type="text" name="current" placeholder="Current" aria-label="Current value" /></td>
+          </tr>
+          <tr class="input-row" data-index="1">
+            <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
+            <td><input type="text" name="heading" placeholder="Metric 2" aria-label="Metric name" /></td>
+            <td><input type="text" name="goal" placeholder="Goal" aria-label="Goal" /></td>
+            <td><input type="text" name="current" placeholder="Current" aria-label="Current value" /></td>
+          </tr>
+          <tr class="input-row" data-index="2">
+            <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
+            <td><input type="text" name="heading" placeholder="Metric 3" aria-label="Metric name" /></td>
+            <td><input type="text" name="goal" placeholder="Goal" aria-label="Goal" /></td>
+            <td><input type="text" name="current" placeholder="Current" aria-label="Current value" /></td>
+          </tr>
+          <tr class="input-row" data-index="3">
+            <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
+            <td><input type="text" name="heading" placeholder="Metric 4" aria-label="Metric name" /></td>
+            <td><input type="text" name="goal" placeholder="Goal" aria-label="Goal" /></td>
+            <td><input type="text" name="current" placeholder="Current" aria-label="Current value" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="input-hint">Tick &quot;Display?&quot; to show a metric on the results page. Current &ge; Goal turns the card green.</p>
+    <div class="input-actions">
+      <button type="button" class="btn-save" id="saveBtn">Save</button>
+    </div>
+  </main>
+  <script>
+    (function () {
+      var KEY = 'metricsDashboard';
+      var MAX = 4;
+
+      function load() {
+        var raw = localStorage.getItem(KEY);
+        var metrics = raw ? JSON.parse(raw) : [];
+        var rows = document.querySelectorAll('.input-row');
+        rows.forEach(function (row, i) {
+          var m = metrics[i] || {};
+          row.querySelector('input[name="display"]').checked = !!m.display;
+          row.querySelector('input[name="heading"]').value = m.heading || '';
+          row.querySelector('input[name="goal"]').value = m.goal != null ? String(m.goal) : '';
+          row.querySelector('input[name="current"]').value = m.current != null ? String(m.current) : '';
+        });
+      }
+
+      function save() {
+        var metrics = [];
+        document.querySelectorAll('.input-row').forEach(function (row) {
+          metrics.push({
+            display: row.querySelector('input[name="display"]').checked,
+            heading: row.querySelector('input[name="heading"]').value.trim(),
+            goal: row.querySelector('input[name="goal"]').value.trim(),
+            current: row.querySelector('input[name="current"]').value.trim()
+          });
+        });
+        localStorage.setItem(KEY, JSON.stringify(metrics));
+      }
+
+      document.getElementById('saveBtn').addEventListener('click', function () {
+        save();
+        window.location.href = 'metrics-results.html';
+      });
+
+      document.querySelectorAll('.input-table input').forEach(function (input) {
+        input.addEventListener('change', save);
+        input.addEventListener('blur', save);
+      });
+
+      load();
+    })();
+  </script>
+</body>
+</html>

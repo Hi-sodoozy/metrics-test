@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics – Results</title>
+  <link rel="stylesheet" href="metrics.css" />
+</head>
+<body class="metrics-page results-page">
+  <main class="results-main">
+    <div class="results-grid" id="resultsGrid">
+      <!-- Results cards injected by JS from localStorage -->
+    </div>
+    <a href="metrics-input.html" class="input-link">Input</a>
+  </main>
+  <script>
+    (function () {
+      var KEY = 'metricsDashboard';
+      var grid = document.getElementById('resultsGrid');
+      var raw = localStorage.getItem(KEY);
+      var metrics = raw ? JSON.parse(raw) : [];
+      var displayed = metrics.filter(function (m) { return m.display; });
+
+      if (displayed.length === 0) {
+        grid.classList.add('empty');
+        grid.innerHTML = '';
+        return;
+      }
+
+      grid.classList.remove('empty');
+      grid.classList.add('count-' + displayed.length);
+
+      displayed.forEach(function (m) {
+        var current = Number(m.current) || 0;
+        var goal = Number(m.goal) || 0;
+        var achieved = goal > 0 && current >= goal;
+        var card = document.createElement('div');
+        card.className = 'result-card' + (achieved ? ' achieved' : '');
+        card.innerHTML =
+          '<h2 class="result-heading">' + escapeHtml(m.heading || 'Metric') + '</h2>' +
+          '<p class="result-values"><span class="current">' + escapeHtml(String(m.current)) + '</span> / <span class="goal">' + escapeHtml(String(m.goal)) + '</span></p>';
+        grid.appendChild(card);
+      });
+
+      function escapeHtml(s) {
+        var div = document.createElement('div');
+        div.textContent = s;
+        return div.innerHTML;
+      }
+    })();
+  </script>
+</body>
+</html>
