@@ -16,8 +16,7 @@
       <table class="input-table" aria-label="Metric data">
         <thead>
           <tr>
-            <th scope="col">Display?</th>
-            <th scope="col">Metric</th>
+            <th scope="col" class="metric-name-cell">Metric</th>
             <th scope="col">Goal</th>
             <th scope="col">Current</th>
             <th scope="col">Display as %?</th>
@@ -26,8 +25,7 @@
         </thead>
         <tbody>
           <tr class="input-row" data-index="0">
-            <td><label class="cell-label"><input type="checkbox" name="display" aria-label="Display this metric" /></label></td>
-            <td><input type="text" name="heading" placeholder="Metric name" /></td>
+            <td class="metric-name-cell"><textarea name="heading" placeholder="Metric name" rows="1" aria-label="Metric name"></textarea></td>
             <td><input type="text" name="goal" placeholder="Goal" /></td>
             <td><input type="text" name="current" placeholder="Current" /></td>
             <td><label class="cell-label"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /></label></td>
@@ -36,7 +34,7 @@
         </tbody>
       </table>
     </div>
-    <p class="input-hint">Tick "Display?" to show the metric. Choose "Summary" (card with current/goal) or "Ranking" (totals from table below plus sorted list). When Ranking is selected, Goal and Current are calculated from the table. "Display as %?" shows values as a percentage. When Current &ge; Goal, the card turns green.</p>
+    <p class="input-hint">Choose "Summary" (card with current/goal) or "Ranking" (totals from table below plus sorted list). When Ranking is selected, Goal and Current are calculated from the table. "Display as %?" shows values as a percentage. When Current &ge; Goal, the card turns green.</p>
 
     <section class="ranking-section" aria-labelledby="ranking-heading">
       <h2 id="ranking-heading" class="ranking-heading">Ranking data</h2>
@@ -96,8 +94,7 @@
         var row = document.querySelector('.input-row');
         if (!row) return;
         var m = data.metrics[0] || {};
-        row.querySelector('input[name="display"]').checked = !!m.display;
-        row.querySelector('input[name="heading"]').value = m.heading || '';
+        row.querySelector('textarea[name="heading"]').value = m.heading || '';
         row.querySelector('input[name="goal"]').value = m.goal !== undefined && m.goal !== null ? String(m.goal) : '';
         row.querySelector('input[name="current"]').value = m.current !== undefined && m.current !== null ? String(m.current) : '';
         row.querySelector('input[name="displayAsPercent"]').checked = !!m.displayAsPercent;
@@ -179,8 +176,7 @@
           var displayAsRadio = row.querySelector('input[name="displayAs_0"]:checked');
           var displayAs = (displayAsRadio && displayAsRadio.value === 'ranking') ? 'ranking' : 'summary';
           metrics.push({
-            display: row.querySelector('input[name="display"]').checked,
-            heading: row.querySelector('input[name="heading"]').value.trim(),
+            heading: row.querySelector('textarea[name="heading"]').value.trim(),
             goal: row.querySelector('input[name="goal"]').value.trim(),
             current: row.querySelector('input[name="current"]').value.trim(),
             displayAsPercent: row.querySelector('input[name="displayAsPercent"]').checked,
@@ -226,7 +222,7 @@
         });
       }
 
-      var inputs = document.querySelectorAll('.input-table:not(.ranking-table) input');
+      var inputs = document.querySelectorAll('.input-table:not(.ranking-table) input, .input-table:not(.ranking-table) textarea');
       for (var j = 0; j < inputs.length; j++) {
         inputs[j].addEventListener('change', save);
         inputs[j].addEventListener('blur', save);

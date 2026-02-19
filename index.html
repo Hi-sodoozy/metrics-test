@@ -50,7 +50,7 @@
       var rankingMetrics = [];
       for (var i = 0; i < data.metrics.length; i++) {
         var m = data.metrics[i];
-        if (!m || !m.display) continue;
+        if (!m) continue;
         if (m.displayAs === 'ranking') {
           rankingMetrics.push(m);
         } else {
@@ -60,14 +60,18 @@
 
       var hasRankingData = data.ranking.rows && data.ranking.rows.length > 0;
       var showRanking = rankingMetrics.length > 0 && hasRankingData;
+      var hasSummaryData = summaryMetrics.length > 0 && (function () {
+        var s = summaryMetrics[0];
+        return (s.heading && s.heading.trim()) || (s.goal && String(s.goal).trim()) || (s.current && String(s.current).trim());
+      })();
 
-      if (summaryMetrics.length === 0 && !showRanking) {
+      if (!hasSummaryData && !showRanking) {
         grid.classList.add('empty');
         rankingWrap.innerHTML = '';
         return;
       }
 
-      if (summaryMetrics.length > 0 && !showRanking) {
+      if (hasSummaryData && !showRanking) {
         grid.classList.remove('empty');
         grid.classList.add('count-' + summaryMetrics.length);
         for (var j = 0; j < summaryMetrics.length; j++) {

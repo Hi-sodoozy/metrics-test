@@ -183,6 +183,33 @@
 
 .input-table tbody tr:last-child td { border-bottom: none; }
 
+.input-table th.metric-name-cell,
+.input-table td.metric-name-cell {
+  min-width: 180px;
+  width: 40%;
+}
+
+.input-table textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.6em;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font: inherit;
+  color: #2c2c2c;
+  line-height: 1.4;
+  resize: vertical;
+  display: block;
+  box-sizing: border-box;
+}
+
+.input-table textarea:focus {
+  outline: none;
+  border-color: #6b9bd1;
+  box-shadow: 0 0 0 2px rgba(107,155,209,0.2);
+}
+
 .input-table input[type="text"] {
   width: 100%;
   padding: 8px 10px;
