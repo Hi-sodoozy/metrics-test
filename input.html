@@ -12,7 +12,8 @@
       <h1>Metrics input</h1>
       <a href="index.html" class="back-link">View results</a>
     </header>
-    <div class="metric-form-wrap">
+    <div class="metric-cards">
+      <div class="metric-card">
       <div class="input-row metric-form" data-index="0">
         <h3 class="metric-block-title">Metric 1</h3>
         <label class="option-check option-show-main"><input type="checkbox" name="showOnMainScreen" aria-label="Show on main screen" /> Show on main screen</label>
@@ -54,7 +55,9 @@
         </div>
         <div class="metric-actions"><button type="button" class="btn-save">Save</button></div>
       </div>
+      </div>
 
+      <div class="metric-card">
       <div class="input-row metric-form" data-index="1">
         <h3 class="metric-block-title">Metric 2</h3>
         <label class="option-check option-show-main"><input type="checkbox" name="showOnMainScreen" aria-label="Show on main screen" /> Show on main screen</label>
@@ -96,7 +99,9 @@
         </div>
         <div class="metric-actions"><button type="button" class="btn-save">Save</button></div>
       </div>
+      </div>
 
+      <div class="metric-card">
       <div class="input-row metric-form" data-index="2">
         <h3 class="metric-block-title">Metric 3</h3>
         <label class="option-check option-show-main"><input type="checkbox" name="showOnMainScreen" aria-label="Show on main screen" /> Show on main screen</label>
@@ -138,7 +143,9 @@
         </div>
         <div class="metric-actions"><button type="button" class="btn-save">Save</button></div>
       </div>
+      </div>
 
+      <div class="metric-card">
       <div class="input-row metric-form" data-index="3">
         <h3 class="metric-block-title">Metric 4</h3>
         <label class="option-check option-show-main"><input type="checkbox" name="showOnMainScreen" aria-label="Show on main screen" /> Show on main screen</label>
@@ -180,6 +187,7 @@
         </div>
         <div class="metric-actions"><button type="button" class="btn-save">Save</button></div>
       </div>
+      </div>
     </div>
     <p class="input-hint">Tick "Show on main screen" to display that metric on the results page. Choose "Summary" or "Ranking" (totals from this metric's ranking table). When Current &ge; Goal, the card turns green.</p>
   </main>
@@ -197,11 +205,12 @@
             var parsed = JSON.parse(raw);
             var list = (parsed && parsed.metrics) ? parsed.metrics : (Array.isArray(parsed) ? parsed : []);
             for (var i = 0; i < 4; i++) {
-              var m = list[i] || {};
-              var ranking = m.ranking || {};
-              if (!m.ranking && parsed.ranking && i === 0) {
-                ranking = { enabled: !!parsed.ranking.enabled, displayAsPercent: !!parsed.ranking.displayAsPercent, rows: Array.isArray(parsed.ranking.rows) ? parsed.ranking.rows : [] };
-              }
+            var m = list[i] || {};
+            var ranking = m.ranking || {};
+            if (!m.ranking && parsed.ranking && i === 0) {
+              var oldRows = Array.isArray(parsed.ranking.rows) ? parsed.ranking.rows : [];
+              ranking = { enabled: !!parsed.ranking.enabled, displayAsPercent: !!parsed.ranking.displayAsPercent, rows: oldRows.slice(0, INITIAL_RANKING_ROWS) };
+            }
               data.metrics.push({
                 showOnMainScreen: !!m.showOnMainScreen,
                 heading: m.heading || '',
