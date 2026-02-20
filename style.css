@@ -16,23 +16,26 @@
   background: #f5f6f8;
 }
 
-/* ----- Results page ----- */
+/* ----- Results page (full viewport, ignore safe areas) ----- */
 
 .results-page .results-main {
+  position: fixed;
+  inset: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 24px 20px 56px;
+  padding: 0;
+  width: 100%;
 }
 
 .results-grid {
   flex: 1;
   display: grid;
-  gap: 16px;
-  align-content: center;
-  max-width: 1200px;
-  margin: 0 auto;
+  gap: 0;
+  align-content: stretch;
   width: 100%;
+  min-height: 0;
 }
 
 .results-grid { grid-template-columns: 1fr; grid-template-rows: 1fr; }
@@ -57,8 +60,8 @@
 
 .result-card {
   background: #fff;
-  border: 1px solid #e2e4e8;
-  border-radius: 8px;
+  border: none;
+  border-radius: 0;
   padding: clamp(24px, 4vw, 48px);
   display: flex;
   flex-direction: column;
@@ -66,8 +69,19 @@
   align-items: center;
   min-height: 0;
   height: 100%;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow: none;
 }
+
+.results-grid.count-2 .result-card,
+.results-grid.count-3 .result-card,
+.results-grid.count-4 .result-card {
+  border: 1px solid #e2e4e8;
+  border-radius: 0;
+}
+
+.results-grid.count-2 { gap: 4px; }
+.results-grid.count-3 { gap: 4px; }
+.results-grid.count-4 { gap: 4px; }
 
 .result-card-inner {
   display: flex;
@@ -105,15 +119,26 @@
 
 .result-card.achieved .result-values .current { color: #1b5e20; }
 
+.ranking-results-wrap {
+  flex-shrink: 0;
+  padding: 0;
+  max-width: none;
+}
+
+.results-page .ranking-results-wrap {
+  padding: 16px;
+}
+
 .input-link {
   position: fixed;
-  bottom: 20px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 13px;
   color: #9a9a9a;
   text-decoration: none;
   transition: color 0.2s;
+  z-index: 10;
 }
 
 .input-link:hover {
@@ -159,6 +184,30 @@
   border-radius: 8px;
   padding: 20px 24px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.metric-form-wrap .input-row.metric-form {
+  padding-bottom: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.metric-form-wrap .input-row.metric-form:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.metric-block-title {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.option-show-main {
+  display: inline-flex;
+  margin-bottom: 12px;
 }
 
 .metric-form .form-block {
