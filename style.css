@@ -299,6 +299,36 @@
 
 .option-radio input { accent-color: #4a6fa5; }
 
+.metric-ranking-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.metric-ranking-heading {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.metric-ranking-section .ranking-toggles {
+  margin-bottom: 12px;
+}
+
+.metric-ranking-section .ranking-table-wrap {
+  margin-bottom: 0;
+}
+
+.metric-actions {
+  margin-top: 16px;
+}
+
+.metric-actions .btn-save {
+  width: auto;
+  min-height: 44px;
+}
+
 .input-table-wrap {
   background: #fff;
   border: 1px solid #e2e4e8;

@@ -27,42 +27,35 @@
 
       var raw;
       try { raw = localStorage.getItem(KEY); } catch (e) { raw = null; }
-      var data = { metrics: [], ranking: { enabled: false, displayAsPercent: false, rows: [] } };
+      var data = { metrics: [] };
       if (raw) {
         try {
           var parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
-            data.metrics = parsed.slice(0, 4);
-          } else if (parsed && parsed.metrics) {
-            data.metrics = (parsed.metrics || []).slice(0, 4);
-            if (parsed.ranking && Array.isArray(parsed.ranking.rows)) {
-              data.ranking = {
-                enabled: !!parsed.ranking.enabled,
-                displayAsPercent: !!parsed.ranking.displayAsPercent,
-                rows: parsed.ranking.rows
-              };
-            }
-          }
+          data.metrics = (parsed && parsed.metrics) ? parsed.metrics.slice(0, 4) : (Array.isArray(parsed) ? parsed.slice(0, 4) : []);
         } catch (e) {}
       }
 
       var displayed = [];
-      var rankingMetric = null;
+      var rankingMetrics = [];
       for (var i = 0; i < data.metrics.length; i++) {
         var m = data.metrics[i];
         if (!m || !m.showOnMainScreen) continue;
         if (m.displayAs === 'ranking') {
-          rankingMetric = m;
-          var rows = data.ranking.rows && data.ranking.rows.length ? data.ranking.rows.filter(function (r) { return r && (String(r.name).trim() || String(r.goal).trim() || String(r.current).trim()); }) : [];
+          var rank = m.ranking || {};
+          var rows = (rank.rows && rank.rows.length) ? rank.rows : (data.ranking && data.ranking.rows ? data.ranking.rows : []);
+          if (!rows.length && data.ranking && data.ranking.rows) rows = data.ranking.rows;
+          rows = rows.filter(function (r) { return r && (String(r.name).trim() || String(r.goal).trim() || String(r.current).trim()); });
           var totalGoal = 0, totalCurrent = 0;
           for (var t = 0; t < rows.length; t++) {
             totalGoal += parseFloat(rows[t].goal, 10) || 0;
             totalCurrent += parseFloat(rows[t].current, 10) || 0;
           }
-          var displayAsPct = data.ranking.displayAsPercent;
+          var displayAsPct = !!(rank.displayAsPercent);
+          if (rows.length && !rank.hasOwnProperty('displayAsPercent') && data.ranking) displayAsPct = !!data.ranking.displayAsPercent;
           var achieved = totalGoal > 0 && totalCurrent >= totalGoal;
           var valuesText = (displayAsPct && totalGoal > 0) ? ('<span class="current">' + Math.round((totalCurrent / totalGoal) * 100) + '%</span>') : ('<span class="current">' + escapeHtml(String(totalCurrent)) + '</span> / <span class="goal">' + escapeHtml(String(totalGoal)) + '</span>');
           displayed.push({ type: 'card', heading: m.heading || 'Summary', valuesHtml: valuesText, achieved: achieved });
+          rankingMetrics.push({ heading: m.heading || 'Ranking', ranking: rank, rows: rows });
         } else {
           var cur = parseFloat(m.current, 10) || 0;
           var goal = parseFloat(m.goal, 10) || 0;
@@ -98,18 +91,20 @@
         grid.appendChild(card);
       }
 
-      if (rankingMetric && data.ranking.rows && data.ranking.rows.length > 0) {
-        var rows = data.ranking.rows.filter(function (r) { return r && (String(r.name).trim() || String(r.goal).trim() || String(r.current).trim()); });
+      for (var ri = 0; ri < rankingMetrics.length; ri++) {
+        var rankingMetric = rankingMetrics[ri];
+        if (!rankingMetric.rows || rankingMetric.rows.length === 0) continue;
+        var rows = rankingMetric.rows;
         var withPct = rows.map(function (r) {
           var cur = parseFloat(r.current, 10) || 0;
           var goal = parseFloat(r.goal, 10) || 0;
           return { name: r.name || '', goal: r.goal, current: r.current, pct: goal > 0 ? (cur / goal) * 100 : 0 };
         });
         withPct.sort(function (a, b) { return b.pct - a.pct; });
-        var displayAsPct = data.ranking.displayAsPercent;
+        var displayAsPct = !!(rankingMetric.ranking && rankingMetric.ranking.displayAsPercent);
         var list = document.createElement('div');
         list.className = 'ranking-results';
-        list.innerHTML = '<h2 class="ranking-results-title">' + escapeHtml(rankingMetric.heading || 'Ranking') + '</h2>';
+        list.innerHTML = '<h2 class="ranking-results-title">' + escapeHtml(rankingMetric.heading) + '</h2>';
         var ol = document.createElement('ol');
         ol.className = 'ranking-list';
         for (var k = 0; k < withPct.length; k++) {
@@ -122,9 +117,8 @@
         }
         list.appendChild(ol);
         rankingWrap.appendChild(list);
-      } else {
-        rankingWrap.innerHTML = '';
       }
+      if (rankingMetrics.length === 0) rankingWrap.innerHTML = '';
     })();
   </script>
 </body>
