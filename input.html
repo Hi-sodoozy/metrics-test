@@ -47,9 +47,6 @@
             <label class="option-radio"><input type="radio" name="displayAs_0" value="ranking" /> Ranking</label>
           </div>
         </div>
-        <div class="metric-contributor-row">
-          <button type="button" class="link-btn btn-contributors" data-metric="0">Add/remove contributor</button>
-        </div>
         <div class="metric-ranking-section">
           <h4 class="metric-ranking-heading">Ranking data</h4>
           <div class="ranking-toggles">
@@ -95,9 +92,6 @@
             <label class="option-radio"><input type="radio" name="displayAs_1" value="summary" /> Summary</label>
             <label class="option-radio"><input type="radio" name="displayAs_1" value="ranking" /> Ranking</label>
           </div>
-        </div>
-        <div class="metric-contributor-row">
-          <button type="button" class="link-btn btn-contributors" data-metric="1">Add/remove contributor</button>
         </div>
         <div class="metric-ranking-section">
           <h4 class="metric-ranking-heading">Ranking data</h4>
@@ -145,9 +139,6 @@
             <label class="option-radio"><input type="radio" name="displayAs_2" value="ranking" /> Ranking</label>
           </div>
         </div>
-        <div class="metric-contributor-row">
-          <button type="button" class="link-btn btn-contributors" data-metric="2">Add/remove contributor</button>
-        </div>
         <div class="metric-ranking-section">
           <h4 class="metric-ranking-heading">Ranking data</h4>
           <div class="ranking-toggles">
@@ -194,9 +185,6 @@
             <label class="option-radio"><input type="radio" name="displayAs_3" value="ranking" /> Ranking</label>
           </div>
         </div>
-        <div class="metric-contributor-row">
-          <button type="button" class="link-btn btn-contributors" data-metric="3">Add/remove contributor</button>
-        </div>
         <div class="metric-ranking-section">
           <h4 class="metric-ranking-heading">Ranking data</h4>
           <div class="ranking-toggles">
@@ -226,17 +214,6 @@
       <a href="#" class="footer-link">Create Account</a>
     </footer>
   </main>
-  <div class="lightbox-overlay" id="contributorLightbox" hidden aria-hidden="true">
-    <div class="lightbox-box" role="dialog" aria-labelledby="contributorLightboxTitle" aria-modal="true">
-      <h2 class="lightbox-title" id="contributorLightboxTitle">Contributors</h2>
-      <div class="lightbox-invite-row">
-        <input type="email" class="lightbox-email" id="contributorEmail" placeholder="Email address" aria-label="Invite by email" />
-        <button type="button" class="btn-invite" id="btnInviteContributor">Invite</button>
-      </div>
-      <ul class="lightbox-contributor-list" id="contributorList"></ul>
-      <button type="button" class="lightbox-close" id="contributorLightboxClose" aria-label="Close">×</button>
-    </div>
-  </div>
   <input type="file" accept="image/*" id="inputPicFile" hidden aria-hidden="true" />
   <script>
     (function () {
@@ -244,7 +221,6 @@
       var INITIAL_RANKING_ROWS = 4;
 
       var businessImageDataUrl = '';
-      var contributorsByMetric = { 0: [], 1: [], 2: [], 3: [] };
 
       function getData() {
         var raw;
@@ -276,7 +252,6 @@
                 displayAsPercent: !!m.displayAsPercent,
                 displayAs: m.displayAs === 'ranking' ? 'ranking' : 'summary',
                 displaySummary: m.displaySummary !== false,
-                contributors: Array.isArray(m.contributors) ? m.contributors.slice() : [],
                 ranking: {
                   enabled: !!ranking.enabled,
                   displayAsPercent: !!ranking.displayAsPercent,
@@ -296,7 +271,6 @@
             displayAsPercent: false,
             displayAs: 'summary',
             displaySummary: true,
-            contributors: [],
             ranking: { enabled: false, displayAsPercent: false, showIndividualGoal: false, rows: [] }
           });
         }
@@ -375,7 +349,6 @@
         for (var i = 0; i < rows.length && i < 4; i++) {
           var row = rows[i];
           var m = data.metrics[i] || {};
-          contributorsByMetric[i] = Array.isArray(m.contributors) ? m.contributors.slice() : [];
           row.querySelector('input[name="showOnMainScreen"]').checked = !!m.showOnMainScreen;
           row.querySelector('textarea[name="heading"]').value = m.heading || '';
           row.querySelector('textarea[name="goal"]').value = m.goal !== undefined && m.goal !== null ? String(m.goal) : '';
@@ -437,7 +410,6 @@
             displayAsPercent: row.querySelector('input[name="displayAsPercent"]').checked,
             displayAs: displayAs,
             displaySummary: displaySummaryCb ? displaySummaryCb.checked : true,
-            contributors: contributorsByMetric[i] || [],
             ranking: {
               enabled: row.querySelector('.ranking-enabled').checked,
               displayAsPercent: row.querySelector('.ranking-display-as-pct').checked,
@@ -521,76 +493,6 @@
       var btnEditName = document.getElementById('btnEditName');
       if (btnEditName && inputBusinessName) {
         btnEditName.addEventListener('click', function () { inputBusinessName.focus(); });
-      }
-
-      var contributorLightbox = document.getElementById('contributorLightbox');
-      var contributorListEl = document.getElementById('contributorList');
-      var contributorEmailEl = document.getElementById('contributorEmail');
-      var contributorLightboxClose = document.getElementById('contributorLightboxClose');
-      var btnInviteContributor = document.getElementById('btnInviteContributor');
-      var currentContributorMetricIndex = 0;
-      var PLACEHOLDER_CONTRIBUTORS = ['Jane Smith', 'Alex Jones'];
-
-      function renderContributorList(metricIndex) {
-        var realList = contributorsByMetric[metricIndex] || [];
-        var displayList = realList.length ? realList : PLACEHOLDER_CONTRIBUTORS.slice();
-        contributorListEl.innerHTML = '';
-        displayList.forEach(function (nameOrEmail, idx) {
-          var li = document.createElement('li');
-          var isPlaceholder = realList.length === 0;
-          li.innerHTML = '<span>' + (nameOrEmail || '').replace(/</g, '&lt;') + '</span>' +
-            (isPlaceholder ? '' : '<button type="button" class="lightbox-contributor-remove" data-index="' + idx + '" aria-label="Remove">−</button>');
-          if (!isPlaceholder && li.querySelector('.lightbox-contributor-remove')) {
-            li.querySelector('.lightbox-contributor-remove').addEventListener('click', function () {
-              var arr = (contributorsByMetric[currentContributorMetricIndex] || []).slice();
-              arr.splice(parseInt(this.getAttribute('data-index'), 10), 1);
-              contributorsByMetric[currentContributorMetricIndex] = arr;
-              renderContributorList(currentContributorMetricIndex);
-            });
-          }
-          contributorListEl.appendChild(li);
-        });
-      }
-
-      function openContributorLightbox(metricIndex) {
-        currentContributorMetricIndex = parseInt(metricIndex, 10);
-        renderContributorList(currentContributorMetricIndex);
-        if (contributorEmailEl) contributorEmailEl.value = '';
-        if (contributorLightbox) {
-          contributorLightbox.hidden = false;
-          contributorLightbox.setAttribute('aria-hidden', 'false');
-        }
-      }
-
-      function closeContributorLightbox() {
-        if (contributorLightbox) {
-          contributorLightbox.hidden = true;
-          contributorLightbox.setAttribute('aria-hidden', 'true');
-        }
-        save();
-      }
-
-      document.querySelectorAll('.btn-contributors').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          openContributorLightbox(this.getAttribute('data-metric'));
-        });
-      });
-      if (contributorLightboxClose) contributorLightboxClose.addEventListener('click', closeContributorLightbox);
-      if (contributorLightbox) {
-        contributorLightbox.addEventListener('click', function (e) {
-          if (e.target === contributorLightbox) closeContributorLightbox();
-        });
-      }
-      if (btnInviteContributor && contributorEmailEl) {
-        btnInviteContributor.addEventListener('click', function () {
-          var email = contributorEmailEl.value.trim();
-          if (!email) return;
-          var arr = (contributorsByMetric[currentContributorMetricIndex] || []).slice();
-          arr.push(email);
-          contributorsByMetric[currentContributorMetricIndex] = arr;
-          contributorEmailEl.value = '';
-          renderContributorList(currentContributorMetricIndex);
-        });
       }
 
       var formInputs = document.querySelectorAll('.metric-form input, .metric-form textarea');
