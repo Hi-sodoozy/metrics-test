@@ -77,7 +77,7 @@
   border: 1px solid #e2e4e8;
   border-radius: 4px;
   overflow: hidden;
-  text-align: center;
+  text-align: left;
 }
 
 .result-column .result-card-summary {
@@ -138,7 +138,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: stretch;
   min-height: 0;
   height: 100%;
   box-shadow: none;
@@ -159,10 +159,10 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   flex: 1;
   width: 100%;
-  text-align: center;
+  text-align: left;
 }
 
 .result-card.achieved {
@@ -174,10 +174,10 @@
   margin: 0 0 0.25em;
   font-size: clamp(2.5rem, 8vw, 5.5rem);
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.5;
   color: #1a1a1a;
   letter-spacing: -0.02em;
-  text-align: center;
+  text-align: left;
   width: 100%;
 }
 
@@ -205,7 +205,7 @@
   border-radius: 0;
   border: none;
   box-shadow: none;
-  text-align: center;
+  text-align: left;
 }
 
 .ranking-results-title {
@@ -213,7 +213,8 @@
   font-size: clamp(1.5rem, 4vw, 2.5rem);
   font-weight: 700;
   color: #1a1a1a;
-  text-align: center;
+  text-align: left;
+  line-height: 1.5;
 }
 
 .ranking-individual-goal {
@@ -832,13 +833,12 @@
 .btn-save:hover { background: #3d5d8c; }
 
 .ranking-list {
-  margin: 0 auto;
-  padding-left: 0;
-  list-style-position: inside;
+  margin: 0;
+  padding-left: 1.5em;
   font-size: 1.1rem;
   line-height: 1.6;
   color: #2c2c2c;
-  text-align: center;
+  text-align: left;
 }
 
 .ranking-list-item {

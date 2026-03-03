@@ -141,11 +141,14 @@
             ol.className = 'ranking-list';
             for (var k = 0; k < withPct.length; k++) {
               var it = withPct[k];
+              var indGoalPart = (it.individualGoal != null && String(it.individualGoal).trim()) ? ('<span class="ranking-individual-goal">' + escapeHtml(String(it.individualGoal)) + '</span>') : '';
               var valText = displayAsPct ? (Math.round(it.pct) + '%') : (escapeHtml(String(it.current)) + ' / ' + escapeHtml(String(it.goal)));
-              if (it.individualGoal != null && String(it.individualGoal).trim()) valText += ' <span class="ranking-individual-goal">(' + escapeHtml(String(it.individualGoal)) + ')</span>';
+              var parts = ['<span class="ranking-name">' + escapeHtml(it.name) + '</span>'];
+              if (indGoalPart) parts.push(indGoalPart);
+              parts.push('<span class="ranking-value">' + valText + '</span>');
               var li = document.createElement('li');
               li.className = 'ranking-list-item';
-              li.innerHTML = '<span class="ranking-name">' + escapeHtml(it.name) + '</span> <span class="ranking-value">' + valText + '</span>';
+              li.innerHTML = parts.join(' ');
               ol.appendChild(li);
             }
             list.appendChild(ol);
