@@ -137,8 +137,8 @@
             var list = document.createElement('div');
             list.className = 'ranking-results' + (item.displaySummary ? '' : ' ranking-results-full');
             list.innerHTML = '<h2 class="ranking-results-title">' + escapeHtml(item.heading) + '</h2>';
-            var ol = document.createElement('ol');
-            ol.className = 'ranking-list';
+            var ul = document.createElement('ul');
+            ul.className = 'ranking-list';
             for (var k = 0; k < withPct.length; k++) {
               var it = withPct[k];
               var indGoalPart = (it.individualGoal != null && String(it.individualGoal).trim()) ? ('<span class="ranking-individual-goal">' + escapeHtml(String(it.individualGoal)) + '</span>') : '';
@@ -149,9 +149,9 @@
               var li = document.createElement('li');
               li.className = 'ranking-list-item';
               li.innerHTML = parts.join(' ');
-              ol.appendChild(li);
+              ul.appendChild(li);
             }
-            list.appendChild(ol);
+            list.appendChild(ul);
             col.appendChild(list);
           }
         }
