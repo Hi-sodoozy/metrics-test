@@ -323,7 +323,7 @@
           tr.innerHTML = nameCell + indCell +
             '<td class="goal-current-cell"><textarea name="rankGoal" placeholder="Goal" rows="2"></textarea></td>' +
             '<td class="goal-current-cell"><textarea name="rankCurrent" placeholder="Current" rows="2"></textarea></td>' +
-            '<td class="td-remove"><button type="button" class="btn-remove-row" aria-label="Remove row">Remove row</button></td>';
+            '<td class="td-remove"><button type="button" class="btn-remove-row" aria-label="Remove row"><span class="btn-remove-icon" aria-hidden="true">−</span></button></td>';
           tr.querySelector('input[name="rankName"]').value = r.name || '';
           var indInput = tr.querySelector('input[name="rankIndividualGoal"]');
           if (indInput) indInput.value = r.individualGoal !== undefined && r.individualGoal !== null ? String(r.individualGoal) : '';
