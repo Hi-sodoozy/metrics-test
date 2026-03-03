@@ -21,7 +21,11 @@
         <button type="button" class="input-edit-icon btn-edit-name" id="btnEditName" aria-label="Edit business name">✎</button>
       </div>
     </div>
-    <div class="input-columns metric-cards" id="inputColumns">
+    <div class="input-metrics-carousel" id="inputCarousel">
+      <button type="button" class="input-carousel-btn input-carousel-prev" id="carouselPrev" aria-label="Previous metrics">‹</button>
+      <div class="input-carousel-viewport">
+        <div class="input-carousel-track" id="carouselTrack">
+          <div class="input-carousel-slide">
       <div class="metric-card">
       <div class="input-row metric-form" data-index="0">
         <h3 class="metric-block-title">Metric 1</h3>
@@ -57,7 +61,7 @@
           <div class="ranking-table-wrap" hidden>
             <table class="input-table ranking-table" aria-label="Ranking data">
               <thead>
-                <tr class="ranking-thead-row"><th scope="col">Name</th><th scope="col" class="th-individual-goal" hidden>Individual goal</th><th scope="col">Goal</th><th scope="col">Current</th></tr>
+                <tr class="ranking-thead-row"><th scope="col">Name</th><th scope="col" class="th-individual-goal" hidden>Individual goal</th><th scope="col">Goal</th><th scope="col">Current</th><th scope="col" class="th-remove">Remove</th></tr>
               </thead>
               <tbody class="ranking-tbody"></tbody>
             </table>
@@ -103,7 +107,7 @@
           <div class="ranking-table-wrap" hidden>
             <table class="input-table ranking-table" aria-label="Ranking data">
               <thead>
-                <tr class="ranking-thead-row"><th scope="col">Name</th><th scope="col" class="th-individual-goal" hidden>Individual goal</th><th scope="col">Goal</th><th scope="col">Current</th></tr>
+                <tr class="ranking-thead-row"><th scope="col">Name</th><th scope="col" class="th-individual-goal" hidden>Individual goal</th><th scope="col">Goal</th><th scope="col">Current</th><th scope="col" class="th-remove">Remove</th></tr>
               </thead>
               <tbody class="ranking-tbody"></tbody>
             </table>
@@ -113,7 +117,8 @@
         <div class="metric-actions"><button type="button" class="btn-save">Save</button></div>
       </div>
       </div>
-
+          </div>
+          <div class="input-carousel-slide">
       <div class="metric-card">
       <div class="input-row metric-form" data-index="2">
         <h3 class="metric-block-title">Metric 3</h3>
@@ -149,7 +154,7 @@
           <div class="ranking-table-wrap" hidden>
             <table class="input-table ranking-table" aria-label="Ranking data">
               <thead>
-                <tr class="ranking-thead-row"><th scope="col">Name</th><th scope="col" class="th-individual-goal" hidden>Individual goal</th><th scope="col">Goal</th><th scope="col">Current</th></tr>
+                <tr class="ranking-thead-row"><th scope="col">Name</th><th scope="col" class="th-individual-goal" hidden>Individual goal</th><th scope="col">Goal</th><th scope="col">Current</th><th scope="col" class="th-remove">Remove</th></tr>
               </thead>
               <tbody class="ranking-tbody"></tbody>
             </table>
@@ -195,7 +200,7 @@
           <div class="ranking-table-wrap" hidden>
             <table class="input-table ranking-table" aria-label="Ranking data">
               <thead>
-                <tr class="ranking-thead-row"><th scope="col">Name</th><th scope="col" class="th-individual-goal" hidden>Individual goal</th><th scope="col">Goal</th><th scope="col">Current</th></tr>
+                <tr class="ranking-thead-row"><th scope="col">Name</th><th scope="col" class="th-individual-goal" hidden>Individual goal</th><th scope="col">Goal</th><th scope="col">Current</th><th scope="col" class="th-remove">Remove</th></tr>
               </thead>
               <tbody class="ranking-tbody"></tbody>
             </table>
@@ -205,6 +210,10 @@
         <div class="metric-actions"><button type="button" class="btn-save">Save</button></div>
       </div>
       </div>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="input-carousel-btn input-carousel-next" id="carouselNext" aria-label="Next metrics">›</button>
     </div>
     <p class="input-hint">Tick "Show on main screen" to display that metric on the results page. Choose "Summary" or "Ranking" (totals from this metric's ranking table). When Current &ge; Goal, the card turns green.</p>
     <footer class="input-footer">
@@ -313,7 +322,8 @@
           var indCell = showInd ? '<td class="td-individual-goal"><input type="text" name="rankIndividualGoal" placeholder="Individual goal" /></td>' : '<td class="td-individual-goal" hidden><input type="text" name="rankIndividualGoal" placeholder="Individual goal" /></td>';
           tr.innerHTML = nameCell + indCell +
             '<td class="goal-current-cell"><textarea name="rankGoal" placeholder="Goal" rows="2"></textarea></td>' +
-            '<td class="goal-current-cell"><textarea name="rankCurrent" placeholder="Current" rows="2"></textarea></td>';
+            '<td class="goal-current-cell"><textarea name="rankCurrent" placeholder="Current" rows="2"></textarea></td>' +
+            '<td class="td-remove"><button type="button" class="btn-remove-row" aria-label="Remove row">Remove row</button></td>';
           tr.querySelector('input[name="rankName"]').value = r.name || '';
           var indInput = tr.querySelector('input[name="rankIndividualGoal"]');
           if (indInput) indInput.value = r.individualGoal !== undefined && r.individualGoal !== null ? String(r.individualGoal) : '';
@@ -321,6 +331,19 @@
           tr.querySelector('textarea[name="rankCurrent"]').value = r.current !== undefined && r.current !== null ? String(r.current) : '';
           if (tr.querySelector('.td-individual-goal')) tr.querySelector('.td-individual-goal').hidden = !showInd;
           tbody.appendChild(tr);
+        }
+        var removeBtns = tbody.querySelectorAll('.btn-remove-row');
+        for (var ri = 0; ri < removeBtns.length; ri++) {
+          (function (rowIndex) {
+            removeBtns[rowIndex].disabled = rowsData.length <= 1;
+            removeBtns[rowIndex].addEventListener('click', function () {
+              var data = getRankingRowsFromBlock(metricRow);
+              if (data.length <= 1) return;
+              data.splice(rowIndex, 1);
+              renderRankingRowsInBlock(metricRow, data);
+              save();
+            });
+          })(ri);
         }
         bindRankingInputsInBlock(metricRow);
       }
@@ -500,6 +523,31 @@
         formInputs[j].addEventListener('change', save);
         formInputs[j].addEventListener('blur', save);
       }
+
+      var carouselTrack = document.getElementById('carouselTrack');
+      var carouselPrev = document.getElementById('carouselPrev');
+      var carouselNext = document.getElementById('carouselNext');
+      var carouselIndex = 0;
+      var carouselTotal = 2;
+      function updateCarouselButtons() {
+        if (carouselPrev) carouselPrev.disabled = carouselIndex <= 0;
+        if (carouselNext) carouselNext.disabled = carouselIndex >= carouselTotal - 1;
+        if (carouselTrack) {
+          if (carouselIndex === 1) carouselTrack.classList.add('slide-1');
+          else carouselTrack.classList.remove('slide-1');
+        }
+      }
+      if (carouselPrev) {
+        carouselPrev.addEventListener('click', function () {
+          if (carouselIndex > 0) { carouselIndex--; updateCarouselButtons(); }
+        });
+      }
+      if (carouselNext) {
+        carouselNext.addEventListener('click', function () {
+          if (carouselIndex < carouselTotal - 1) { carouselIndex++; updateCarouselButtons(); }
+        });
+      }
+      updateCarouselButtons();
 
       load();
     })();
