@@ -9,10 +9,19 @@
 <body class="metrics-page input-page">
   <main class="input-main">
     <header class="input-header">
-      <h1>Metrics input</h1>
       <a href="index.html" class="back-link">View results</a>
     </header>
-    <div class="metric-cards">
+    <div class="input-business-header">
+      <div class="input-business-pic-wrap">
+        <div class="input-business-pic" id="inputBusinessPic"></div>
+        <button type="button" class="input-edit-icon btn-edit-pic" id="btnEditPic" aria-label="Edit display picture">✎</button>
+      </div>
+      <div class="input-business-name-wrap">
+        <input type="text" class="input-business-name" id="inputBusinessName" placeholder="Your business name" aria-label="Business name" />
+        <button type="button" class="input-edit-icon btn-edit-name" id="btnEditName" aria-label="Edit business name">✎</button>
+      </div>
+    </div>
+    <div class="input-columns metric-cards" id="inputColumns">
       <div class="metric-card">
       <div class="input-row metric-form" data-index="0">
         <h3 class="metric-block-title">Metric 1</h3>
@@ -31,22 +40,27 @@
         <div class="form-block options-block">
           <label class="form-label">Options</label>
           <div class="options-row">
+            <label class="option-check"><input type="checkbox" name="displaySummary" class="display-summary-cb" checked aria-label="Display summary" /> Display summary</label>
             <label class="option-check"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /> Display as %?</label>
             <span class="show-as-label">Show as</span>
             <label class="option-radio"><input type="radio" name="displayAs_0" value="summary" /> Summary</label>
             <label class="option-radio"><input type="radio" name="displayAs_0" value="ranking" /> Ranking</label>
           </div>
         </div>
+        <div class="metric-contributor-row">
+          <button type="button" class="link-btn btn-contributors" data-metric="0">Add/remove contributor</button>
+        </div>
         <div class="metric-ranking-section">
           <h4 class="metric-ranking-heading">Ranking data</h4>
           <div class="ranking-toggles">
             <label class="toggle-row"><input type="checkbox" class="ranking-enabled" aria-label="Ranking" /> Ranking</label>
             <label class="toggle-row"><input type="checkbox" class="ranking-display-as-pct" aria-label="Display as percentage" /> Display as %?</label>
+            <button type="button" class="link-btn btn-individual-goal" data-metric="0">+ individual goal</button>
           </div>
           <div class="ranking-table-wrap" hidden>
             <table class="input-table ranking-table" aria-label="Ranking data">
               <thead>
-                <tr><th scope="col">Name</th><th scope="col">Goal</th><th scope="col">Current</th></tr>
+                <tr class="ranking-thead-row"><th scope="col">Name</th><th scope="col" class="th-individual-goal" hidden>Individual goal</th><th scope="col">Goal</th><th scope="col">Current</th></tr>
               </thead>
               <tbody class="ranking-tbody"></tbody>
             </table>
@@ -75,22 +89,27 @@
         <div class="form-block options-block">
           <label class="form-label">Options</label>
           <div class="options-row">
+            <label class="option-check"><input type="checkbox" name="displaySummary" class="display-summary-cb" checked aria-label="Display summary" /> Display summary</label>
             <label class="option-check"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /> Display as %?</label>
             <span class="show-as-label">Show as</span>
             <label class="option-radio"><input type="radio" name="displayAs_1" value="summary" /> Summary</label>
             <label class="option-radio"><input type="radio" name="displayAs_1" value="ranking" /> Ranking</label>
           </div>
         </div>
+        <div class="metric-contributor-row">
+          <button type="button" class="link-btn btn-contributors" data-metric="1">Add/remove contributor</button>
+        </div>
         <div class="metric-ranking-section">
           <h4 class="metric-ranking-heading">Ranking data</h4>
           <div class="ranking-toggles">
             <label class="toggle-row"><input type="checkbox" class="ranking-enabled" aria-label="Ranking" /> Ranking</label>
             <label class="toggle-row"><input type="checkbox" class="ranking-display-as-pct" aria-label="Display as percentage" /> Display as %?</label>
+            <button type="button" class="link-btn btn-individual-goal" data-metric="1">+ individual goal</button>
           </div>
           <div class="ranking-table-wrap" hidden>
             <table class="input-table ranking-table" aria-label="Ranking data">
               <thead>
-                <tr><th scope="col">Name</th><th scope="col">Goal</th><th scope="col">Current</th></tr>
+                <tr class="ranking-thead-row"><th scope="col">Name</th><th scope="col" class="th-individual-goal" hidden>Individual goal</th><th scope="col">Goal</th><th scope="col">Current</th></tr>
               </thead>
               <tbody class="ranking-tbody"></tbody>
             </table>
@@ -119,22 +138,27 @@
         <div class="form-block options-block">
           <label class="form-label">Options</label>
           <div class="options-row">
+            <label class="option-check"><input type="checkbox" name="displaySummary" class="display-summary-cb" checked aria-label="Display summary" /> Display summary</label>
             <label class="option-check"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /> Display as %?</label>
             <span class="show-as-label">Show as</span>
             <label class="option-radio"><input type="radio" name="displayAs_2" value="summary" /> Summary</label>
             <label class="option-radio"><input type="radio" name="displayAs_2" value="ranking" /> Ranking</label>
           </div>
         </div>
+        <div class="metric-contributor-row">
+          <button type="button" class="link-btn btn-contributors" data-metric="2">Add/remove contributor</button>
+        </div>
         <div class="metric-ranking-section">
           <h4 class="metric-ranking-heading">Ranking data</h4>
           <div class="ranking-toggles">
             <label class="toggle-row"><input type="checkbox" class="ranking-enabled" aria-label="Ranking" /> Ranking</label>
             <label class="toggle-row"><input type="checkbox" class="ranking-display-as-pct" aria-label="Display as percentage" /> Display as %?</label>
+            <button type="button" class="link-btn btn-individual-goal" data-metric="2">+ individual goal</button>
           </div>
           <div class="ranking-table-wrap" hidden>
             <table class="input-table ranking-table" aria-label="Ranking data">
               <thead>
-                <tr><th scope="col">Name</th><th scope="col">Goal</th><th scope="col">Current</th></tr>
+                <tr class="ranking-thead-row"><th scope="col">Name</th><th scope="col" class="th-individual-goal" hidden>Individual goal</th><th scope="col">Goal</th><th scope="col">Current</th></tr>
               </thead>
               <tbody class="ranking-tbody"></tbody>
             </table>
@@ -163,22 +187,27 @@
         <div class="form-block options-block">
           <label class="form-label">Options</label>
           <div class="options-row">
+            <label class="option-check"><input type="checkbox" name="displaySummary" class="display-summary-cb" checked aria-label="Display summary" /> Display summary</label>
             <label class="option-check"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /> Display as %?</label>
             <span class="show-as-label">Show as</span>
             <label class="option-radio"><input type="radio" name="displayAs_3" value="summary" /> Summary</label>
             <label class="option-radio"><input type="radio" name="displayAs_3" value="ranking" /> Ranking</label>
           </div>
         </div>
+        <div class="metric-contributor-row">
+          <button type="button" class="link-btn btn-contributors" data-metric="3">Add/remove contributor</button>
+        </div>
         <div class="metric-ranking-section">
           <h4 class="metric-ranking-heading">Ranking data</h4>
           <div class="ranking-toggles">
             <label class="toggle-row"><input type="checkbox" class="ranking-enabled" aria-label="Ranking" /> Ranking</label>
             <label class="toggle-row"><input type="checkbox" class="ranking-display-as-pct" aria-label="Display as percentage" /> Display as %?</label>
+            <button type="button" class="link-btn btn-individual-goal" data-metric="3">+ individual goal</button>
           </div>
           <div class="ranking-table-wrap" hidden>
             <table class="input-table ranking-table" aria-label="Ranking data">
               <thead>
-                <tr><th scope="col">Name</th><th scope="col">Goal</th><th scope="col">Current</th></tr>
+                <tr class="ranking-thead-row"><th scope="col">Name</th><th scope="col" class="th-individual-goal" hidden>Individual goal</th><th scope="col">Goal</th><th scope="col">Current</th></tr>
               </thead>
               <tbody class="ranking-tbody"></tbody>
             </table>
@@ -190,27 +219,55 @@
       </div>
     </div>
     <p class="input-hint">Tick "Show on main screen" to display that metric on the results page. Choose "Summary" or "Ranking" (totals from this metric's ranking table). When Current &ge; Goal, the card turns green.</p>
+    <footer class="input-footer">
+      <a href="#" class="footer-link">My Profile</a>
+      <a href="#" class="footer-link">Business Profile</a>
+      <a href="#" class="footer-link">Invite User</a>
+      <a href="#" class="footer-link">Create Account</a>
+    </footer>
   </main>
+  <div class="lightbox-overlay" id="contributorLightbox" hidden aria-hidden="true">
+    <div class="lightbox-box" role="dialog" aria-labelledby="contributorLightboxTitle" aria-modal="true">
+      <h2 class="lightbox-title" id="contributorLightboxTitle">Contributors</h2>
+      <div class="lightbox-invite-row">
+        <input type="email" class="lightbox-email" id="contributorEmail" placeholder="Email address" aria-label="Invite by email" />
+        <button type="button" class="btn-invite" id="btnInviteContributor">Invite</button>
+      </div>
+      <ul class="lightbox-contributor-list" id="contributorList"></ul>
+      <button type="button" class="lightbox-close" id="contributorLightboxClose" aria-label="Close">×</button>
+    </div>
+  </div>
+  <input type="file" accept="image/*" id="inputPicFile" hidden aria-hidden="true" />
   <script>
     (function () {
       var KEY = 'metricsDashboard';
       var INITIAL_RANKING_ROWS = 4;
 
+      var businessImageDataUrl = '';
+      var contributorsByMetric = { 0: [], 1: [], 2: [], 3: [] };
+
       function getData() {
         var raw;
         try { raw = localStorage.getItem(KEY); } catch (e) { raw = null; }
-        var data = { metrics: [] };
+        var data = { businessName: '', businessImage: '', metrics: [] };
         if (raw) {
           try {
             var parsed = JSON.parse(raw);
+            data.businessName = (parsed.businessName != null) ? String(parsed.businessName) : '';
+            data.businessImage = (parsed.businessImage != null) ? String(parsed.businessImage) : '';
+            if (data.businessImage) businessImageDataUrl = data.businessImage;
             var list = (parsed && parsed.metrics) ? parsed.metrics : (Array.isArray(parsed) ? parsed : []);
             for (var i = 0; i < 4; i++) {
-            var m = list[i] || {};
-            var ranking = m.ranking || {};
-            if (!m.ranking && parsed.ranking && i === 0) {
-              var oldRows = Array.isArray(parsed.ranking.rows) ? parsed.ranking.rows : [];
-              ranking = { enabled: !!parsed.ranking.enabled, displayAsPercent: !!parsed.ranking.displayAsPercent, rows: oldRows.slice(0, INITIAL_RANKING_ROWS) };
-            }
+              var m = list[i] || {};
+              var ranking = m.ranking || {};
+              if (!m.ranking && parsed.ranking && i === 0) {
+                var oldRows = Array.isArray(parsed.ranking.rows) ? parsed.ranking.rows : [];
+                ranking = { enabled: !!parsed.ranking.enabled, displayAsPercent: !!ranking.displayAsPercent, rows: oldRows.slice(0, INITIAL_RANKING_ROWS) };
+              }
+              var rows = Array.isArray(ranking.rows) ? ranking.rows : [];
+              var rowsWithInd = rows.map(function (r) {
+                return { name: r.name || '', goal: r.goal !== undefined ? String(r.goal) : '', current: r.current !== undefined ? String(r.current) : '', individualGoal: r.individualGoal !== undefined ? String(r.individualGoal) : '' };
+              });
               data.metrics.push({
                 showOnMainScreen: !!m.showOnMainScreen,
                 heading: m.heading || '',
@@ -218,13 +275,30 @@
                 current: m.current !== undefined ? String(m.current) : '',
                 displayAsPercent: !!m.displayAsPercent,
                 displayAs: m.displayAs === 'ranking' ? 'ranking' : 'summary',
-                ranking: { enabled: !!ranking.enabled, displayAsPercent: !!ranking.displayAsPercent, rows: Array.isArray(ranking.rows) ? ranking.rows : [] }
+                displaySummary: m.displaySummary !== false,
+                contributors: Array.isArray(m.contributors) ? m.contributors.slice() : [],
+                ranking: {
+                  enabled: !!ranking.enabled,
+                  displayAsPercent: !!ranking.displayAsPercent,
+                  showIndividualGoal: !!ranking.showIndividualGoal,
+                  rows: rowsWithInd
+                }
               });
             }
           } catch (e) {}
         }
         while (data.metrics.length < 4) {
-          data.metrics.push({ showOnMainScreen: false, heading: '', goal: '', current: '', displayAsPercent: false, displayAs: 'summary', ranking: { enabled: false, displayAsPercent: false, rows: [] } });
+          data.metrics.push({
+            showOnMainScreen: false,
+            heading: '',
+            goal: '',
+            current: '',
+            displayAsPercent: false,
+            displayAs: 'summary',
+            displaySummary: true,
+            contributors: [],
+            ranking: { enabled: false, displayAsPercent: false, showIndividualGoal: false, rows: [] }
+          });
         }
         return data;
       }
@@ -234,30 +308,44 @@
         var tbody = metricRow.querySelector('.ranking-tbody');
         if (!tbody) return arr;
         tbody.querySelectorAll('.ranking-row').forEach(function (tr) {
+          var indInput = tr.querySelector('input[name="rankIndividualGoal"]');
           arr.push({
             name: (tr.querySelector('input[name="rankName"]') || {}).value.trim(),
             goal: (tr.querySelector('textarea[name="rankGoal"]') || {}).value.trim(),
-            current: (tr.querySelector('textarea[name="rankCurrent"]') || {}).value.trim()
+            current: (tr.querySelector('textarea[name="rankCurrent"]') || {}).value.trim(),
+            individualGoal: indInput ? indInput.value.trim() : ''
           });
         });
         return arr;
       }
 
+      function getShowIndividualGoalInBlock(metricRow) {
+        var btn = metricRow.querySelector('.btn-individual-goal');
+        return btn && btn.textContent.indexOf('-') !== -1;
+      }
+
       function renderRankingRowsInBlock(metricRow, rowsData) {
         var tbody = metricRow.querySelector('.ranking-tbody');
         if (!tbody) return;
+        var showInd = getShowIndividualGoalInBlock(metricRow);
+        var theadTh = metricRow.querySelector('.th-individual-goal');
+        if (theadTh) theadTh.hidden = !showInd;
         tbody.innerHTML = '';
         for (var i = 0; i < rowsData.length; i++) {
           var r = rowsData[i] || {};
           var tr = document.createElement('tr');
           tr.className = 'ranking-row';
-          tr.innerHTML =
-            '<td><input type="text" name="rankName" placeholder="Name" /></td>' +
+          var nameCell = '<td><input type="text" name="rankName" placeholder="Name" /></td>';
+          var indCell = showInd ? '<td class="td-individual-goal"><input type="text" name="rankIndividualGoal" placeholder="Individual goal" /></td>' : '<td class="td-individual-goal" hidden><input type="text" name="rankIndividualGoal" placeholder="Individual goal" /></td>';
+          tr.innerHTML = nameCell + indCell +
             '<td class="goal-current-cell"><textarea name="rankGoal" placeholder="Goal" rows="2"></textarea></td>' +
             '<td class="goal-current-cell"><textarea name="rankCurrent" placeholder="Current" rows="2"></textarea></td>';
           tr.querySelector('input[name="rankName"]').value = r.name || '';
+          var indInput = tr.querySelector('input[name="rankIndividualGoal"]');
+          if (indInput) indInput.value = r.individualGoal !== undefined && r.individualGoal !== null ? String(r.individualGoal) : '';
           tr.querySelector('textarea[name="rankGoal"]').value = r.goal !== undefined && r.goal !== null ? String(r.goal) : '';
           tr.querySelector('textarea[name="rankCurrent"]').value = r.current !== undefined && r.current !== null ? String(r.current) : '';
+          if (tr.querySelector('.td-individual-goal')) tr.querySelector('.td-individual-goal').hidden = !showInd;
           tbody.appendChild(tr);
         }
         bindRankingInputsInBlock(metricRow);
@@ -276,14 +364,24 @@
 
       function load() {
         var data = getData();
+        var nameEl = document.getElementById('inputBusinessName');
+        var picEl = document.getElementById('inputBusinessPic');
+        if (nameEl) nameEl.value = data.businessName || '';
+        if (picEl && data.businessImage) {
+          picEl.style.backgroundImage = 'url(' + data.businessImage + ')';
+          picEl.style.backgroundSize = 'cover';
+        }
         var rows = document.querySelectorAll('.input-row.metric-form');
         for (var i = 0; i < rows.length && i < 4; i++) {
           var row = rows[i];
           var m = data.metrics[i] || {};
+          contributorsByMetric[i] = Array.isArray(m.contributors) ? m.contributors.slice() : [];
           row.querySelector('input[name="showOnMainScreen"]').checked = !!m.showOnMainScreen;
           row.querySelector('textarea[name="heading"]').value = m.heading || '';
           row.querySelector('textarea[name="goal"]').value = m.goal !== undefined && m.goal !== null ? String(m.goal) : '';
           row.querySelector('textarea[name="current"]').value = m.current !== undefined && m.current !== null ? String(m.current) : '';
+          var dsCb = row.querySelector('input[name="displaySummary"]');
+          if (dsCb) dsCb.checked = m.displaySummary !== false;
           row.querySelector('input[name="displayAsPercent"]').checked = !!m.displayAsPercent;
           var displayAs = (m.displayAs === 'ranking') ? 'ranking' : 'summary';
           var radio = row.querySelector('input[name="displayAs_' + i + '"][value="' + displayAs + '"]');
@@ -291,10 +389,14 @@
           var rank = m.ranking || {};
           row.querySelector('.ranking-enabled').checked = !!rank.enabled;
           row.querySelector('.ranking-display-as-pct').checked = !!rank.displayAsPercent;
+          var indBtn = row.querySelector('.btn-individual-goal');
+          if (indBtn) {
+            indBtn.textContent = rank.showIndividualGoal ? '- individual goal' : '+ individual goal';
+          }
           var wrap = row.querySelector('.metric-ranking-section .ranking-table-wrap');
           wrap.hidden = !rank.enabled;
-          var rankRows = rank.rows && rank.rows.length >= INITIAL_RANKING_ROWS ? rank.rows : (rank.rows || []).slice();
-          while (rankRows.length < INITIAL_RANKING_ROWS) rankRows.push({ name: '', goal: '', current: '' });
+          var rankRows = rank.rows && rank.rows.length ? rank.rows.slice() : [];
+          while (rankRows.length < INITIAL_RANKING_ROWS) rankRows.push({ name: '', goal: '', current: '', individualGoal: '' });
           renderRankingRowsInBlock(row, rankRows);
         }
         updateAllSummaryInputsState();
@@ -317,6 +419,7 @@
       }
 
       function save() {
+        var businessName = (document.getElementById('inputBusinessName') || {}).value || '';
         var metrics = [];
         var rows = document.querySelectorAll('.input-row.metric-form');
         for (var i = 0; i < rows.length && i < 4; i++) {
@@ -324,22 +427,32 @@
           var displayAsRadio = row.querySelector('input[name="displayAs_' + i + '"]:checked');
           var displayAs = (displayAsRadio && displayAsRadio.value === 'ranking') ? 'ranking' : 'summary';
           var rankRows = getRankingRowsFromBlock(row);
-          metrics.push({
+          var displaySummaryCb = row.querySelector('input[name="displaySummary"]');
+          var indBtn = row.querySelector('.btn-individual-goal');
+          var metricData = {
             showOnMainScreen: row.querySelector('input[name="showOnMainScreen"]').checked,
             heading: row.querySelector('textarea[name="heading"]').value.trim(),
             goal: row.querySelector('textarea[name="goal"]').value.trim(),
             current: row.querySelector('textarea[name="current"]').value.trim(),
             displayAsPercent: row.querySelector('input[name="displayAsPercent"]').checked,
             displayAs: displayAs,
+            displaySummary: displaySummaryCb ? displaySummaryCb.checked : true,
+            contributors: contributorsByMetric[i] || [],
             ranking: {
               enabled: row.querySelector('.ranking-enabled').checked,
               displayAsPercent: row.querySelector('.ranking-display-as-pct').checked,
+              showIndividualGoal: indBtn ? indBtn.textContent.indexOf('-') !== -1 : false,
               rows: rankRows
             }
-          });
+          };
+          metrics.push(metricData);
         }
         try {
-          localStorage.setItem(KEY, JSON.stringify({ metrics: metrics }));
+          localStorage.setItem(KEY, JSON.stringify({
+            businessName: businessName,
+            businessImage: businessImageDataUrl || '',
+            metrics: metrics
+          }));
         } catch (e) {}
       }
 
@@ -350,9 +463,19 @@
           save();
         });
         row.querySelector('.ranking-display-as-pct').addEventListener('change', save);
+        var indGoalBtn = row.querySelector('.btn-individual-goal');
+        if (indGoalBtn) {
+          indGoalBtn.addEventListener('click', function () {
+            var show = this.textContent.indexOf('-') !== -1;
+            this.textContent = show ? '+ individual goal' : '- individual goal';
+            var data = getRankingRowsFromBlock(row);
+            renderRankingRowsInBlock(row, data);
+            save();
+          });
+        }
         row.querySelector('.metric-ranking-section .btn-add-row').addEventListener('click', function () {
           var data = getRankingRowsFromBlock(row);
-          data.push({ name: '', goal: '', current: '' });
+          data.push({ name: '', goal: '', current: '', individualGoal: '' });
           renderRankingRowsInBlock(row, data);
           save();
         });
@@ -368,6 +491,107 @@
           });
         });
       });
+
+      var inputBusinessName = document.getElementById('inputBusinessName');
+      if (inputBusinessName) {
+        inputBusinessName.addEventListener('change', save);
+        inputBusinessName.addEventListener('blur', save);
+      }
+      var btnEditPic = document.getElementById('btnEditPic');
+      var inputPicFile = document.getElementById('inputPicFile');
+      if (btnEditPic && inputPicFile) {
+        btnEditPic.addEventListener('click', function () { inputPicFile.click(); });
+        inputPicFile.addEventListener('change', function () {
+          var file = (this.files || [])[0];
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function () {
+            businessImageDataUrl = reader.result;
+            var pic = document.getElementById('inputBusinessPic');
+            if (pic) {
+              pic.style.backgroundImage = 'url(' + businessImageDataUrl + ')';
+              pic.style.backgroundSize = 'cover';
+            }
+            save();
+          };
+          reader.readAsDataURL(file);
+          this.value = '';
+        });
+      }
+      var btnEditName = document.getElementById('btnEditName');
+      if (btnEditName && inputBusinessName) {
+        btnEditName.addEventListener('click', function () { inputBusinessName.focus(); });
+      }
+
+      var contributorLightbox = document.getElementById('contributorLightbox');
+      var contributorListEl = document.getElementById('contributorList');
+      var contributorEmailEl = document.getElementById('contributorEmail');
+      var contributorLightboxClose = document.getElementById('contributorLightboxClose');
+      var btnInviteContributor = document.getElementById('btnInviteContributor');
+      var currentContributorMetricIndex = 0;
+      var PLACEHOLDER_CONTRIBUTORS = ['Jane Smith', 'Alex Jones'];
+
+      function renderContributorList(metricIndex) {
+        var realList = contributorsByMetric[metricIndex] || [];
+        var displayList = realList.length ? realList : PLACEHOLDER_CONTRIBUTORS.slice();
+        contributorListEl.innerHTML = '';
+        displayList.forEach(function (nameOrEmail, idx) {
+          var li = document.createElement('li');
+          var isPlaceholder = realList.length === 0;
+          li.innerHTML = '<span>' + (nameOrEmail || '').replace(/</g, '&lt;') + '</span>' +
+            (isPlaceholder ? '' : '<button type="button" class="lightbox-contributor-remove" data-index="' + idx + '" aria-label="Remove">−</button>');
+          if (!isPlaceholder && li.querySelector('.lightbox-contributor-remove')) {
+            li.querySelector('.lightbox-contributor-remove').addEventListener('click', function () {
+              var arr = (contributorsByMetric[currentContributorMetricIndex] || []).slice();
+              arr.splice(parseInt(this.getAttribute('data-index'), 10), 1);
+              contributorsByMetric[currentContributorMetricIndex] = arr;
+              renderContributorList(currentContributorMetricIndex);
+            });
+          }
+          contributorListEl.appendChild(li);
+        });
+      }
+
+      function openContributorLightbox(metricIndex) {
+        currentContributorMetricIndex = parseInt(metricIndex, 10);
+        renderContributorList(currentContributorMetricIndex);
+        if (contributorEmailEl) contributorEmailEl.value = '';
+        if (contributorLightbox) {
+          contributorLightbox.hidden = false;
+          contributorLightbox.setAttribute('aria-hidden', 'false');
+        }
+      }
+
+      function closeContributorLightbox() {
+        if (contributorLightbox) {
+          contributorLightbox.hidden = true;
+          contributorLightbox.setAttribute('aria-hidden', 'true');
+        }
+        save();
+      }
+
+      document.querySelectorAll('.btn-contributors').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          openContributorLightbox(this.getAttribute('data-metric'));
+        });
+      });
+      if (contributorLightboxClose) contributorLightboxClose.addEventListener('click', closeContributorLightbox);
+      if (contributorLightbox) {
+        contributorLightbox.addEventListener('click', function (e) {
+          if (e.target === contributorLightbox) closeContributorLightbox();
+        });
+      }
+      if (btnInviteContributor && contributorEmailEl) {
+        btnInviteContributor.addEventListener('click', function () {
+          var email = contributorEmailEl.value.trim();
+          if (!email) return;
+          var arr = (contributorsByMetric[currentContributorMetricIndex] || []).slice();
+          arr.push(email);
+          contributorsByMetric[currentContributorMetricIndex] = arr;
+          contributorEmailEl.value = '';
+          renderContributorList(currentContributorMetricIndex);
+        });
+      }
 
       var formInputs = document.querySelectorAll('.metric-form input, .metric-form textarea');
       for (var j = 0; j < formInputs.length; j++) {
