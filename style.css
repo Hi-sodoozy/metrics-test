@@ -778,6 +778,49 @@
   vertical-align: middle;
 }
 
+.input-table td.td-row-actions {
+  white-space: nowrap;
+  vertical-align: middle;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-row-invite,
+.btn-row-invite-send {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #4a6fa5;
+  color: #4a6fa5;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-row-invite:hover,
+.btn-row-invite-send:hover {
+  background: #eef4fc;
+}
+
+.invite-row-cell {
+  padding-right: 8px;
+}
+
+.invite-email-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font: inherit;
+}
+
+.invite-email-input:focus {
+  outline: none;
+  border-color: #6b9bd1;
+  box-shadow: 0 0 0 2px rgba(107,155,209,0.2);
+}
+
 .btn-remove-row {
   display: inline-flex;
   align-items: center;

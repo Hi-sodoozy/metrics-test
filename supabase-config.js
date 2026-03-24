@@ -28,6 +28,25 @@
         detectSessionInUrl: true,
       },
     });
+
+    // Invite helper used by invite pages and row-level invite actions.
+    // Email wording is controlled by Supabase email templates.
+    window.metricsSendInvite = function (email, businessName, redirectTo) {
+      if (!window.metricsSupabase) {
+        return Promise.reject(new Error('Supabase is not initialized.'));
+      }
+      return window.metricsSupabase.auth.signInWithOtp({
+        email: email,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: redirectTo,
+          data: {
+            invite_type: 'collaboration',
+            business_name: businessName || '',
+          },
+        },
+      });
+    };
   }
 
   init();

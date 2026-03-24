@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics – Invite user</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .invite-main { max-width: 520px; margin: 0 auto; padding: 32px 20px 48px; }
+    .invite-card {
+      background: #fff;
+      border: 1px solid #e2e4e8;
+      border-radius: 8px;
+      padding: 28px 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .invite-title { margin: 0 0 8px; font-size: 1.35rem; color: #1a1a1a; }
+    .invite-copy { margin: 0 0 18px; font-size: 14px; color: #6b6b6b; }
+    .invite-field { margin-bottom: 14px; }
+    .invite-field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.03em; text-transform: uppercase; color: #5a5a5a; }
+    .invite-field input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font: inherit;
+    }
+    .invite-field input:focus { outline: none; border-color: #6b9bd1; box-shadow: 0 0 0 2px rgba(107,155,209,0.2); }
+    .invite-btn {
+      width: 100%;
+      margin-top: 8px;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      background: #4a6fa5;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .invite-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .invite-btn:hover:not(:disabled) { background: #3d5d8c; }
+    .invite-message { margin-top: 14px; padding: 10px 12px; border-radius: 6px; font-size: 14px; line-height: 1.4; }
+    .invite-message.info { background: #e8f0fb; color: #1a3a5c; border: 1px solid #c5d8ec; }
+    .invite-message.error { background: #fce8e8; color: #6b1a1a; border: 1px solid #e8c0c0; }
+    .invite-back { display: inline-block; margin-top: 16px; color: #4a6fa5; text-decoration: none; font-size: 14px; }
+    .invite-back:hover { text-decoration: underline; }
+  </style>
+</head>
+<body class="metrics-page input-page">
+  <main class="invite-main">
+    <div class="invite-card">
+      <h1 class="invite-title">Invite User</h1>
+      <p class="invite-copy">Enter an email address to send an invitation to create an account.</p>
+      <form id="inviteForm" novalidate>
+        <div class="invite-field">
+          <label for="inviteEmail">Email address</label>
+          <input id="inviteEmail" type="email" autocomplete="email" required />
+        </div>
+        <button type="submit" class="invite-btn" id="inviteBtn">Send Invite</button>
+      </form>
+      <div id="inviteMessage" hidden></div>
+    </div>
+    <a href="input.html" class="invite-back">← Back to input</a>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script>
+    (function () {
+      var form = document.getElementById('inviteForm');
+      var emailInput = document.getElementById('inviteEmail');
+      var messageEl = document.getElementById('inviteMessage');
+      var btn = document.getElementById('inviteBtn');
+
+      function showMessage(text, kind) {
+        messageEl.hidden = !text;
+        messageEl.className = 'invite-message ' + (kind || 'info');
+        messageEl.textContent = text || '';
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var email = (emailInput.value || '').trim();
+        var businessName = '';
+        try {
+          var raw = localStorage.getItem('metricsDashboard');
+          var parsed = raw ? JSON.parse(raw) : {};
+          businessName = parsed.businessName || '';
+        } catch (err) {}
+        if (!email) {
+          showMessage('Please enter an email address.', 'error');
+          return;
+        }
+        if (!window.metricsSendInvite) {
+          showMessage('Supabase invite is not configured.', 'error');
+          return;
+        }
+        btn.disabled = true;
+        var redirectTo = window.location.origin + window.location.pathname.replace(/[^/]*$/, 'auth.html');
+        window.metricsSendInvite(email, businessName, redirectTo)
+          .then(function (res) {
+            if (res && res.error) throw res.error;
+            showMessage("You've been invited to create an account.", 'info');
+          })
+          .catch(function (err) {
+            showMessage((err && err.message) ? err.message : 'Unable to send invite email.', 'error');
+          })
+          .finally(function () {
+            btn.disabled = false;
+          });
+      });
+    })();
+  </script>
+</body>
+</html>

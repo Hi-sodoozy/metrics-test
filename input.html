@@ -219,11 +219,13 @@
     <footer class="input-footer">
       <a href="#" class="footer-link">My Profile</a>
       <a href="#" class="footer-link">Business Profile</a>
-      <a href="#" class="footer-link">Invite User</a>
+      <a href="invite-user.html" class="footer-link">Invite User</a>
       <a href="auth.html" class="footer-link">Create Account</a>
     </footer>
   </main>
   <input type="file" accept="image/*" id="inputPicFile" hidden aria-hidden="true" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
   <script>
     (function () {
       var KEY = 'metricsDashboard';
@@ -251,7 +253,14 @@
               }
               var rows = Array.isArray(ranking.rows) ? ranking.rows : [];
               var rowsWithInd = rows.map(function (r) {
-                return { name: r.name || '', goal: r.goal !== undefined ? String(r.goal) : '', current: r.current !== undefined ? String(r.current) : '', individualGoal: r.individualGoal !== undefined ? String(r.individualGoal) : '' };
+                return {
+                  name: r.name || '',
+                  goal: r.goal !== undefined ? String(r.goal) : '',
+                  current: r.current !== undefined ? String(r.current) : '',
+                  individualGoal: r.individualGoal !== undefined ? String(r.individualGoal) : '',
+                  inviteEmail: r.inviteEmail !== undefined ? String(r.inviteEmail) : '',
+                  mode: r.mode === 'invite' ? 'invite' : 'data'
+                };
               });
               data.metrics.push({
                 showOnMainScreen: !!m.showOnMainScreen,
@@ -286,17 +295,25 @@
         return data;
       }
 
+      function fieldValue(el) {
+        if (!el || el.value == null) return '';
+        return String(el.value).trim();
+      }
+
       function getRankingRowsFromBlock(metricRow) {
         var arr = [];
         var tbody = metricRow.querySelector('.ranking-tbody');
         if (!tbody) return arr;
         tbody.querySelectorAll('.ranking-row').forEach(function (tr) {
+          var mode = tr.getAttribute('data-mode') === 'invite' ? 'invite' : 'data';
           var indInput = tr.querySelector('input[name="rankIndividualGoal"]');
           arr.push({
-            name: (tr.querySelector('input[name="rankName"]') || {}).value.trim(),
-            goal: (tr.querySelector('textarea[name="rankGoal"]') || {}).value.trim(),
-            current: (tr.querySelector('textarea[name="rankCurrent"]') || {}).value.trim(),
-            individualGoal: indInput ? indInput.value.trim() : ''
+            mode: mode,
+            inviteEmail: fieldValue(tr.querySelector('input[name="rankInviteEmail"]')),
+            name: fieldValue(tr.querySelector('input[name="rankName"]')),
+            goal: fieldValue(tr.querySelector('textarea[name="rankGoal"]')),
+            current: fieldValue(tr.querySelector('textarea[name="rankCurrent"]')),
+            individualGoal: indInput ? fieldValue(indInput) : ''
           });
         });
         return arr;
@@ -314,22 +331,78 @@
         var theadTh = metricRow.querySelector('.th-individual-goal');
         if (theadTh) theadTh.hidden = !showInd;
         tbody.innerHTML = '';
+        var businessName = fieldValue(document.getElementById('inputBusinessName'));
+        var redirectTo = window.location.origin + window.location.pathname.replace(/[^/]*$/, 'auth.html');
         for (var i = 0; i < rowsData.length; i++) {
           var r = rowsData[i] || {};
           var tr = document.createElement('tr');
           tr.className = 'ranking-row';
-          var nameCell = '<td><input type="text" name="rankName" placeholder="Name" /></td>';
-          var indCell = showInd ? '<td class="td-individual-goal"><input type="text" name="rankIndividualGoal" placeholder="Individual goal" /></td>' : '<td class="td-individual-goal" hidden><input type="text" name="rankIndividualGoal" placeholder="Individual goal" /></td>';
-          tr.innerHTML = nameCell + indCell +
-            '<td class="goal-current-cell"><textarea name="rankGoal" placeholder="Goal" rows="2"></textarea></td>' +
-            '<td class="goal-current-cell"><textarea name="rankCurrent" placeholder="Current" rows="2"></textarea></td>' +
-            '<td class="td-remove"><button type="button" class="btn-remove-row" aria-label="Remove row"><span class="btn-remove-icon" aria-hidden="true">−</span></button></td>';
-          tr.querySelector('input[name="rankName"]').value = r.name || '';
-          var indInput = tr.querySelector('input[name="rankIndividualGoal"]');
-          if (indInput) indInput.value = r.individualGoal !== undefined && r.individualGoal !== null ? String(r.individualGoal) : '';
-          tr.querySelector('textarea[name="rankGoal"]').value = r.goal !== undefined && r.goal !== null ? String(r.goal) : '';
-          tr.querySelector('textarea[name="rankCurrent"]').value = r.current !== undefined && r.current !== null ? String(r.current) : '';
-          if (tr.querySelector('.td-individual-goal')) tr.querySelector('.td-individual-goal').hidden = !showInd;
+          var isInvite = r.mode === 'invite';
+          tr.setAttribute('data-mode', isInvite ? 'invite' : 'data');
+          if (isInvite) {
+            var spanCols = showInd ? 4 : 3;
+            tr.innerHTML =
+              '<td class="invite-row-cell" colspan="' + spanCols + '">' +
+                '<input type="email" name="rankInviteEmail" class="invite-email-input" placeholder="Invite collaborator email address" />' +
+              '</td>' +
+              '<td class="td-row-actions">' +
+                '<button type="button" class="btn-row-invite-send">Invite</button>' +
+                '<button type="button" class="btn-remove-row" aria-label="Remove row"><span class="btn-remove-icon" aria-hidden="true">−</span></button>' +
+              '</td>';
+            var inviteEmailInput = tr.querySelector('input[name="rankInviteEmail"]');
+            if (inviteEmailInput) inviteEmailInput.value = r.inviteEmail || '';
+            var sendInviteBtn = tr.querySelector('.btn-row-invite-send');
+            if (sendInviteBtn && inviteEmailInput) {
+              sendInviteBtn.addEventListener('click', function () {
+                var email = fieldValue(inviteEmailInput);
+                if (!email) {
+                  alert('Please enter an email address.');
+                  return;
+                }
+                if (window.metricsSendInvite) {
+                  sendInviteBtn.disabled = true;
+                  window.metricsSendInvite(email, businessName, redirectTo).then(function (res) {
+                    if (res && res.error) throw res.error;
+                    alert('Invitation sent: you have invited this user to collaborate with ' + (businessName || 'your business') + '.');
+                    save();
+                  }).catch(function (err) {
+                    alert((err && err.message) ? err.message : 'Unable to send invitation email.');
+                  }).finally(function () {
+                    sendInviteBtn.disabled = false;
+                  });
+                } else {
+                  alert('Supabase client is not configured yet.');
+                }
+              });
+            }
+          } else {
+            var nameCell = '<td><input type="text" name="rankName" placeholder="Name" /></td>';
+            var indCell = showInd ? '<td class="td-individual-goal"><input type="text" name="rankIndividualGoal" placeholder="Individual goal" /></td>' : '<td class="td-individual-goal" hidden><input type="text" name="rankIndividualGoal" placeholder="Individual goal" /></td>';
+            tr.innerHTML = nameCell + indCell +
+              '<td class="goal-current-cell"><textarea name="rankGoal" placeholder="Goal" rows="2"></textarea></td>' +
+              '<td class="goal-current-cell"><textarea name="rankCurrent" placeholder="Current" rows="2"></textarea></td>' +
+              '<td class="td-row-actions">' +
+                '<button type="button" class="btn-row-invite">Invite</button>' +
+                '<button type="button" class="btn-remove-row" aria-label="Remove row"><span class="btn-remove-icon" aria-hidden="true">−</span></button>' +
+              '</td>';
+            tr.querySelector('input[name="rankName"]').value = r.name || '';
+            var indInput = tr.querySelector('input[name="rankIndividualGoal"]');
+            if (indInput) indInput.value = r.individualGoal !== undefined && r.individualGoal !== null ? String(r.individualGoal) : '';
+            tr.querySelector('textarea[name="rankGoal"]').value = r.goal !== undefined && r.goal !== null ? String(r.goal) : '';
+            tr.querySelector('textarea[name="rankCurrent"]').value = r.current !== undefined && r.current !== null ? String(r.current) : '';
+            if (tr.querySelector('.td-individual-goal')) tr.querySelector('.td-individual-goal').hidden = !showInd;
+            var rowInviteBtn = tr.querySelector('.btn-row-invite');
+            if (rowInviteBtn) {
+              rowInviteBtn.addEventListener('click', function () {
+                var data = getRankingRowsFromBlock(metricRow);
+                var rowIndex = Array.prototype.indexOf.call(tbody.children, tr);
+                if (rowIndex < 0) return;
+                data[rowIndex] = { mode: 'invite', inviteEmail: '', name: '', goal: '', current: '', individualGoal: '' };
+                renderRankingRowsInBlock(metricRow, data);
+                save();
+              });
+            }
+          }
           tbody.appendChild(tr);
         }
         var removeBtns = tbody.querySelectorAll('.btn-remove-row');
@@ -339,6 +412,7 @@
             removeBtns[rowIndex].addEventListener('click', function () {
               var data = getRankingRowsFromBlock(metricRow);
               if (data.length <= 1) return;
+              if (!window.confirm('Are you sure?')) return;
               data.splice(rowIndex, 1);
               renderRankingRowsInBlock(metricRow, data);
               save();
@@ -392,7 +466,7 @@
           var wrap = row.querySelector('.metric-ranking-section .ranking-table-wrap');
           wrap.hidden = !rank.enabled;
           var rankRows = rank.rows && rank.rows.length ? rank.rows.slice() : [];
-          while (rankRows.length < INITIAL_RANKING_ROWS) rankRows.push({ name: '', goal: '', current: '', individualGoal: '' });
+          while (rankRows.length < INITIAL_RANKING_ROWS) rankRows.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '', inviteEmail: '' });
           renderRankingRowsInBlock(row, rankRows);
         }
         updateAllSummaryInputsState();
@@ -470,7 +544,7 @@
         }
         row.querySelector('.metric-ranking-section .btn-add-row').addEventListener('click', function () {
           var data = getRankingRowsFromBlock(row);
-          data.push({ name: '', goal: '', current: '', individualGoal: '' });
+          data.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '', inviteEmail: '' });
           renderRankingRowsInBlock(row, data);
           save();
         });
