@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics – Sign in</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .auth-main { max-width: 420px; margin: 0 auto; padding: 32px 20px 48px; }
+    .auth-card {
+      background: #fff;
+      border: 1px solid #e2e4e8;
+      border-radius: 8px;
+      padding: 28px 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .auth-card h1 { margin: 0 0 8px; font-size: 1.35rem; font-weight: 600; color: #1a1a1a; }
+    .auth-card p.lead { margin: 0 0 20px; font-size: 14px; color: #6b6b6b; }
+    .auth-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid #e2e4e8;
+      background: #f5f6f8;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #505050;
+    }
+    .auth-tab[aria-selected="true"] {
+      background: #fff;
+      border-color: #4a6fa5;
+      color: #1a1a1a;
+    }
+    .auth-panel[hidden] { display: none !important; }
+    .auth-field { margin-bottom: 16px; }
+    .auth-field label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #5a5a5a; margin-bottom: 6px; }
+    .auth-field input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font: inherit;
+      box-sizing: border-box;
+    }
+    .auth-field input:focus { outline: none; border-color: #6b9bd1; box-shadow: 0 0 0 2px rgba(107,155,209,0.2); }
+    .auth-submit {
+      width: 100%;
+      margin-top: 8px;
+      padding: 12px;
+      font: inherit;
+      font-weight: 500;
+      color: #fff;
+      background: #4a6fa5;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .auth-submit:hover { background: #3d5d8c; }
+    .auth-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+    .auth-message { margin-top: 16px; padding: 12px; border-radius: 6px; font-size: 14px; line-height: 1.4; }
+    .auth-message.info { background: #e8f0fb; color: #1a3a5c; border: 1px solid #c5d8ec; }
+    .auth-message.error { background: #fce8e8; color: #6b1a1a; border: 1px solid #e8c0c0; }
+    .auth-back { display: inline-block; margin-top: 20px; font-size: 14px; color: #4a6fa5; text-decoration: none; }
+    .auth-back:hover { text-decoration: underline; }
+  </style>
+</head>
+<body class="metrics-page input-page">
+  <main class="auth-main">
+    <div class="auth-card">
+      <h1>Metrics account</h1>
+      <p class="lead">Create an account or sign in. Sessions are stored in this browser.</p>
+
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab" id="tabSignIn" role="tab" aria-selected="true" aria-controls="panelSignIn">Sign in</button>
+        <button type="button" class="auth-tab" id="tabSignUp" role="tab" aria-selected="false" aria-controls="panelSignUp">Create account</button>
+      </div>
+
+      <div id="panelSignIn" class="auth-panel" role="tabpanel" aria-labelledby="tabSignIn">
+        <form id="formSignIn" novalidate>
+          <div class="auth-field">
+            <label for="signInEmail">Email</label>
+            <input id="signInEmail" name="email" type="email" autocomplete="email" required />
+          </div>
+          <div class="auth-field">
+            <label for="signInPassword">Password</label>
+            <input id="signInPassword" name="password" type="password" autocomplete="current-password" required />
+          </div>
+          <button type="submit" class="auth-submit" id="btnSignIn">Sign in</button>
+        </form>
+      </div>
+
+      <div id="panelSignUp" class="auth-panel" role="tabpanel" aria-labelledby="tabSignUp" hidden>
+        <form id="formSignUp" novalidate>
+          <div class="auth-field">
+            <label for="signUpEmail">Email</label>
+            <input id="signUpEmail" name="email" type="email" autocomplete="email" required />
+          </div>
+          <div class="auth-field">
+            <label for="signUpPassword">Password</label>
+            <input id="signUpPassword" name="password" type="password" autocomplete="new-password" required minlength="6" />
+          </div>
+          <div class="auth-field">
+            <label for="signUpPassword2">Confirm password</label>
+            <input id="signUpPassword2" name="password2" type="password" autocomplete="new-password" required />
+          </div>
+          <button type="submit" class="auth-submit" id="btnSignUp">Create account</button>
+        </form>
+      </div>
+
+      <div id="authMessage" class="auth-message" hidden></div>
+    </div>
+    <a class="auth-back" href="input.html">← Back to input</a>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script>
+    (function () {
+      var client = window.metricsSupabase;
+      var tabSignIn = document.getElementById('tabSignIn');
+      var tabSignUp = document.getElementById('tabSignUp');
+      var panelSignIn = document.getElementById('panelSignIn');
+      var panelSignUp = document.getElementById('panelSignUp');
+      var authMessage = document.getElementById('authMessage');
+
+      function showMessage(text, kind) {
+        authMessage.textContent = text;
+        authMessage.className = 'auth-message ' + (kind || 'info');
+        authMessage.hidden = !text;
+      }
+
+      function clearMessage() {
+        authMessage.hidden = true;
+        authMessage.textContent = '';
+      }
+
+      tabSignIn.addEventListener('click', function () {
+        tabSignIn.setAttribute('aria-selected', 'true');
+        tabSignUp.setAttribute('aria-selected', 'false');
+        panelSignIn.hidden = false;
+        panelSignUp.hidden = true;
+        clearMessage();
+      });
+      tabSignUp.addEventListener('click', function () {
+        tabSignUp.setAttribute('aria-selected', 'true');
+        tabSignIn.setAttribute('aria-selected', 'false');
+        panelSignUp.hidden = false;
+        panelSignIn.hidden = true;
+        clearMessage();
+      });
+
+      document.getElementById('formSignIn').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        clearMessage();
+        if (!client) {
+          showMessage('Supabase is not configured. Check the browser console.', 'error');
+          return;
+        }
+        var email = document.getElementById('signInEmail').value.trim();
+        var password = document.getElementById('signInPassword').value;
+        var btn = document.getElementById('btnSignIn');
+        btn.disabled = true;
+        try {
+          var res = await client.auth.signInWithPassword({ email: email, password: password });
+          if (res.error) throw res.error;
+          showMessage('Signed in successfully. You can go to Input or Results.', 'info');
+        } catch (err) {
+          showMessage(err.message || String(err), 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      document.getElementById('formSignUp').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        clearMessage();
+        if (!client) {
+          showMessage('Supabase is not configured. Check the browser console.', 'error');
+          return;
+        }
+        var email = document.getElementById('signUpEmail').value.trim();
+        var p1 = document.getElementById('signUpPassword').value;
+        var p2 = document.getElementById('signUpPassword2').value;
+        if (p1 !== p2) {
+          showMessage('Passwords do not match.', 'error');
+          return;
+        }
+        var btn = document.getElementById('btnSignUp');
+        btn.disabled = true;
+        try {
+          var redirectTo = window.location.origin + window.location.pathname.replace(/[^/]*$/, 'auth.html');
+          var res = await client.auth.signUp({
+            email: email,
+            password: p1,
+            options: { emailRedirectTo: redirectTo },
+          });
+          if (res.error) throw res.error;
+          if (res.data.user && !res.data.session) {
+            showMessage('Check your email to confirm your account before signing in.', 'info');
+          } else {
+            showMessage('Account created. You are signed in.', 'info');
+          }
+        } catch (err) {
+          showMessage(err.message || String(err), 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
