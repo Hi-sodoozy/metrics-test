@@ -19,6 +19,8 @@
     .auth-field input:focus { outline:none; border-color:#6b9bd1; box-shadow:0 0 0 2px rgba(107,155,209,0.2); }
     .password-wrap { position:relative; }
     .password-toggle { position:absolute; right:8px; top:50%; transform:translateY(-50%); border:none; background:none; color:#4a6fa5; cursor:pointer; font-size:12px; font-weight:600; }
+    .forgot-link { margin-top:6px; border:none; background:none; color:#4a6fa5; font-size:12px; padding:0; cursor:pointer; text-decoration:underline; }
+    .forgot-link:hover { color:#2a4f85; }
     .auth-submit { width:100%; margin-top:8px; padding:12px; font:inherit; font-weight:600; color:#fff; background:#4a6fa5; border:none; border-radius:6px; cursor:pointer; }
     .auth-submit:hover { background:#3d5d8c; }
     .auth-submit:disabled { opacity:0.6; cursor:not-allowed; }
@@ -55,6 +57,7 @@
             <input id="authPassword" type="password" autocomplete="current-password" required minlength="6" />
             <button type="button" class="password-toggle" data-target="authPassword">Reveal</button>
           </div>
+          <button type="button" class="forgot-link">Forgot password?</button>
         </div>
         <div class="auth-field" id="fieldPasswordConfirm" hidden>
           <label for="authPasswordConfirm">Confirm password</label>
@@ -62,6 +65,7 @@
             <input id="authPasswordConfirm" type="password" autocomplete="new-password" />
             <button type="button" class="password-toggle" data-target="authPasswordConfirm">Reveal</button>
           </div>
+          <button type="button" class="forgot-link">Forgot password?</button>
         </div>
         <button type="submit" class="auth-submit" id="authSubmitBtn">Continue</button>
       </form>
@@ -123,6 +127,29 @@
           var next = target.type === 'password' ? 'text' : 'password';
           target.type = next;
           btn.textContent = next === 'password' ? 'Reveal' : 'Hide';
+        });
+      });
+
+      document.querySelectorAll('.forgot-link').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          showMessage('');
+          if (!client) {
+            showMessage('Supabase is not configured. Check browser console.', 'error');
+            return;
+          }
+          var email = (document.getElementById('authEmail').value || '').trim();
+          if (!email) {
+            showMessage('Enter your email first, then click "Forgot password?".', 'error');
+            return;
+          }
+          try {
+            var resetRedirect = window.location.origin + window.location.pathname.replace(/[^/]*$/, 'reset-password.html');
+            var resetRes = await client.auth.resetPasswordForEmail(email, { redirectTo: resetRedirect });
+            if (resetRes && resetRes.error) throw resetRes.error;
+            showMessage('Password reset email sent. Check your inbox.', 'info');
+          } catch (err) {
+            showMessage((err && err.message) ? err.message : 'Unable to send reset email.', 'error');
+          }
         });
       });
 
