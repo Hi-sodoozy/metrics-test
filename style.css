@@ -326,6 +326,29 @@
   border-color: #6b9bd1;
 }
 
+.account-view-toggle {
+  display: inline-flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.account-view-btn {
+  border: 1px solid #d5d9df;
+  background: #fff;
+  color: #3b4c60;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.account-view-btn.active {
+  border-color: #4a6fa5;
+  color: #4a6fa5;
+}
+
 /* Input carousel: 2 metrics at a time with prev/next */
 .input-metrics-carousel {
   display: flex;
@@ -807,6 +830,13 @@
   padding-right: 8px;
 }
 
+.invite-row-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .invite-email-input {
   width: 100%;
   padding: 10px 12px;
@@ -819,6 +849,60 @@
   outline: none;
   border-color: #6b9bd1;
   box-shadow: 0 0 0 2px rgba(107,155,209,0.2);
+}
+
+.invite-permission-wrap {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.invite-permission-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #5a5a5a;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.invite-permission-select {
+  min-width: 120px;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 13px;
+  background: #fff;
+}
+
+.invite-permission-select:focus {
+  outline: none;
+  border-color: #6b9bd1;
+  box-shadow: 0 0 0 2px rgba(107,155,209,0.2);
+}
+
+@media (max-width: 640px) {
+  .invite-row-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.invited-users-wrap {
+  margin-top: 12px;
+}
+
+.invited-users-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #5a5a5a;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.invited-users-empty {
+  color: #6b6b6b;
+  font-size: 13px;
 }
 
 .btn-remove-row {

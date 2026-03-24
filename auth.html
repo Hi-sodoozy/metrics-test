@@ -3,116 +3,71 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Metrics – Sign in</title>
+  <title>Metrics – Account access</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    .auth-main { max-width: 420px; margin: 0 auto; padding: 32px 20px 48px; }
-    .auth-card {
-      background: #fff;
-      border: 1px solid #e2e4e8;
-      border-radius: 8px;
-      padding: 28px 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }
-    .auth-card h1 { margin: 0 0 8px; font-size: 1.35rem; font-weight: 600; color: #1a1a1a; }
-    .auth-card p.lead { margin: 0 0 20px; font-size: 14px; color: #6b6b6b; }
-    .auth-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-    .auth-tab {
-      flex: 1;
-      padding: 10px;
-      font: inherit;
-      font-size: 14px;
-      font-weight: 500;
-      border: 1px solid #e2e4e8;
-      background: #f5f6f8;
-      border-radius: 6px;
-      cursor: pointer;
-      color: #505050;
-    }
-    .auth-tab[aria-selected="true"] {
-      background: #fff;
-      border-color: #4a6fa5;
-      color: #1a1a1a;
-    }
-    .auth-panel[hidden] { display: none !important; }
-    .auth-field { margin-bottom: 16px; }
-    .auth-field label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #5a5a5a; margin-bottom: 6px; }
-    .auth-field input {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font: inherit;
-      box-sizing: border-box;
-    }
-    .auth-field input:focus { outline: none; border-color: #6b9bd1; box-shadow: 0 0 0 2px rgba(107,155,209,0.2); }
-    .auth-submit {
-      width: 100%;
-      margin-top: 8px;
-      padding: 12px;
-      font: inherit;
-      font-weight: 500;
-      color: #fff;
-      background: #4a6fa5;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .auth-submit:hover { background: #3d5d8c; }
-    .auth-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-    .auth-message { margin-top: 16px; padding: 12px; border-radius: 6px; font-size: 14px; line-height: 1.4; }
-    .auth-message.info { background: #e8f0fb; color: #1a3a5c; border: 1px solid #c5d8ec; }
-    .auth-message.error { background: #fce8e8; color: #6b1a1a; border: 1px solid #e8c0c0; }
-    .auth-back { display: inline-block; margin-top: 20px; font-size: 14px; color: #4a6fa5; text-decoration: none; }
-    .auth-back:hover { text-decoration: underline; }
+    .auth-main { max-width: 480px; margin: 0 auto; padding: 32px 20px 48px; }
+    .auth-card { background:#fff; border:1px solid #e2e4e8; border-radius:8px; padding:28px 24px; box-shadow:0 1px 3px rgba(0,0,0,0.04); }
+    .auth-card h1 { margin:0 0 8px; font-size:1.35rem; font-weight:600; color:#1a1a1a; }
+    .auth-card p.lead { margin:0 0 20px; font-size:14px; color:#6b6b6b; }
+    .auth-switch { display:flex; gap:8px; margin-bottom:20px; }
+    .auth-switch a { flex:1; min-height:40px; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; border:1px solid #e2e4e8; border-radius:6px; color:#505050; font-weight:600; background:#f5f6f8; }
+    .auth-switch a.active { border-color:#4a6fa5; color:#1a1a1a; background:#fff; }
+    .auth-field { margin-bottom:14px; }
+    .auth-field label { display:block; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.03em; color:#5a5a5a; margin-bottom:6px; }
+    .auth-field input { width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:4px; font:inherit; box-sizing:border-box; }
+    .auth-field input:focus { outline:none; border-color:#6b9bd1; box-shadow:0 0 0 2px rgba(107,155,209,0.2); }
+    .password-wrap { position:relative; }
+    .password-toggle { position:absolute; right:8px; top:50%; transform:translateY(-50%); border:none; background:none; color:#4a6fa5; cursor:pointer; font-size:12px; font-weight:600; }
+    .auth-submit { width:100%; margin-top:8px; padding:12px; font:inherit; font-weight:600; color:#fff; background:#4a6fa5; border:none; border-radius:6px; cursor:pointer; }
+    .auth-submit:hover { background:#3d5d8c; }
+    .auth-submit:disabled { opacity:0.6; cursor:not-allowed; }
+    .auth-message { margin-top:14px; padding:12px; border-radius:6px; font-size:14px; line-height:1.4; }
+    .auth-message.info { background:#e8f0fb; color:#1a3a5c; border:1px solid #c5d8ec; }
+    .auth-message.error { background:#fce8e8; color:#6b1a1a; border:1px solid #e8c0c0; }
+    .auth-back { display:inline-block; margin-top:20px; font-size:14px; color:#4a6fa5; text-decoration:none; }
+    .auth-back:hover { text-decoration:underline; }
   </style>
 </head>
 <body class="metrics-page input-page">
   <main class="auth-main">
     <div class="auth-card">
-      <h1>Metrics account</h1>
-      <p class="lead">Create an account or sign in. Sessions are stored in this browser.</p>
+      <h1 id="authTitle">Sign in</h1>
+      <p class="lead" id="authLead">Access your account.</p>
 
-      <div class="auth-tabs" role="tablist">
-        <button type="button" class="auth-tab" id="tabSignIn" role="tab" aria-selected="true" aria-controls="panelSignIn">Sign in</button>
-        <button type="button" class="auth-tab" id="tabSignUp" role="tab" aria-selected="false" aria-controls="panelSignUp">Create account</button>
+      <div class="auth-switch">
+        <a id="switchSignIn" href="#">Sign in</a>
+        <a id="switchSignUp" href="#">Sign up</a>
       </div>
 
-      <div id="panelSignIn" class="auth-panel" role="tabpanel" aria-labelledby="tabSignIn">
-        <form id="formSignIn" novalidate>
-          <div class="auth-field">
-            <label for="signInEmail">Email</label>
-            <input id="signInEmail" name="email" type="email" autocomplete="email" required />
+      <form id="authForm" novalidate>
+        <div class="auth-field" id="fieldBusinessName" hidden>
+          <label for="businessName">Business name</label>
+          <input id="businessName" type="text" placeholder="Your business name" />
+        </div>
+        <div class="auth-field">
+          <label for="authEmail">Email</label>
+          <input id="authEmail" type="email" autocomplete="email" required />
+        </div>
+        <div class="auth-field">
+          <label for="authPassword">Password</label>
+          <div class="password-wrap">
+            <input id="authPassword" type="password" autocomplete="current-password" required minlength="6" />
+            <button type="button" class="password-toggle" data-target="authPassword">Reveal</button>
           </div>
-          <div class="auth-field">
-            <label for="signInPassword">Password</label>
-            <input id="signInPassword" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <div class="auth-field" id="fieldPasswordConfirm" hidden>
+          <label for="authPasswordConfirm">Confirm password</label>
+          <div class="password-wrap">
+            <input id="authPasswordConfirm" type="password" autocomplete="new-password" />
+            <button type="button" class="password-toggle" data-target="authPasswordConfirm">Reveal</button>
           </div>
-          <button type="submit" class="auth-submit" id="btnSignIn">Sign in</button>
-        </form>
-      </div>
-
-      <div id="panelSignUp" class="auth-panel" role="tabpanel" aria-labelledby="tabSignUp" hidden>
-        <form id="formSignUp" novalidate>
-          <div class="auth-field">
-            <label for="signUpEmail">Email</label>
-            <input id="signUpEmail" name="email" type="email" autocomplete="email" required />
-          </div>
-          <div class="auth-field">
-            <label for="signUpPassword">Password</label>
-            <input id="signUpPassword" name="password" type="password" autocomplete="new-password" required minlength="6" />
-          </div>
-          <div class="auth-field">
-            <label for="signUpPassword2">Confirm password</label>
-            <input id="signUpPassword2" name="password2" type="password" autocomplete="new-password" required />
-          </div>
-          <button type="submit" class="auth-submit" id="btnSignUp">Create account</button>
-        </form>
-      </div>
-
-      <div id="authMessage" class="auth-message" hidden></div>
+        </div>
+        <button type="submit" class="auth-submit" id="authSubmitBtn">Continue</button>
+      </form>
+      <div id="authMessage" hidden></div>
     </div>
-    <a class="auth-back" href="input.html">← Back to input</a>
+    <a class="auth-back" href="welcome.html">← Back</a>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -120,95 +75,132 @@
   <script>
     (function () {
       var client = window.metricsSupabase;
-      var tabSignIn = document.getElementById('tabSignIn');
-      var tabSignUp = document.getElementById('tabSignUp');
-      var panelSignIn = document.getElementById('panelSignIn');
-      var panelSignUp = document.getElementById('panelSignUp');
+      var qs = new URLSearchParams(window.location.search);
+      var accountType = qs.get('account') === 'business' ? 'business' : 'individual';
+      var mode = qs.get('mode') === 'signup' ? 'signup' : 'signin';
+
+      var authTitle = document.getElementById('authTitle');
+      var authLead = document.getElementById('authLead');
+      var switchSignIn = document.getElementById('switchSignIn');
+      var switchSignUp = document.getElementById('switchSignUp');
+      var fieldBusinessName = document.getElementById('fieldBusinessName');
+      var fieldPasswordConfirm = document.getElementById('fieldPasswordConfirm');
+      var authSubmitBtn = document.getElementById('authSubmitBtn');
       var authMessage = document.getElementById('authMessage');
 
+      switchSignIn.href = 'auth.html?account=' + accountType + '&mode=signin';
+      switchSignUp.href = 'auth.html?account=' + accountType + '&mode=signup';
+
       function showMessage(text, kind) {
-        authMessage.textContent = text;
-        authMessage.className = 'auth-message ' + (kind || 'info');
         authMessage.hidden = !text;
+        authMessage.className = 'auth-message ' + (kind || 'info');
+        authMessage.textContent = text || '';
       }
 
-      function clearMessage() {
-        authMessage.hidden = true;
-        authMessage.textContent = '';
+      function routeAfterAuth(ctx) {
+        if (ctx && ctx.accountType === 'business') window.location.href = 'input.html';
+        else window.location.href = 'individual.html';
       }
 
-      tabSignIn.addEventListener('click', function () {
-        tabSignIn.setAttribute('aria-selected', 'true');
-        tabSignUp.setAttribute('aria-selected', 'false');
-        panelSignIn.hidden = false;
-        panelSignUp.hidden = true;
-        clearMessage();
-      });
-      tabSignUp.addEventListener('click', function () {
-        tabSignUp.setAttribute('aria-selected', 'true');
-        tabSignIn.setAttribute('aria-selected', 'false');
-        panelSignUp.hidden = false;
-        panelSignIn.hidden = true;
-        clearMessage();
+      function applyMode() {
+        var isSignUp = mode === 'signup';
+        var accountLabel = accountType === 'business' ? 'Business' : 'Individual';
+        authTitle.textContent = (isSignUp ? 'Sign up' : 'Sign in') + ' – ' + accountLabel;
+        authLead.textContent = accountType === 'business'
+          ? 'Business accounts manage team metrics and invitations.'
+          : 'Individual accounts manage invited business metrics and personal metrics.';
+        fieldBusinessName.hidden = !(isSignUp && accountType === 'business');
+        fieldPasswordConfirm.hidden = !isSignUp;
+        authSubmitBtn.textContent = isSignUp ? 'Create account' : 'Sign in';
+        switchSignIn.classList.toggle('active', !isSignUp);
+        switchSignUp.classList.toggle('active', isSignUp);
+      }
+
+      document.querySelectorAll('.password-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var target = document.getElementById(btn.getAttribute('data-target'));
+          if (!target) return;
+          var next = target.type === 'password' ? 'text' : 'password';
+          target.type = next;
+          btn.textContent = next === 'password' ? 'Reveal' : 'Hide';
+        });
       });
 
-      document.getElementById('formSignIn').addEventListener('submit', async function (e) {
+      document.getElementById('authForm').addEventListener('submit', async function (e) {
         e.preventDefault();
-        clearMessage();
+        showMessage('');
         if (!client) {
-          showMessage('Supabase is not configured. Check the browser console.', 'error');
+          showMessage('Supabase is not configured. Check browser console.', 'error');
           return;
         }
-        var email = document.getElementById('signInEmail').value.trim();
-        var password = document.getElementById('signInPassword').value;
-        var btn = document.getElementById('btnSignIn');
-        btn.disabled = true;
-        try {
-          var res = await client.auth.signInWithPassword({ email: email, password: password });
-          if (res.error) throw res.error;
-          showMessage('Signed in successfully. You can go to Input or Results.', 'info');
-        } catch (err) {
-          showMessage(err.message || String(err), 'error');
-        } finally {
-          btn.disabled = false;
-        }
-      });
-
-      document.getElementById('formSignUp').addEventListener('submit', async function (e) {
-        e.preventDefault();
-        clearMessage();
-        if (!client) {
-          showMessage('Supabase is not configured. Check the browser console.', 'error');
+        var email = (document.getElementById('authEmail').value || '').trim();
+        var password = document.getElementById('authPassword').value;
+        var confirm = document.getElementById('authPasswordConfirm').value;
+        var businessName = (document.getElementById('businessName').value || '').trim();
+        if (!email || !password) {
+          showMessage('Please complete email and password.', 'error');
           return;
         }
-        var email = document.getElementById('signUpEmail').value.trim();
-        var p1 = document.getElementById('signUpPassword').value;
-        var p2 = document.getElementById('signUpPassword2').value;
-        if (p1 !== p2) {
-          showMessage('Passwords do not match.', 'error');
-          return;
-        }
-        var btn = document.getElementById('btnSignUp');
-        btn.disabled = true;
-        try {
-          var redirectTo = window.location.origin + window.location.pathname.replace(/[^/]*$/, 'auth.html');
-          var res = await client.auth.signUp({
-            email: email,
-            password: p1,
-            options: { emailRedirectTo: redirectTo },
-          });
-          if (res.error) throw res.error;
-          if (res.data.user && !res.data.session) {
-            showMessage('Check your email to confirm your account before signing in.', 'info');
-          } else {
-            showMessage('Account created. You are signed in.', 'info');
+        if (mode === 'signup') {
+          if (password !== confirm) {
+            showMessage('Passwords do not match.', 'error');
+            return;
           }
+          if (accountType === 'business' && !businessName) {
+            showMessage('Business name is required for business sign up.', 'error');
+            return;
+          }
+        }
+        authSubmitBtn.disabled = true;
+        try {
+          if (mode === 'signin') {
+            var signInRes = await client.auth.signInWithPassword({ email: email, password: password });
+            if (signInRes.error) throw signInRes.error;
+            var ctx = window.metricsSetUserContext ? {
+              userId: signInRes.data.user.id,
+              email: signInRes.data.user.email || '',
+              accountType: (signInRes.data.user.user_metadata && signInRes.data.user.user_metadata.account_type) || 'individual',
+              businessName: (signInRes.data.user.user_metadata && signInRes.data.user.user_metadata.business_name) || '',
+              firstName: (signInRes.data.user.user_metadata && signInRes.data.user.user_metadata.first_name) || '',
+              lastName: (signInRes.data.user.user_metadata && signInRes.data.user.user_metadata.last_name) || ''
+            } : null;
+            if (window.metricsSetUserContext) window.metricsSetUserContext(ctx);
+            routeAfterAuth(ctx);
+            return;
+          }
+          var redirectTo = window.location.origin + window.location.pathname.replace(/[^/]*$/, 'auth.html?account=' + accountType + '&mode=signin');
+          var signUpRes = await client.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+              emailRedirectTo: redirectTo,
+              data: {
+                account_type: accountType,
+                business_name: businessName
+              }
+            }
+          });
+          if (signUpRes.error) throw signUpRes.error;
+          if (signUpRes.data.user && !signUpRes.data.session) {
+            showMessage('Check your email to confirm your account, then sign in.', 'info');
+            return;
+          }
+          var ctx2 = {
+            userId: signUpRes.data.user.id,
+            email: signUpRes.data.user.email || '',
+            accountType: accountType,
+            businessName: businessName
+          };
+          if (window.metricsSetUserContext) window.metricsSetUserContext(ctx2);
+          routeAfterAuth(ctx2);
         } catch (err) {
-          showMessage(err.message || String(err), 'error');
+          showMessage((err && err.message) ? err.message : String(err), 'error');
         } finally {
-          btn.disabled = false;
+          authSubmitBtn.disabled = false;
         }
       });
+
+      applyMode();
     })();
   </script>
 </body>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics – Individual</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .ind-main { max-width: 1000px; margin: 0 auto; padding: 28px 20px 40px; }
+    .ind-top { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+    .ind-toggle { display:flex; gap:8px; }
+    .ind-toggle button { border:1px solid #d5d9df; background:#fff; border-radius:6px; padding:9px 12px; font:inherit; cursor:pointer; font-weight:600; color:#3b4c60; }
+    .ind-toggle button.active { border-color:#4a6fa5; color:#4a6fa5; }
+    .ind-card { background:#fff; border:1px solid #e2e4e8; border-radius:8px; padding:16px; margin-bottom:14px; }
+    .ind-card h3 { margin:0 0 8px; font-size:1.05rem; }
+    .ind-table { width:100%; border-collapse:collapse; }
+    .ind-table th,.ind-table td { border-bottom:1px solid #eee; text-align:left; padding:8px; font-size:14px; }
+    .ind-table input { width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font:inherit; }
+    .ind-save { margin-top:10px; padding:8px 12px; border:1px solid #4a6fa5; color:#4a6fa5; background:#fff; border-radius:6px; cursor:pointer; font-weight:600; }
+    .ind-save:hover { background:#eef4fc; }
+    .ind-empty { color:#6b6b6b; font-size:14px; }
+  </style>
+</head>
+<body class="metrics-page input-page">
+  <main class="ind-main">
+    <div class="ind-top">
+      <h1 style="margin:0;font-size:1.45rem;">Individual Account</h1>
+      <div class="ind-toggle">
+        <button type="button" id="btnBusinessView" class="active">Business Metrics</button>
+        <button type="button" id="btnPersonalView">Personal Metrics</button>
+      </div>
+    </div>
+
+    <section id="businessMetricsPanel"></section>
+    <section id="personalMetricsPanel" hidden>
+      <div class="ind-card">
+        <h3>Personal metrics</h3>
+        <p class="ind-empty">Use the Input page personal view to manage your personal metrics.</p>
+        <a href="input.html" class="back-link">Open personal metrics editor</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script>
+    (function () {
+      var ctx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
+      if (!ctx || !ctx.email) {
+        window.location.href = 'welcome.html';
+        return;
+      }
+
+      var btnBusinessView = document.getElementById('btnBusinessView');
+      var btnPersonalView = document.getElementById('btnPersonalView');
+      var businessPanel = document.getElementById('businessMetricsPanel');
+      var personalPanel = document.getElementById('personalMetricsPanel');
+
+      function setView(which) {
+        var isBusiness = which === 'business';
+        businessPanel.hidden = !isBusiness;
+        personalPanel.hidden = isBusiness;
+        btnBusinessView.classList.toggle('active', isBusiness);
+        btnPersonalView.classList.toggle('active', !isBusiness);
+      }
+
+      btnBusinessView.addEventListener('click', function () { setView('business'); });
+      btnPersonalView.addEventListener('click', function () { setView('personal'); });
+
+      function renderBusinessMetrics() {
+        businessPanel.innerHTML = '<div class="ind-card"><p class="ind-empty">Loading invitations...</p></div>';
+        if (!window.metricsFetchInvitesForEmail) {
+          businessPanel.innerHTML = '<div class="ind-card"><p class="ind-empty">Supabase invite access is not configured.</p></div>';
+          return;
+        }
+        window.metricsFetchInvitesForEmail(ctx.email).then(function (res) {
+          if (res && res.error) throw res.error;
+          var rows = (res && res.data) ? res.data : [];
+          var activeRows = rows.filter(function (r) { return r && r.metric_index >= 0 && r.status !== 'revoked'; });
+          if (!activeRows.length) {
+            businessPanel.innerHTML = '<div class="ind-card"><p class="ind-empty">No business metrics invited yet.</p></div>';
+            return;
+          }
+          businessPanel.innerHTML = '';
+          activeRows.sort(function (a, b) { return (a.metric_index || 0) - (b.metric_index || 0); });
+          activeRows.forEach(function (r) {
+            var card = document.createElement('div');
+            card.className = 'ind-card';
+            card.innerHTML = '<h3>' + (r.business_name || 'Business') + ' – Metric ' + ((r.metric_index || 0) + 1) + '</h3>';
+            var table = document.createElement('table');
+            table.className = 'ind-table';
+            table.innerHTML = '<thead><tr><th>First name</th><th>Last name</th><th>Email</th><th>Permission</th></tr></thead>';
+            var tbody = document.createElement('tbody');
+            var tr = document.createElement('tr');
+            var permissionLabel = r.permission === 'read' ? 'Read only' : 'Can edit';
+            tr.innerHTML = '<td>' + (r.first_name || '-') + '</td><td>' + (r.last_name || '-') + '</td><td>' + (r.email || '-') + '</td><td>' + permissionLabel + '</td>';
+            tbody.appendChild(tr);
+            table.appendChild(tbody);
+            card.appendChild(table);
+            card.innerHTML += '<p class="ind-empty" style="margin-top:8px;">Use your business owner\'s workflow to edit invited business metrics.</p>';
+            businessPanel.appendChild(card);
+          });
+        }).catch(function (err) {
+          businessPanel.innerHTML = '<div class="ind-card"><p class="ind-empty">' + ((err && err.message) ? err.message : 'Unable to load invites.') + '</p></div>';
+        });
+      }
+
+      renderBusinessMetrics();
+      setView('business');
+    })();
+  </script>
+</body>
+</html>

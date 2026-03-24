@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics – Welcome</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .welcome-main { max-width: 980px; margin: 0 auto; padding: 36px 20px 56px; }
+    .welcome-title { margin: 0 0 24px; text-align: center; font-size: clamp(1.8rem, 4vw, 2.5rem); }
+    .welcome-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .welcome-card {
+      background: #fff;
+      border: 1px solid #e2e4e8;
+      border-radius: 10px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .welcome-card h2 { margin: 0 0 8px; font-size: 1.35rem; }
+    .welcome-card p { margin: 0 0 18px; color: #6b6b6b; font-size: 14px; }
+    .welcome-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .welcome-link {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 42px;
+      border-radius: 6px;
+      border: 1px solid #4a6fa5;
+      color: #4a6fa5;
+      text-decoration: none;
+      font-weight: 600;
+      background: #fff;
+    }
+    .welcome-link.primary { background: #4a6fa5; color: #fff; }
+    .welcome-link:hover { opacity: 0.92; }
+    @media (max-width: 760px) {
+      .welcome-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="metrics-page input-page">
+  <main class="welcome-main">
+    <h1 class="welcome-title">Welcome to your metrics tracker</h1>
+    <div class="welcome-grid">
+      <section class="welcome-card">
+        <h2>Business</h2>
+        <p>For admin functionality</p>
+        <div class="welcome-actions">
+          <a class="welcome-link primary" href="auth.html?account=business&mode=signup">Sign up</a>
+          <a class="welcome-link" href="auth.html?account=business&mode=signin">Sign in</a>
+        </div>
+      </section>
+      <section class="welcome-card">
+        <h2>Individual</h2>
+        <p>For employees and personal use</p>
+        <div class="welcome-actions">
+          <a class="welcome-link primary" href="auth.html?account=individual&mode=signup">Sign up</a>
+          <a class="welcome-link" href="auth.html?account=individual&mode=signin">Sign in</a>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem('metricsUserContext');
+        var ctx = raw ? JSON.parse(raw) : null;
+        if (ctx && ctx.email) {
+          window.location.href = ctx.accountType === 'business' ? 'input.html' : 'individual.html';
+        }
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>

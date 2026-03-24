@@ -21,6 +21,10 @@
         <button type="button" class="input-edit-icon btn-edit-name" id="btnEditName" aria-label="Edit business name">✎</button>
       </div>
     </div>
+    <div class="account-view-toggle" id="accountViewToggle">
+      <button type="button" class="account-view-btn active" data-view="business" id="btnBusinessMetricsView">Business Metrics</button>
+      <button type="button" class="account-view-btn" data-view="personal" id="btnPersonalMetricsView">Personal Metrics</button>
+    </div>
     <div class="input-metrics-carousel" id="inputCarousel">
       <button type="button" class="input-carousel-btn input-carousel-prev" id="carouselPrev" aria-label="Previous metrics">‹</button>
       <div class="input-carousel-viewport">
@@ -66,6 +70,13 @@
               <tbody class="ranking-tbody"></tbody>
             </table>
             <button type="button" class="btn-add-row">Add more rows</button>
+            <div class="invited-users-wrap">
+              <h5 class="invited-users-title">Invited users</h5>
+              <table class="input-table invited-users-table" aria-label="Invited users">
+                <thead><tr><th scope="col">First name</th><th scope="col">Last name</th><th scope="col">Email</th><th scope="col">Permission</th></tr></thead>
+                <tbody class="invited-users-body"></tbody>
+              </table>
+            </div>
           </div>
         </div>
         <div class="metric-actions"><button type="button" class="btn-save">Save</button></div>
@@ -228,14 +239,30 @@
   <script src="supabase-config.js"></script>
   <script>
     (function () {
-      var KEY = 'metricsDashboard';
+      var userCtx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
+      if (!userCtx || !userCtx.email) {
+        window.location.href = 'welcome.html';
+        return;
+      }
+      if (userCtx.accountType === 'individual') {
+        window.location.href = 'individual.html';
+        return;
+      }
+
+      var KEY_BUSINESS = 'metricsDashboard';
+      var KEY_PERSONAL = 'metricsPersonalDashboard';
+      var activeView = 'business';
       var INITIAL_RANKING_ROWS = 4;
 
       var businessImageDataUrl = '';
 
+      function activeKey() {
+        return activeView === 'personal' ? KEY_PERSONAL : KEY_BUSINESS;
+      }
+
       function getData() {
         var raw;
-        try { raw = localStorage.getItem(KEY); } catch (e) { raw = null; }
+        try { raw = localStorage.getItem(activeKey()); } catch (e) { raw = null; }
         var data = { businessName: '', businessImage: '', metrics: [] };
         if (raw) {
           try {
@@ -259,6 +286,9 @@
                   current: r.current !== undefined ? String(r.current) : '',
                   individualGoal: r.individualGoal !== undefined ? String(r.individualGoal) : '',
                   inviteEmail: r.inviteEmail !== undefined ? String(r.inviteEmail) : '',
+                  inviteFirstName: r.inviteFirstName !== undefined ? String(r.inviteFirstName) : '',
+                  inviteLastName: r.inviteLastName !== undefined ? String(r.inviteLastName) : '',
+                  invitePermission: r.invitePermission === 'read' ? 'read' : 'edit',
                   mode: r.mode === 'invite' ? 'invite' : 'data'
                 };
               });
@@ -310,6 +340,9 @@
           arr.push({
             mode: mode,
             inviteEmail: fieldValue(tr.querySelector('input[name="rankInviteEmail"]')),
+            inviteFirstName: fieldValue(tr.querySelector('input[name="rankInviteFirstName"]')),
+            inviteLastName: fieldValue(tr.querySelector('input[name="rankInviteLastName"]')),
+            invitePermission: ((tr.querySelector('select[name="rankInvitePermission"]') || {}).value === 'read') ? 'read' : 'edit',
             name: fieldValue(tr.querySelector('input[name="rankName"]')),
             goal: fieldValue(tr.querySelector('textarea[name="rankGoal"]')),
             current: fieldValue(tr.querySelector('textarea[name="rankCurrent"]')),
@@ -322,6 +355,47 @@
       function getShowIndividualGoalInBlock(metricRow) {
         var btn = metricRow.querySelector('.btn-individual-goal');
         return btn && btn.textContent.indexOf('-') !== -1;
+      }
+
+      function renderInvitedUsers(metricRow, rowsData) {
+        var body = metricRow.querySelector('.invited-users-body');
+        if (!body) return;
+        body.innerHTML = '';
+        var invites = (rowsData || []).filter(function (r) { return r && r.mode === 'invite' && r.inviteEmail; });
+        if (!invites.length) {
+          var tr = document.createElement('tr');
+          tr.innerHTML = '<td colspan="4" class="invited-users-empty">No invited users yet.</td>';
+          body.appendChild(tr);
+        } else {
+          invites.forEach(function (row) {
+          var tr = document.createElement('tr');
+          var permissionLabel = row.invitePermission === 'read' ? 'Read only' : 'Can edit';
+          tr.innerHTML = '<td>' + (row.inviteFirstName || '-') + '</td><td>' + (row.inviteLastName || '-') + '</td><td>' + row.inviteEmail + '</td><td>' + permissionLabel + '</td>';
+            body.appendChild(tr);
+          });
+        }
+        var userCtx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
+        var metricIndex = parseInt(metricRow.getAttribute('data-index') || '0', 10);
+        if (!userCtx || !userCtx.userId || !window.metricsFetchMetricInvites) return;
+        window.metricsFetchMetricInvites({
+          ownerUserId: userCtx.userId,
+          metricIndex: metricIndex
+        }).then(function (res) {
+          if (!res || res.error || !Array.isArray(res.data)) return;
+          body.innerHTML = '';
+          if (!res.data.length) {
+            var trEmpty = document.createElement('tr');
+            trEmpty.innerHTML = '<td colspan="4" class="invited-users-empty">No invited users yet.</td>';
+            body.appendChild(trEmpty);
+            return;
+          }
+          res.data.forEach(function (row) {
+            var tr = document.createElement('tr');
+            var permissionLabel = row.permission === 'read' ? 'Read only' : 'Can edit';
+            tr.innerHTML = '<td>' + (row.first_name || '-') + '</td><td>' + (row.last_name || '-') + '</td><td>' + (row.email || '-') + '</td><td>' + permissionLabel + '</td>';
+            body.appendChild(tr);
+          });
+        }).catch(function () {});
       }
 
       function renderRankingRowsInBlock(metricRow, rowsData) {
@@ -343,28 +417,60 @@
             var spanCols = showInd ? 4 : 3;
             tr.innerHTML =
               '<td class="invite-row-cell" colspan="' + spanCols + '">' +
+                '<div class="invite-row-grid">' +
+                  '<input type="text" name="rankInviteFirstName" class="invite-email-input" placeholder="First name" />' +
+                  '<input type="text" name="rankInviteLastName" class="invite-email-input" placeholder="Last name" />' +
+                '</div>' +
                 '<input type="email" name="rankInviteEmail" class="invite-email-input" placeholder="Invite collaborator email address" />' +
+                '<div class="invite-permission-wrap"><label class="invite-permission-label">Permission</label><select name="rankInvitePermission" class="invite-permission-select"><option value="edit">Can edit</option><option value="read">Read only</option></select></div>' +
               '</td>' +
               '<td class="td-row-actions">' +
                 '<button type="button" class="btn-row-invite-send">Invite</button>' +
                 '<button type="button" class="btn-remove-row" aria-label="Remove row"><span class="btn-remove-icon" aria-hidden="true">−</span></button>' +
               '</td>';
             var inviteEmailInput = tr.querySelector('input[name="rankInviteEmail"]');
+            var inviteFirstNameInput = tr.querySelector('input[name="rankInviteFirstName"]');
+            var inviteLastNameInput = tr.querySelector('input[name="rankInviteLastName"]');
+            var invitePermissionInput = tr.querySelector('select[name="rankInvitePermission"]');
+            if (inviteFirstNameInput) inviteFirstNameInput.value = r.inviteFirstName || '';
+            if (inviteLastNameInput) inviteLastNameInput.value = r.inviteLastName || '';
             if (inviteEmailInput) inviteEmailInput.value = r.inviteEmail || '';
+            if (invitePermissionInput) invitePermissionInput.value = r.invitePermission === 'read' ? 'read' : 'edit';
             var sendInviteBtn = tr.querySelector('.btn-row-invite-send');
             if (sendInviteBtn && inviteEmailInput) {
               sendInviteBtn.addEventListener('click', function () {
                 var email = fieldValue(inviteEmailInput);
+                var firstName = fieldValue(inviteFirstNameInput);
+                var lastName = fieldValue(inviteLastNameInput);
+                var permission = invitePermissionInput && invitePermissionInput.value === 'read' ? 'read' : 'edit';
                 if (!email) {
                   alert('Please enter an email address.');
                   return;
                 }
                 if (window.metricsSendInvite) {
+                  var metricIndex = parseInt(metricRow.getAttribute('data-index') || '0', 10);
+                  var userCtx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
                   sendInviteBtn.disabled = true;
                   window.metricsSendInvite(email, businessName, redirectTo).then(function (res) {
                     if (res && res.error) throw res.error;
-                    alert('Invitation sent: you have invited this user to collaborate with ' + (businessName || 'your business') + '.');
+                    if (window.metricsUpsertMetricInvite && userCtx && userCtx.userId) {
+                      return window.metricsUpsertMetricInvite({
+                        ownerUserId: userCtx.userId,
+                        metricIndex: metricIndex,
+                        email: email,
+                        firstName: firstName,
+                        lastName: lastName,
+                        permission: permission,
+                        businessName: businessName,
+                        invitedByUserId: userCtx.userId
+                      });
+                    }
+                    return null;
+                  }).then(function (dbRes) {
+                    if (dbRes && dbRes.error) throw dbRes.error;
+                    alert('Invitation sent: you have been invited to collaborate with ' + (businessName || 'your business') + '.');
                     save();
+                    renderInvitedUsers(metricRow, getRankingRowsFromBlock(metricRow));
                   }).catch(function (err) {
                     alert((err && err.message) ? err.message : 'Unable to send invitation email.');
                   }).finally(function () {
@@ -397,7 +503,7 @@
                 var data = getRankingRowsFromBlock(metricRow);
                 var rowIndex = Array.prototype.indexOf.call(tbody.children, tr);
                 if (rowIndex < 0) return;
-                data[rowIndex] = { mode: 'invite', inviteEmail: '', name: '', goal: '', current: '', individualGoal: '' };
+                data[rowIndex] = { mode: 'invite', inviteEmail: '', inviteFirstName: '', inviteLastName: '', invitePermission: 'edit', name: '', goal: '', current: '', individualGoal: '' };
                 renderRankingRowsInBlock(metricRow, data);
                 save();
               });
@@ -413,12 +519,23 @@
               var data = getRankingRowsFromBlock(metricRow);
               if (data.length <= 1) return;
               if (!window.confirm('Are you sure?')) return;
+              var removed = data[rowIndex] || null;
               data.splice(rowIndex, 1);
               renderRankingRowsInBlock(metricRow, data);
               save();
+              var metricIndex = parseInt(metricRow.getAttribute('data-index') || '0', 10);
+              var userCtx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
+              if (removed && removed.mode === 'invite' && removed.inviteEmail && window.metricsDeleteMetricInvite && userCtx && userCtx.userId) {
+                window.metricsDeleteMetricInvite({
+                  ownerUserId: userCtx.userId,
+                  metricIndex: metricIndex,
+                  email: removed.inviteEmail
+                }).catch(function () {});
+              }
             });
           })(ri);
         }
+        renderInvitedUsers(metricRow, rowsData);
         bindRankingInputsInBlock(metricRow);
       }
 
@@ -466,7 +583,7 @@
           var wrap = row.querySelector('.metric-ranking-section .ranking-table-wrap');
           wrap.hidden = !rank.enabled;
           var rankRows = rank.rows && rank.rows.length ? rank.rows.slice() : [];
-          while (rankRows.length < INITIAL_RANKING_ROWS) rankRows.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '', inviteEmail: '' });
+          while (rankRows.length < INITIAL_RANKING_ROWS) rankRows.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '', inviteEmail: '', inviteFirstName: '', inviteLastName: '', invitePermission: 'edit' });
           renderRankingRowsInBlock(row, rankRows);
         }
         updateAllSummaryInputsState();
@@ -517,7 +634,7 @@
           metrics.push(metricData);
         }
         try {
-          localStorage.setItem(KEY, JSON.stringify({
+          localStorage.setItem(activeKey(), JSON.stringify({
             businessName: businessName,
             businessImage: businessImageDataUrl || '',
             metrics: metrics
@@ -544,7 +661,7 @@
         }
         row.querySelector('.metric-ranking-section .btn-add-row').addEventListener('click', function () {
           var data = getRankingRowsFromBlock(row);
-          data.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '', inviteEmail: '' });
+          data.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '', inviteEmail: '', inviteFirstName: '', inviteLastName: '', invitePermission: 'edit' });
           renderRankingRowsInBlock(row, data);
           save();
         });
@@ -592,6 +709,19 @@
         btnEditName.addEventListener('click', function () { inputBusinessName.focus(); });
       }
 
+      function switchMetricsView(nextView) {
+        activeView = nextView === 'personal' ? 'personal' : 'business';
+        try { localStorage.setItem('metricsActiveView', activeView); } catch (e) {}
+        document.getElementById('btnBusinessMetricsView').classList.toggle('active', activeView === 'business');
+        document.getElementById('btnPersonalMetricsView').classList.toggle('active', activeView === 'personal');
+        load();
+      }
+
+      var btnBusinessMetricsView = document.getElementById('btnBusinessMetricsView');
+      var btnPersonalMetricsView = document.getElementById('btnPersonalMetricsView');
+      if (btnBusinessMetricsView) btnBusinessMetricsView.addEventListener('click', function () { switchMetricsView('business'); });
+      if (btnPersonalMetricsView) btnPersonalMetricsView.addEventListener('click', function () { switchMetricsView('personal'); });
+
       var formInputs = document.querySelectorAll('.metric-form input, .metric-form textarea');
       for (var j = 0; j < formInputs.length; j++) {
         formInputs[j].addEventListener('change', save);
@@ -623,7 +753,11 @@
       }
       updateCarouselButtons();
 
-      load();
+      try {
+        var storedView = localStorage.getItem('metricsActiveView');
+        if (storedView === 'personal' || storedView === 'business') activeView = storedView;
+      } catch (e) {}
+      switchMetricsView(activeView);
     })();
   </script>
 </body>

@@ -54,8 +54,23 @@
       <p class="invite-copy">Enter an email address to send an invitation to create an account.</p>
       <form id="inviteForm" novalidate>
         <div class="invite-field">
+          <label for="inviteFirstName">First name</label>
+          <input id="inviteFirstName" type="text" autocomplete="given-name" />
+        </div>
+        <div class="invite-field">
+          <label for="inviteLastName">Last name</label>
+          <input id="inviteLastName" type="text" autocomplete="family-name" />
+        </div>
+        <div class="invite-field">
           <label for="inviteEmail">Email address</label>
           <input id="inviteEmail" type="email" autocomplete="email" required />
+        </div>
+        <div class="invite-field">
+          <label for="invitePermission">Permission</label>
+          <select id="invitePermission" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:4px;font:inherit;">
+            <option value="edit">Can edit</option>
+            <option value="read">Read only</option>
+          </select>
         </div>
         <button type="submit" class="invite-btn" id="inviteBtn">Send Invite</button>
       </form>
@@ -68,8 +83,21 @@
   <script src="supabase-config.js"></script>
   <script>
     (function () {
+      var ctx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
+      if (!ctx || !ctx.email) {
+        window.location.href = 'welcome.html';
+        return;
+      }
+      if (ctx.accountType !== 'business') {
+        window.location.href = 'individual.html';
+        return;
+      }
+
       var form = document.getElementById('inviteForm');
       var emailInput = document.getElementById('inviteEmail');
+      var firstNameInput = document.getElementById('inviteFirstName');
+      var lastNameInput = document.getElementById('inviteLastName');
+      var permissionInput = document.getElementById('invitePermission');
       var messageEl = document.getElementById('inviteMessage');
       var btn = document.getElementById('inviteBtn');
 
@@ -82,6 +110,9 @@
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         var email = (emailInput.value || '').trim();
+        var firstName = (firstNameInput.value || '').trim();
+        var lastName = (lastNameInput.value || '').trim();
+        var permission = (permissionInput && permissionInput.value === 'read') ? 'read' : 'edit';
         var businessName = '';
         try {
           var raw = localStorage.getItem('metricsDashboard');
@@ -101,6 +132,23 @@
         window.metricsSendInvite(email, businessName, redirectTo)
           .then(function (res) {
             if (res && res.error) throw res.error;
+            // General invite page: save to metric_index -1 (not tied to a specific metric)
+            if (window.metricsUpsertMetricInvite && ctx && ctx.userId) {
+              return window.metricsUpsertMetricInvite({
+                ownerUserId: ctx.userId,
+                metricIndex: -1,
+                email: email,
+                firstName: firstName,
+                lastName: lastName,
+                permission: permission,
+                businessName: businessName,
+                invitedByUserId: ctx.userId
+              });
+            }
+            return null;
+          })
+          .then(function (dbRes) {
+            if (dbRes && dbRes.error) throw dbRes.error;
             showMessage("You've been invited to create an account.", 'info');
           })
           .catch(function (err) {

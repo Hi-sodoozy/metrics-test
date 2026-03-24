@@ -19,6 +19,17 @@
   </main>
   <script>
     (function () {
+      var userCtx = null;
+      try {
+        userCtx = JSON.parse(localStorage.getItem('metricsUserContext') || 'null');
+      } catch (e) {
+        userCtx = null;
+      }
+      if (!userCtx || !userCtx.email) {
+        window.location.href = 'welcome.html';
+        return;
+      }
+
       function escapeHtml(s) {
         var div = document.createElement('div');
         div.textContent = s == null ? '' : s;
