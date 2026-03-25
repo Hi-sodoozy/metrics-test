@@ -28,6 +28,11 @@
       <button type="button" class="btn-add-metric-board" id="btnAddMetricBoard">+ Add metric board</button>
       <p id="metricBoardHelp" class="input-hint-inline" aria-live="polite"></p>
     </div>
+    <nav class="boards-toc" id="boardsToc" aria-label="Jump to board" hidden>
+      <h3 class="boards-toc-title" id="boardsTocTitle">Boards</h3>
+      <p class="boards-toc-hint" id="boardsTocHint">Open a board from the list or use the arrows to move between them.</p>
+      <ul class="boards-toc-list" id="boardsTocList" role="list"></ul>
+    </nav>
     <div class="input-metrics-carousel carousel-1up" id="inputCarousel">
       <button type="button" class="input-carousel-btn input-carousel-prev" id="carouselPrev" aria-label="Previous metrics">‹</button>
       <div class="input-carousel-viewport">
@@ -160,6 +165,8 @@
           var MAX_ON_RESULTS_SCREEN = 4;
           var invitedBoardsCount = 0;
           var carouselPageIndex = 0;
+          var tocSharedActiveBtn = null;
+          var boardTocRefreshTimer = null;
 
       var businessImageDataUrl = '';
 
@@ -764,6 +771,7 @@
             }
           }
         });
+        scheduleBoardTocRefresh();
       }
 
       function wireTitleFieldForRow(row) {
@@ -777,6 +785,7 @@
           heading.value = tf.value;
           save();
           scheduleRemoteSave();
+          scheduleBoardTocRefresh();
         });
         heading.addEventListener('input', function () {
           tf.value = heading.value;
@@ -888,9 +897,128 @@
       }
 
       function slidesPerViewForInput() {
-        if (isCollaborator) return 2;
-        if (isIndividualHub && invitedBoardsCount > 0) return 2;
+        // Individual accounts and invited employees: one board per slide (horizontal carousel + TOC).
+        if (isCollaborator || isIndividualHub) return 1;
         return 1;
+      }
+
+      function usesBoardToc() {
+        return isIndividualHub || isCollaborator;
+      }
+
+      function scheduleBoardTocRefresh() {
+        if (!usesBoardToc()) return;
+        clearTimeout(boardTocRefreshTimer);
+        boardTocRefreshTimer = setTimeout(function () {
+          boardTocRefreshTimer = null;
+          refreshBoardToc();
+        }, 200);
+      }
+
+      function getTocLabelFromForm(form) {
+        if (!form) return 'Board';
+        var tf = form.querySelector('.metric-block-title-field');
+        var h = form.querySelector('input[name="heading"]');
+        var raw = (tf && tf.value.trim()) || (h && h.value.trim()) || '';
+        if (!raw) {
+          var ix = parseInt(form.getAttribute('data-index') || '0', 10);
+          raw = 'Board ' + (ix + 1);
+        }
+        return raw;
+      }
+
+      function findCarouselPageForMetricIndex(metricIndex) {
+        var forms = document.querySelectorAll('#inputCarousel .input-row.metric-form');
+        var n = forms.length;
+        if (n === 0) return 0;
+        var spv = slidesPerViewForInput();
+        var pages = chunkPageIndices(n, spv);
+        var p;
+        for (p = 0; p < pages.length; p++) {
+          if (pages[p].indexOf(metricIndex) >= 0) return p;
+        }
+        return 0;
+      }
+
+      function updateBoardTocActive() {
+        var nav = document.getElementById('boardsToc');
+        if (!nav || nav.hidden) return;
+        var btns = nav.querySelectorAll('.boards-toc-btn');
+        btns.forEach(function (b) {
+          b.classList.remove('boards-toc-btn-active');
+          b.removeAttribute('aria-current');
+        });
+        if (tocSharedActiveBtn && tocSharedActiveBtn.parentNode && nav.contains(tocSharedActiveBtn)) {
+          tocSharedActiveBtn.classList.add('boards-toc-btn-active');
+          tocSharedActiveBtn.setAttribute('aria-current', 'true');
+          return;
+        }
+        var sharedN = isIndividualHub ? document.querySelectorAll('#sharedBoardsHost .metric-card').length : 0;
+        var idx = sharedN + carouselPageIndex;
+        if (btns[idx]) {
+          btns[idx].classList.add('boards-toc-btn-active');
+          btns[idx].setAttribute('aria-current', 'true');
+        }
+      }
+
+      function refreshBoardToc() {
+        var nav = document.getElementById('boardsToc');
+        var list = document.getElementById('boardsTocList');
+        if (!nav || !list) return;
+        tocSharedActiveBtn = null;
+        if (!usesBoardToc()) {
+          nav.hidden = true;
+          list.innerHTML = '';
+          return;
+        }
+        nav.hidden = false;
+        list.innerHTML = '';
+
+        function appendEntry(label, onActivate) {
+          var li = document.createElement('li');
+          li.className = 'boards-toc-item';
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'boards-toc-btn';
+          btn.textContent = label;
+          btn.addEventListener('click', function () {
+            onActivate(btn);
+          });
+          li.appendChild(btn);
+          list.appendChild(li);
+        }
+
+        if (isIndividualHub) {
+          document.querySelectorAll('#sharedBoardsHost .metric-card').forEach(function (card) {
+            var form = card.querySelector('.input-row.metric-form');
+            var badge = form ? form.querySelector('.metric-business-badge') : null;
+            var base = getTocLabelFromForm(form);
+            var label = base;
+            if (badge && !badge.hidden && (badge.textContent || '').trim()) {
+              label = (badge.textContent || '').trim() + ' — ' + base;
+            }
+            appendEntry(label, function (btn) {
+              tocSharedActiveBtn = btn;
+              card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              updateBoardTocActive();
+            });
+          });
+        }
+
+        document.querySelectorAll('#inputCarousel .input-row.metric-form').forEach(function (form) {
+          var mi = parseInt(form.getAttribute('data-index') || '0', 10);
+          var label = getTocLabelFromForm(form);
+          appendEntry(label, function () {
+            tocSharedActiveBtn = null;
+            carouselPageIndex = findCarouselPageForMetricIndex(mi);
+            applyCarouselTransform();
+            updateCarouselNavUI();
+            var carEl = document.getElementById('inputCarousel');
+            if (carEl) carEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          });
+        });
+
+        updateBoardTocActive();
       }
 
       function chunkPageIndices(len, spv) {
@@ -935,6 +1063,7 @@
         var nextBtn = document.getElementById('carouselNext');
         if (prevBtn) prevBtn.disabled = carouselPageIndex <= 0;
         if (nextBtn) nextBtn.disabled = carouselPageIndex >= pageCount - 1;
+        updateBoardTocActive();
       }
 
       function updateAddMetricToolbar(metricCount) {
@@ -1000,6 +1129,7 @@
         applyCarouselTransform();
         updateCarouselNavUI();
         updateAddMetricToolbar(n);
+        refreshBoardToc();
       }
 
       function renderSharedBoardsIntoHost(slotInvites, cache) {
@@ -1053,6 +1183,7 @@
           var form = host.querySelector('.metric-form[data-dashboard-owner="' + inv.owner_user_id + '"][data-index="' + inv.metric_index + '"]');
           if (form) refreshInvitedUsersSection(form);
         });
+        refreshBoardToc();
         return Promise.resolve();
       }
 
@@ -1254,7 +1385,14 @@
         }).then(function (res) {
           body.innerHTML = '';
           if (!res || res.error) {
-            body.innerHTML = '<tr><td colspan="4" class="invited-users-empty">Unable to load invites.</td></tr>';
+            var errMsg = (res && res.error && (res.error.message || res.error.details || res.error.hint))
+              ? String(res.error.message || res.error.details || res.error.hint)
+              : '';
+            if (res && res.error) {
+              console.warn('metricsFetchMetricInvites', res.error);
+            }
+            var detail = errMsg ? (' <span class="invited-users-err-detail">' + escapeHtmlStr(errMsg) + '</span>') : '';
+            body.innerHTML = '<tr><td colspan="4" class="invited-users-empty">Unable to load invites.' + detail + '</td></tr>';
             updateRemoveInviteButton(metricRow);
             return;
           }
@@ -1314,8 +1452,10 @@
           }
           updateRemoveInviteButton(metricRow);
           applyRowAccessLocks();
-        }).catch(function () {
-          body.innerHTML = '<tr><td colspan="4" class="invited-users-empty">Unable to load invites.</td></tr>';
+        }).catch(function (err) {
+          console.warn('metricsFetchMetricInvites', err);
+          var detail = (err && err.message) ? (' <span class="invited-users-err-detail">' + escapeHtmlStr(String(err.message)) + '</span>') : '';
+          body.innerHTML = '<tr><td colspan="4" class="invited-users-empty">Unable to load invites.' + detail + '</td></tr>';
           updateRemoveInviteButton(metricRow);
         });
       }
@@ -1590,6 +1730,7 @@
       if (carouselPrev) {
         carouselPrev.addEventListener('click', function () {
           if (carouselPageIndex > 0) {
+            tocSharedActiveBtn = null;
             carouselPageIndex--;
             applyCarouselTransform();
             updateCarouselNavUI();
@@ -1601,6 +1742,7 @@
           var tr = document.getElementById('carouselTrack');
           var pageCount = parseInt(tr && tr.getAttribute('data-page-count') || '1', 10);
           if (carouselPageIndex < pageCount - 1) {
+            tocSharedActiveBtn = null;
             carouselPageIndex++;
             applyCarouselTransform();
             updateCarouselNavUI();
@@ -1650,6 +1792,7 @@
           });
           applyRowAccessLocks();
           syncTitleRowFromTextareasCarousel();
+          refreshBoardToc();
         })
         .catch(function (err) {
           if (isCollaborator) {
@@ -1664,6 +1807,7 @@
           });
           applyRowAccessLocks();
           syncTitleRowFromTextareasCarousel();
+          refreshBoardToc();
         });
         });
     })();

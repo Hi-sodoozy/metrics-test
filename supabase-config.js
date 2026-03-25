@@ -152,7 +152,7 @@
       }
       return window.metricsSupabase
         .from('metric_invites')
-        .select('first_name,last_name,email,metric_index,owner_user_id,status,permission')
+        .select('first_name,last_name,email,metric_index,owner_user_id,status,permission,created_at')
         .eq('owner_user_id', payload.ownerUserId)
         .eq('metric_index', payload.metricIndex)
         .order('created_at', { ascending: true });
