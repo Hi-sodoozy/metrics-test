@@ -33,10 +33,12 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: center;
+  gap: 14px;
   padding: 16px 20px;
   background: #fff;
   border-bottom: 1px solid #e2e4e8;
+  text-align: center;
 }
 
 .results-header-pic-wrap {
@@ -54,9 +56,39 @@
 
 .results-business-name {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 700;
   color: #1a1a1a;
+}
+
+.result-owner-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e2e4e8;
+  background: #f8fafc;
+}
+
+.result-owner-pic {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #d1d5db;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.result-owner-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+  max-width: 80%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .results-grid {
@@ -236,10 +268,6 @@
 }
 
 .input-link {
-  position: fixed;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
   font-size: 13px;
   color: #9a9a9a;
   text-decoration: none;
@@ -249,6 +277,78 @@
 
 .input-link:hover {
   color: #5a5a5a;
+}
+
+.results-bottom-actions {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.results-theme-toggle {
+  font-size: 13px;
+  color: #9a9a9a;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.results-theme-toggle:hover {
+  color: #5a5a5a;
+}
+
+.results-theme-icon {
+  display: inline-flex;
+  width: 20px;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.results-theme-dark .results-header {
+  background: #0f1419;
+  border-bottom-color: rgba(255,255,255,0.12);
+}
+
+.results-theme-dark .results-business-name {
+  color: #e8eaef;
+}
+
+.results-theme-dark .result-owner-meta {
+  background: rgba(255,255,255,0.04);
+  border-bottom-color: rgba(255,255,255,0.12);
+}
+
+.results-theme-dark .result-owner-name {
+  color: #cbd5e1;
+}
+
+.results-theme-dark .result-card,
+.results-theme-dark .ranking-results {
+  background: #0f1419;
+  color: #e8eaef;
+  border-color: rgba(255,255,255,0.12);
+}
+
+.results-theme-dark .result-card-inner .result-heading,
+.results-theme-dark .ranking-results-title {
+  color: #e8eaef;
+}
+
+.results-theme-dark .result-card-inner .result-values,
+.results-theme-dark .ranking-value,
+.results-theme-dark .ranking-individual-goal {
+  color: #cbd5e1;
 }
 
 /* ----- Input page ----- */

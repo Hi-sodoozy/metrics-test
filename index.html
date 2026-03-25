@@ -15,7 +15,13 @@
       <h1 class="results-business-name" id="resultsBusinessName">Your business name</h1>
     </header>
     <div class="results-grid" id="resultsGrid"></div>
-    <a href="input.html" class="input-link" id="linkToInput">Input</a>
+    <div class="results-bottom-actions">
+      <a href="input.html" class="input-link" id="linkToInput">Input</a>
+      <button type="button" class="results-theme-toggle" id="resultsThemeToggle" aria-label="Toggle display theme">
+        <span class="results-theme-icon" id="resultsThemeIcon" aria-hidden="true">◓</span>
+        <span class="results-theme-label" id="resultsThemeLabel">Dark</span>
+      </button>
+    </div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
@@ -76,7 +82,9 @@
               achieved: achieved,
               displaySummary: displaySummary,
               ranking: rank,
-              rows: rows
+              rows: rows,
+              sourceBusinessName: m.sourceBusinessName || data.businessName || '',
+              sourceBusinessImage: m.sourceBusinessImage || data.businessImage || ''
             });
           } else {
             var cur = parseFloat(m.current, 10) || 0;
@@ -88,7 +96,14 @@
             } else {
               valuesText = '<span class="current">' + escapeHtml(String(m.current)) + '</span> / <span class="goal">' + escapeHtml(String(m.goal)) + '</span>';
             }
-            displayed.push({ type: 'summary', heading: m.heading || 'Metric', valuesHtml: valuesText, achieved: achieved });
+            displayed.push({
+              type: 'summary',
+              heading: m.heading || 'Metric',
+              valuesHtml: valuesText,
+              achieved: achieved,
+              sourceBusinessName: m.sourceBusinessName || data.businessName || '',
+              sourceBusinessImage: m.sourceBusinessImage || data.businessImage || ''
+            });
           }
         }
 
@@ -106,6 +121,12 @@
           var item = displayed[j];
           var col = document.createElement('div');
           col.className = 'result-column';
+          var ownerMeta = document.createElement('div');
+          ownerMeta.className = 'result-owner-meta';
+          ownerMeta.innerHTML =
+            '<span class="result-owner-pic"' + (item.sourceBusinessImage ? (' style="background-image:url(' + item.sourceBusinessImage + ')"') : '') + '></span>' +
+            '<span class="result-owner-name">' + escapeHtml(item.sourceBusinessName || 'Board') + '</span>';
+          col.appendChild(ownerMeta);
 
           if (item.type === 'summary') {
             var card = document.createElement('div');
@@ -177,11 +198,108 @@
         return data;
       }
 
+      function cloneMetricWithSource(metric, businessName, businessImage) {
+        var out = JSON.parse(JSON.stringify(metric || {}));
+        out.sourceBusinessName = businessName || '';
+        out.sourceBusinessImage = businessImage || '';
+        return out;
+      }
+
+      function buildCombinedHomeDashboard(userCtx) {
+        return window.metricsLoadBusinessDashboard(userCtx.userId).then(function (homeDash) {
+          var combined = {
+            businessName: homeDash.businessName || '',
+            businessImage: homeDash.businessImage || '',
+            metrics: []
+          };
+          var ownMetrics = Array.isArray(homeDash.metrics) ? homeDash.metrics : [];
+          var ownTagged = ownMetrics.map(function (m) {
+            return cloneMetricWithSource(m, combined.businessName, combined.businessImage);
+          });
+          if (!window.metricsFetchInvitesForEmail) {
+            combined.metrics = ownTagged;
+            return combined;
+          }
+          return window.metricsFetchInvitesForEmail(userCtx.email).then(function (res) {
+            var list = (res && res.data) ? res.data : [];
+            var slotInvites = list.filter(function (r) {
+              return r && r.metric_index != null && r.metric_index >= 0 && r.metric_index <= 9 && r.status !== 'revoked';
+            });
+            if (!slotInvites.length) {
+              combined.metrics = ownTagged;
+              return combined;
+            }
+            var owners = {};
+            slotInvites.forEach(function (r) { owners[r.owner_user_id] = true; });
+            var ownerIds = Object.keys(owners);
+            return Promise.all(ownerIds.map(function (oid) {
+              return window.metricsLoadBusinessDashboard(oid);
+            })).then(function (dashboards) {
+              var byOwner = {};
+              ownerIds.forEach(function (oid, idx) {
+                byOwner[oid] = dashboards[idx];
+              });
+              var invitedMetrics = [];
+              slotInvites.forEach(function (inv) {
+                var dash = byOwner[inv.owner_user_id];
+                var metric = dash && dash.metrics ? dash.metrics[inv.metric_index] : null;
+                if (!metric) return;
+                invitedMetrics.push(cloneMetricWithSource(
+                  metric,
+                  (dash && dash.businessName) || inv.business_name || '',
+                  (dash && dash.businessImage) || ''
+                ));
+              });
+              combined.metrics = invitedMetrics.concat(ownTagged);
+              return combined;
+            });
+          }).catch(function () {
+            combined.metrics = ownTagged;
+            return combined;
+          });
+        });
+      }
+
+      var RESULTS_THEME_KEY = 'metricsResultsDisplayTheme';
+      var INPUT_THEME_KEY = 'metricsInputDisplayTheme';
+      function applyResultsTheme(theme) {
+        var t = theme === 'dark' ? 'dark' : 'light';
+        document.body.classList.toggle('results-theme-dark', t === 'dark');
+        document.body.classList.toggle('results-theme-light', t !== 'dark');
+        try { localStorage.setItem(RESULTS_THEME_KEY, t); } catch (e) {}
+        var toggle = document.getElementById('resultsThemeToggle');
+        if (toggle) {
+          var label = document.getElementById('resultsThemeLabel');
+          var icon = document.getElementById('resultsThemeIcon');
+          var nextTheme = t === 'dark' ? 'light' : 'dark';
+          var nextLabel = nextTheme === 'dark' ? 'Dark' : 'Light';
+          var nextIcon = nextTheme === 'dark' ? '◔' : '◑';
+          if (label) label.textContent = nextLabel;
+          if (icon) icon.textContent = nextIcon;
+          toggle.setAttribute('aria-label', 'Switch to ' + nextTheme + ' view');
+        }
+      }
+      function initResultsTheme() {
+        var stored = 'light';
+        try {
+          stored = localStorage.getItem(RESULTS_THEME_KEY) || localStorage.getItem(INPUT_THEME_KEY) || 'light';
+        } catch (e) {}
+        applyResultsTheme(stored);
+      }
+
       Promise.resolve()
         .then(function () {
           return window.metricsSyncContextFromSession ? window.metricsSyncContextFromSession() : null;
         })
         .then(function () {
+          var toggle = document.getElementById('resultsThemeToggle');
+          if (toggle) {
+            toggle.addEventListener('click', function () {
+              var isDark = document.body.classList.contains('results-theme-dark');
+              applyResultsTheme(isDark ? 'light' : 'dark');
+            });
+          }
+          initResultsTheme();
           var userCtx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
           if (!userCtx || !userCtx.email) {
             window.location.href = 'welcome.html';
@@ -199,6 +317,13 @@
           if (!window.metricsLoadBusinessDashboard) {
             renderDashboard(loadFromLocalStorage('metricsDashboard'));
             return null;
+          }
+          if (!uuidLooksValid(ownerParam) || ownerId === userCtx.userId) {
+            return buildCombinedHomeDashboard(userCtx).then(function (data) {
+              renderDashboard(data);
+            }).catch(function () {
+              renderDashboard(loadFromLocalStorage('metricsDashboard'));
+            });
           }
           return window.metricsLoadBusinessDashboard(ownerId).then(function (data) {
             renderDashboard(data);
