@@ -21,8 +21,10 @@ create table if not exists public.metric_invites (
 alter table public.metric_invites
   add column if not exists permission text not null default 'edit' check (permission in ('edit', 'read'));
 
+-- Plain column unique index so PostgREST upsert onConflict=(owner_user_id,metric_index,email) works.
+-- Always store lowercase email from the app (see supabase-config.js).
 create unique index if not exists metric_invites_owner_metric_email_idx
-  on public.metric_invites (owner_user_id, metric_index, lower(email));
+  on public.metric_invites (owner_user_id, metric_index, email);
 
 create or replace function public.set_updated_at()
 returns trigger

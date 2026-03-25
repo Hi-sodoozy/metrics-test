@@ -70,14 +70,14 @@
               <tbody class="ranking-tbody"></tbody>
             </table>
             <button type="button" class="btn-add-row">Add more rows</button>
-            <div class="invited-users-wrap">
-              <h5 class="invited-users-title">Invited users</h5>
-              <table class="input-table invited-users-table" aria-label="Invited users">
-                <thead><tr><th scope="col">First name</th><th scope="col">Last name</th><th scope="col">Email</th><th scope="col">Permission</th></tr></thead>
-                <tbody class="invited-users-body"></tbody>
-              </table>
-            </div>
           </div>
+        </div>
+        <div class="invited-users-wrap">
+          <h5 class="invited-users-title">Invited users</h5>
+          <table class="input-table invited-users-table" aria-label="Invited users">
+            <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Permission</th></tr></thead>
+            <tbody class="invited-users-body"></tbody>
+          </table>
         </div>
         <div class="metric-actions"><button type="button" class="btn-save">Save</button></div>
       </div>
@@ -124,6 +124,13 @@
             </table>
             <button type="button" class="btn-add-row">Add more rows</button>
           </div>
+        </div>
+        <div class="invited-users-wrap">
+          <h5 class="invited-users-title">Invited users</h5>
+          <table class="input-table invited-users-table" aria-label="Invited users">
+            <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Permission</th></tr></thead>
+            <tbody class="invited-users-body"></tbody>
+          </table>
         </div>
         <div class="metric-actions"><button type="button" class="btn-save">Save</button></div>
       </div>
@@ -172,6 +179,13 @@
             <button type="button" class="btn-add-row">Add more rows</button>
           </div>
         </div>
+        <div class="invited-users-wrap">
+          <h5 class="invited-users-title">Invited users</h5>
+          <table class="input-table invited-users-table" aria-label="Invited users">
+            <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Permission</th></tr></thead>
+            <tbody class="invited-users-body"></tbody>
+          </table>
+        </div>
         <div class="metric-actions"><button type="button" class="btn-save">Save</button></div>
       </div>
       </div>
@@ -217,6 +231,13 @@
             </table>
             <button type="button" class="btn-add-row">Add more rows</button>
           </div>
+        </div>
+        <div class="invited-users-wrap">
+          <h5 class="invited-users-title">Invited users</h5>
+          <table class="input-table invited-users-table" aria-label="Invited users">
+            <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Permission</th></tr></thead>
+            <tbody class="invited-users-body"></tbody>
+          </table>
         </div>
         <div class="metric-actions"><button type="button" class="btn-save">Save</button></div>
       </div>
@@ -494,14 +515,17 @@
               }
               var rows = Array.isArray(ranking.rows) ? ranking.rows : [];
               var rowsWithInd = rows.map(function (r) {
+                var inviteName = r.inviteName != null ? String(r.inviteName).trim() : '';
+                if (!inviteName && (r.inviteFirstName || r.inviteLastName)) {
+                  inviteName = [r.inviteFirstName || '', r.inviteLastName || ''].join(' ').trim();
+                }
                 return {
                   name: r.name || '',
                   goal: r.goal !== undefined ? String(r.goal) : '',
                   current: r.current !== undefined ? String(r.current) : '',
                   individualGoal: r.individualGoal !== undefined ? String(r.individualGoal) : '',
                   inviteEmail: r.inviteEmail !== undefined ? String(r.inviteEmail) : '',
-                  inviteFirstName: r.inviteFirstName !== undefined ? String(r.inviteFirstName) : '',
-                  inviteLastName: r.inviteLastName !== undefined ? String(r.inviteLastName) : '',
+                  inviteName: inviteName,
                   invitePermission: r.invitePermission === 'read' ? 'read' : 'edit',
                   mode: r.mode === 'invite' ? 'invite' : 'data'
                 };
@@ -544,6 +568,22 @@
         return String(el.value).trim();
       }
 
+      function rowInviteDisplayName(r) {
+        if (!r) return '';
+        if (r.inviteName != null && String(r.inviteName).trim()) return String(r.inviteName).trim();
+        var a = (r.inviteFirstName || '').trim();
+        var b = (r.inviteLastName || '').trim();
+        return (a + ' ' + b).trim();
+      }
+
+      function dbInviteDisplayName(row) {
+        if (!row) return '-';
+        var a = (row.first_name || '').trim();
+        var b = (row.last_name || '').trim();
+        var combined = (a + ' ' + b).trim();
+        return combined || '-';
+      }
+
       function getRankingRowsFromBlock(metricRow) {
         var arr = [];
         var tbody = metricRow.querySelector('.ranking-tbody');
@@ -554,8 +594,7 @@
           arr.push({
             mode: mode,
             inviteEmail: fieldValue(tr.querySelector('input[name="rankInviteEmail"]')),
-            inviteFirstName: fieldValue(tr.querySelector('input[name="rankInviteFirstName"]')),
-            inviteLastName: fieldValue(tr.querySelector('input[name="rankInviteLastName"]')),
+            inviteName: fieldValue(tr.querySelector('input[name="rankInviteName"]')),
             invitePermission: ((tr.querySelector('select[name="rankInvitePermission"]') || {}).value === 'read') ? 'read' : 'edit',
             name: fieldValue(tr.querySelector('input[name="rankName"]')),
             goal: fieldValue(tr.querySelector('textarea[name="rankGoal"]')),
@@ -578,13 +617,14 @@
         var invites = (rowsData || []).filter(function (r) { return r && r.mode === 'invite' && r.inviteEmail; });
         if (!invites.length) {
           var tr = document.createElement('tr');
-          tr.innerHTML = '<td colspan="4" class="invited-users-empty">No invited users yet.</td>';
+          tr.innerHTML = '<td colspan="3" class="invited-users-empty">No invited users yet.</td>';
           body.appendChild(tr);
         } else {
           invites.forEach(function (row) {
           var tr = document.createElement('tr');
           var permissionLabel = row.invitePermission === 'read' ? 'Read only' : 'Can edit';
-          tr.innerHTML = '<td>' + (row.inviteFirstName || '-') + '</td><td>' + (row.inviteLastName || '-') + '</td><td>' + row.inviteEmail + '</td><td>' + permissionLabel + '</td>';
+          var nm = rowInviteDisplayName(row) || '-';
+          tr.innerHTML = '<td>' + nm + '</td><td>' + row.inviteEmail + '</td><td>' + permissionLabel + '</td>';
             body.appendChild(tr);
           });
         }
@@ -599,14 +639,14 @@
           body.innerHTML = '';
           if (!res.data.length) {
             var trEmpty = document.createElement('tr');
-            trEmpty.innerHTML = '<td colspan="4" class="invited-users-empty">No invited users yet.</td>';
+            trEmpty.innerHTML = '<td colspan="3" class="invited-users-empty">No invited users yet.</td>';
             body.appendChild(trEmpty);
             return;
           }
           res.data.forEach(function (row) {
             var tr = document.createElement('tr');
             var permissionLabel = row.permission === 'read' ? 'Read only' : 'Can edit';
-            tr.innerHTML = '<td>' + (row.first_name || '-') + '</td><td>' + (row.last_name || '-') + '</td><td>' + (row.email || '-') + '</td><td>' + permissionLabel + '</td>';
+            tr.innerHTML = '<td>' + dbInviteDisplayName(row) + '</td><td>' + (row.email || '-') + '</td><td>' + permissionLabel + '</td>';
             body.appendChild(tr);
           });
         }).catch(function () {});
@@ -631,10 +671,7 @@
             var spanCols = showInd ? 4 : 3;
             tr.innerHTML =
               '<td class="invite-row-cell" colspan="' + spanCols + '">' +
-                '<div class="invite-row-grid">' +
-                  '<input type="text" name="rankInviteFirstName" class="invite-email-input" placeholder="First name" />' +
-                  '<input type="text" name="rankInviteLastName" class="invite-email-input" placeholder="Last name" />' +
-                '</div>' +
+                '<input type="text" name="rankInviteName" class="invite-email-input" placeholder="Name" />' +
                 '<input type="email" name="rankInviteEmail" class="invite-email-input" placeholder="Invite collaborator email address" />' +
                 '<div class="invite-permission-wrap"><label class="invite-permission-label">Permission</label><select name="rankInvitePermission" class="invite-permission-select"><option value="edit">Can edit</option><option value="read">Read only</option></select></div>' +
               '</td>' +
@@ -643,19 +680,16 @@
                 '<button type="button" class="btn-remove-row" aria-label="Remove row"><span class="btn-remove-icon" aria-hidden="true">−</span></button>' +
               '</td>';
             var inviteEmailInput = tr.querySelector('input[name="rankInviteEmail"]');
-            var inviteFirstNameInput = tr.querySelector('input[name="rankInviteFirstName"]');
-            var inviteLastNameInput = tr.querySelector('input[name="rankInviteLastName"]');
+            var inviteNameInput = tr.querySelector('input[name="rankInviteName"]');
             var invitePermissionInput = tr.querySelector('select[name="rankInvitePermission"]');
-            if (inviteFirstNameInput) inviteFirstNameInput.value = r.inviteFirstName || '';
-            if (inviteLastNameInput) inviteLastNameInput.value = r.inviteLastName || '';
+            if (inviteNameInput) inviteNameInput.value = rowInviteDisplayName(r);
             if (inviteEmailInput) inviteEmailInput.value = r.inviteEmail || '';
             if (invitePermissionInput) invitePermissionInput.value = r.invitePermission === 'read' ? 'read' : 'edit';
             var sendInviteBtn = tr.querySelector('.btn-row-invite-send');
             if (sendInviteBtn && inviteEmailInput) {
               sendInviteBtn.addEventListener('click', function () {
                 var email = fieldValue(inviteEmailInput);
-                var firstName = fieldValue(inviteFirstNameInput);
-                var lastName = fieldValue(inviteLastNameInput);
+                var inviteName = fieldValue(inviteNameInput);
                 var permission = invitePermissionInput && invitePermissionInput.value === 'read' ? 'read' : 'edit';
                 if (!email) {
                   alert('Please enter an email address.');
@@ -672,8 +706,7 @@
                         ownerUserId: dashboardOwnerId,
                         metricIndex: metricIndex,
                         email: email,
-                        firstName: firstName,
-                        lastName: lastName,
+                        name: inviteName,
                         permission: permission,
                         businessName: businessName,
                         invitedByUserId: userCtx.userId
@@ -717,7 +750,7 @@
                 var data = getRankingRowsFromBlock(metricRow);
                 var rowIndex = Array.prototype.indexOf.call(tbody.children, tr);
                 if (rowIndex < 0) return;
-                data[rowIndex] = { mode: 'invite', inviteEmail: '', inviteFirstName: '', inviteLastName: '', invitePermission: 'edit', name: '', goal: '', current: '', individualGoal: '' };
+                data[rowIndex] = { mode: 'invite', inviteEmail: '', inviteName: '', invitePermission: 'edit', name: '', goal: '', current: '', individualGoal: '' };
                 renderRankingRowsInBlock(metricRow, data);
                 save();
               });
@@ -800,7 +833,7 @@
           var wrap = row.querySelector('.metric-ranking-section .ranking-table-wrap');
           wrap.hidden = !rank.enabled;
           var rankRows = rank.rows && rank.rows.length ? rank.rows.slice() : [];
-          while (rankRows.length < INITIAL_RANKING_ROWS) rankRows.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '', inviteEmail: '', inviteFirstName: '', inviteLastName: '', invitePermission: 'edit' });
+          while (rankRows.length < INITIAL_RANKING_ROWS) rankRows.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '', inviteEmail: '', inviteName: '', invitePermission: 'edit' });
           renderRankingRowsInBlock(row, rankRows);
         }
         updateAllSummaryInputsState();
@@ -879,7 +912,7 @@
         }
         row.querySelector('.metric-ranking-section .btn-add-row').addEventListener('click', function () {
           var data = getRankingRowsFromBlock(row);
-          data.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '', inviteEmail: '', inviteFirstName: '', inviteLastName: '', invitePermission: 'edit' });
+          data.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '', inviteEmail: '', inviteName: '', invitePermission: 'edit' });
           renderRankingRowsInBlock(row, data);
           save();
         });

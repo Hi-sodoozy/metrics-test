@@ -54,12 +54,8 @@
       <p class="invite-copy">Enter an email address to send an invitation to create an account.</p>
       <form id="inviteForm" novalidate>
         <div class="invite-field">
-          <label for="inviteFirstName">First name</label>
-          <input id="inviteFirstName" type="text" autocomplete="given-name" />
-        </div>
-        <div class="invite-field">
-          <label for="inviteLastName">Last name</label>
-          <input id="inviteLastName" type="text" autocomplete="family-name" />
+          <label for="inviteName">Name</label>
+          <input id="inviteName" type="text" autocomplete="name" placeholder="Invitee name" />
         </div>
         <div class="invite-field">
           <label for="inviteEmail">Email address</label>
@@ -95,8 +91,7 @@
 
       var form = document.getElementById('inviteForm');
       var emailInput = document.getElementById('inviteEmail');
-      var firstNameInput = document.getElementById('inviteFirstName');
-      var lastNameInput = document.getElementById('inviteLastName');
+      var nameInput = document.getElementById('inviteName');
       var permissionInput = document.getElementById('invitePermission');
       var messageEl = document.getElementById('inviteMessage');
       var btn = document.getElementById('inviteBtn');
@@ -110,8 +105,7 @@
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         var email = (emailInput.value || '').trim();
-        var firstName = (firstNameInput.value || '').trim();
-        var lastName = (lastNameInput.value || '').trim();
+        var inviteName = (nameInput && nameInput.value) ? nameInput.value.trim() : '';
         var permission = (permissionInput && permissionInput.value === 'read') ? 'read' : 'edit';
         var businessName = '';
         try {
@@ -138,8 +132,7 @@
                 ownerUserId: ctx.userId,
                 metricIndex: -1,
                 email: email,
-                firstName: firstName,
-                lastName: lastName,
+                name: inviteName,
                 permission: permission,
                 businessName: businessName,
                 invitedByUserId: ctx.userId

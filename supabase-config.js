@@ -60,14 +60,22 @@
       },
     });
 
+    function normalizeInviteEmail(email) {
+      return String(email || '').trim().toLowerCase();
+    }
+
     // Invite helper used by invite pages and row-level invite actions.
     // Email wording is controlled by Supabase email templates.
     window.metricsSendInvite = function (email, businessName, redirectTo) {
       if (!window.metricsSupabase) {
         return Promise.reject(new Error('Supabase is not initialized.'));
       }
+      var em = normalizeInviteEmail(email);
+      if (!em) {
+        return Promise.reject(new Error('Email is required.'));
+      }
       return window.metricsSupabase.auth.signInWithOtp({
-        email: email,
+        email: em,
         options: {
           shouldCreateUser: true,
           emailRedirectTo: redirectTo,
@@ -83,12 +91,20 @@
       if (!window.metricsSupabase) {
         return Promise.reject(new Error('Supabase is not initialized.'));
       }
+      var em = normalizeInviteEmail(payload.email);
+      if (!em) {
+        return Promise.reject(new Error('Email is required.'));
+      }
+      var displayName = (payload.name != null ? String(payload.name) : '').trim();
+      if (!displayName && payload.firstName) {
+        displayName = [payload.firstName, payload.lastName || ''].join(' ').trim();
+      }
       return window.metricsSupabase.from('metric_invites').upsert({
         owner_user_id: payload.ownerUserId,
         metric_index: payload.metricIndex,
-        email: payload.email,
-        first_name: payload.firstName || null,
-        last_name: payload.lastName || null,
+        email: em,
+        first_name: displayName || null,
+        last_name: null,
         business_name: payload.businessName || null,
         invited_by_user_id: payload.invitedByUserId || payload.ownerUserId,
         permission: payload.permission === 'read' ? 'read' : 'edit',
@@ -100,12 +116,13 @@
       if (!window.metricsSupabase) {
         return Promise.reject(new Error('Supabase is not initialized.'));
       }
+      var em = normalizeInviteEmail(payload.email);
       return window.metricsSupabase
         .from('metric_invites')
         .delete()
         .eq('owner_user_id', payload.ownerUserId)
         .eq('metric_index', payload.metricIndex)
-        .eq('email', payload.email);
+        .eq('email', em);
     };
 
     window.metricsFetchMetricInvites = function (payload) {
@@ -124,10 +141,11 @@
       if (!window.metricsSupabase) {
         return Promise.reject(new Error('Supabase is not initialized.'));
       }
+      var em = normalizeInviteEmail(email);
       return window.metricsSupabase
         .from('metric_invites')
         .select('first_name,last_name,email,metric_index,owner_user_id,business_name,status,permission')
-        .ilike('email', String(email || '').trim())
+        .eq('email', em)
         .order('created_at', { ascending: true });
     };
 
