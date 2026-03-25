@@ -1087,6 +1087,22 @@
   margin-bottom: 20px;
 }
 
+.goal-current-block-muted {
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+
+.goal-current-block-muted .form-label {
+  color: #9ca3af;
+}
+
+.goal-current-block-muted .metric-single-line-input:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+}
+
 .individual-data-options {
   display: flex;
   flex-wrap: wrap;
@@ -2195,6 +2211,16 @@
 
 .input-page.input-theme-dark .individual-data-active-note {
   color: #7dd3fc;
+}
+
+.input-page.input-theme-dark .goal-current-block-muted .form-label {
+  color: #64748b;
+}
+
+.input-page.input-theme-dark .goal-current-block-muted .metric-single-line-input:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  color: #64748b;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .input-page.input-theme-dark .hero-name-wrap .btn-edit-name {

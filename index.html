@@ -46,24 +46,35 @@
           var displaySummary = m.displaySummary !== false;
           if (m.displayAs === 'ranking') {
             var rank = m.ranking || {};
-            var showIndListValues = rank.showIndividualGoalProgress !== false;
+            var legacyEnabled = !!rank.enabled;
+            var showSimpleAgg = rank.showSimpleAggregate != null ? !!rank.showSimpleAggregate : legacyEnabled;
+            var showIndListValues = rank.showIndividualGoalProgress != null ? (rank.showIndividualGoalProgress !== false) : legacyEnabled;
             var rankByPerf = rank.rankPerformance !== false;
             var rows = (rank.rows && rank.rows.length) ? rank.rows : [];
             rows = rows.filter(function (r) { return r && (String(r.name).trim() || String(r.goal).trim() || String(r.current).trim()); });
-            var totalGoal = 0, totalCurrent = 0;
-            for (var t = 0; t < rows.length; t++) {
-              totalGoal += parseFloat(rows[t].goal, 10) || 0;
-              totalCurrent += parseFloat(rows[t].current, 10) || 0;
+            var showMainTotalsCard = displaySummary && rows.length > 0 && (showSimpleAgg || showIndListValues);
+            var totalGoal = 0, totalCurrent = 0, achieved = false, valuesText = '';
+            if (showMainTotalsCard) {
+              for (var t = 0; t < rows.length; t++) {
+                var rg = rows[t];
+                var g = parseFloat(rg.goal, 10) || 0;
+                var indG = rg.individualGoal != null ? parseFloat(rg.individualGoal, 10) : NaN;
+                if (!isNaN(indG) && indG > 0) g = indG;
+                totalGoal += g;
+                totalCurrent += parseFloat(rg.current, 10) || 0;
+              }
+              var displayAsPctAgg = !!(rank.displayAsPercent);
+              achieved = totalGoal > 0 && totalCurrent >= totalGoal;
+              valuesText = (displayAsPctAgg && totalGoal > 0) ? ('<span class="current">' + Math.round((totalCurrent / totalGoal) * 100) + '%</span>') : ('<span class="current">' + escapeHtml(String(totalCurrent)) + '</span> / <span class="goal">' + escapeHtml(String(totalGoal)) + '</span>');
             }
-            var displayAsPct = !!(rank.displayAsPercent);
-            var achieved = totalGoal > 0 && totalCurrent >= totalGoal;
-            var valuesText = (displayAsPct && totalGoal > 0) ? ('<span class="current">' + Math.round((totalCurrent / totalGoal) * 100) + '%</span>') : ('<span class="current">' + escapeHtml(String(totalCurrent)) + '</span> / <span class="goal">' + escapeHtml(String(totalGoal)) + '</span>');
             displayed.push({
               type: 'ranking',
               heading: m.heading || 'Summary',
               valuesHtml: valuesText,
               achieved: achieved,
               displaySummary: displaySummary,
+              showMainTotalsCard: showMainTotalsCard,
+              showSimpleAggregate: showSimpleAgg,
               showIndividualGoalProgress: showIndListValues,
               rankByPerformance: rankByPerf,
               ranking: rank,
@@ -123,7 +134,7 @@
               '</div>';
             col.appendChild(card);
           } else {
-            if (item.displaySummary) {
+            if (item.showMainTotalsCard) {
               var card2 = document.createElement('div');
               card2.className = 'result-card result-card-summary' + (item.achieved ? ' achieved' : '');
               card2.innerHTML =
@@ -133,7 +144,7 @@
                 '</div>';
               col.appendChild(card2);
             }
-            if (item.rows && item.rows.length > 0) {
+            if (item.rows && item.rows.length > 0 && item.showIndividualGoalProgress !== false) {
               var withPct = item.rows.map(function (r) {
                 var cur = parseFloat(r.current, 10) || 0;
                 var goal = parseFloat(r.goal, 10) || 0;
@@ -146,7 +157,8 @@
               }
               var displayAsPct = !!(item.ranking && item.ranking.displayAsPercent);
               var list = document.createElement('div');
-              list.className = 'ranking-results' + (item.displaySummary ? '' : ' ranking-results-full');
+              var hasAggregate = !!item.showMainTotalsCard;
+              list.className = 'ranking-results' + (hasAggregate ? '' : ' ranking-results-full');
               list.innerHTML = '<h2 class="ranking-results-title">' + escapeHtml(item.heading) + '</h2>';
               var ul = document.createElement('ul');
               ul.className = 'ranking-list';
@@ -156,9 +168,7 @@
                 var valText = displayAsPct ? (Math.round(it.pct) + '%') : (escapeHtml(String(it.current)) + ' / ' + escapeHtml(String(it.goal)));
                 var parts = ['<span class="ranking-name">' + escapeHtml(it.name) + '</span>'];
                 if (indGoalPart) parts.push(indGoalPart);
-                if (item.showIndividualGoalProgress !== false) {
-                  parts.push('<span class="ranking-value">' + valText + '</span>');
-                }
+                parts.push('<span class="ranking-value">' + valText + '</span>');
                 var li = document.createElement('li');
                 li.className = 'ranking-list-item';
                 li.innerHTML = parts.join(' ');

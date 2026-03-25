@@ -725,6 +725,7 @@
             el.disabled = !canView || !canManageInv;
           });
           applySummaryModeUiForRow(row);
+          updateSummaryInputsState(row);
         });
       }
 
@@ -1872,10 +1873,12 @@
         var isRanking = (picked || {}).value === 'ranking';
         var goalInput = row.querySelector('input[name="goal"]');
         var currentInput = row.querySelector('input[name="current"]');
-        goalInput.disabled = isRanking;
-        currentInput.disabled = isRanking;
-        goalInput.placeholder = isRanking ? 'Using Individual data. Select Summary view to edit this field' : 'Goal';
-        currentInput.placeholder = isRanking ? 'Using Individual data. Select Summary view to edit this field' : 'Current';
+        var goalBlock = row.querySelector('.goal-current-block');
+        if (goalInput) goalInput.disabled = isRanking;
+        if (currentInput) currentInput.disabled = isRanking;
+        if (goalInput) goalInput.placeholder = isRanking ? 'Using Individual data. Select Summary view to edit this field' : 'Goal';
+        if (currentInput) currentInput.placeholder = isRanking ? 'Using Individual data. Select Summary view to edit this field' : 'Current';
+        if (goalBlock) goalBlock.classList.toggle('goal-current-block-muted', isRanking);
       }
 
       function updateAllSummaryInputsState() {
