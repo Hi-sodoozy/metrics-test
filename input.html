@@ -54,14 +54,14 @@
         <label class="option-check option-show-main"><input type="checkbox" name="showOnMainScreen" aria-label="Show on main screen" /> Show on main screen</label>
         <input type="hidden" name="heading" value="" />
         <div class="form-block goal-current-block">
-          <label class="form-label">Goal + Current</label>
+          <label class="form-label">Goal + Current <span class="info-tip" tabindex="0" aria-label="Goal and current info" title="When Current ≥ Goal, the card turns green.">i</span></label>
           <div class="goal-current-fields">
             <input type="number" name="goal" class="metric-single-line-input metric-number-input" placeholder="0" inputmode="decimal" step="any" autocomplete="off" aria-label="Goal (numeric)" />
             <input type="number" name="current" class="metric-single-line-input metric-number-input" placeholder="0" inputmode="decimal" step="any" autocomplete="off" aria-label="Current (numeric)" />
           </div>
         </div>
         <div class="form-block options-block">
-          <label class="form-label">Options</label>
+          <label class="form-label">Options <span class="info-tip" tabindex="0" aria-label="Summary and ranking info" title="Choose &quot;Summary&quot; to display the Goal + Current values entered above. Choose &quot;Ranking&quot; to display the information and totals from the ranking table below.">i</span></label>
           <div class="options-row">
             <label class="option-check"><input type="checkbox" name="displaySummary" class="display-summary-cb" checked aria-label="Display summary" /> Display summary</label>
             <label class="option-check"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /> Display as %?</label>
@@ -92,7 +92,7 @@
           <div class="metric-actions metric-actions-after-ranking"><button type="button" class="btn-save">Save</button></div>
         </div>
         <div class="invited-users-wrap">
-          <h5 class="invited-users-title">Invited users</h5>
+          <h5 class="invited-users-title">Invited users <span class="invited-users-subtitle">All users that can view this metric board</span></h5>
           <table class="input-table invited-users-table" aria-label="Invited users">
             <thead>
               <tr>
@@ -116,12 +116,11 @@
             </div>
             <p class="invited-add-hint">Set viewer, editor, or admin access in the table after someone is invited.</p>
           </div>
-          <button type="button" class="btn-remove-metric">Remove this metric</button>
+          <div class="remove-metric-row"><button type="button" class="btn-remove-metric">Remove this metric</button></div>
         </div>
       </div>
       </div>
     </div>
-    <p class="input-hint">Tick &quot;Show on main screen&quot; for up to four metrics on the display screen at once. You can create up to ten boards here. Choose &quot;Summary&quot; or &quot;Ranking&quot; (totals from this metric's ranking table). When Current &ge; Goal, the card turns green.</p>
     <footer class="input-footer">
       <a href="#" class="footer-link">My Profile</a>
       <a href="#" class="footer-link">Business Profile</a>

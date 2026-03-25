@@ -808,6 +808,23 @@
   margin-bottom: 8px;
 }
 
+.info-tip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 6px;
+  border-radius: 999px;
+  border: 1px solid #9aa3b2;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+  vertical-align: middle;
+}
+
 .metric-form textarea {
   width: 100%;
   min-height: 2.6em;
@@ -890,6 +907,11 @@
   border: 1px solid #e0a0a0;
   border-radius: 6px;
   cursor: pointer;
+}
+
+.remove-metric-row {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .btn-remove-metric:hover:not(:disabled) {
@@ -1262,6 +1284,15 @@
   color: #5a5a5a;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+.invited-users-subtitle {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #6b6b6b;
 }
 
 .invited-users-empty {
@@ -1924,6 +1955,15 @@
 .input-page.input-theme-dark .option-check,
 .input-page.input-theme-dark .option-radio {
   color: #9aa3b2;
+}
+
+.input-page.input-theme-dark .info-tip {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #cbd5e1;
+}
+
+.input-page.input-theme-dark .invited-users-subtitle {
+  color: #94a3b8;
 }
 
 .input-page.input-theme-dark .input-carousel-btn,
