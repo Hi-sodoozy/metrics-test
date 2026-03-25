@@ -269,7 +269,8 @@
         var em = normalizeEmailLocal(userEmail);
         if (!em) return serverMetric ? JSON.parse(JSON.stringify(serverMetric)) : emptyMetricSlot();
         var out = JSON.parse(JSON.stringify(serverMetric || emptyMetricSlot()));
-        if (!out.ranking) out.ranking = { enabled: false, displayAsPercent: false, showIndividualGoal: false, showIndividualGoalProgress: true, rankPerformance: true, rows: [] };
+        if (!out.ranking) out.ranking = { enabled: false, displayAsPercent: false, showIndividualGoal: false, showSimpleAggregate: false, showIndividualGoalProgress: true, rankPerformance: true, rows: [] };
+        if (out.ranking.showSimpleAggregate === undefined && out.ranking.enabled) out.ranking.showSimpleAggregate = true;
         if (!Array.isArray(out.ranking.rows)) out.ranking.rows = [];
         var sr = out.ranking.rows;
         var cr = (clientMetric && clientMetric.ranking && Array.isArray(clientMetric.ranking.rows)) ? clientMetric.ranking.rows : [];
@@ -313,7 +314,8 @@
         var metricIndex = parseInt(metricRow.getAttribute('data-index') || '0', 10);
         if (!canManageInvitesForMetric(metricIndex, metricRow)) return;
         var rankOn = metricRow.querySelector('.ranking-opt-simple');
-        if (!rankOn || !rankOn.checked) return;
+        var rankInd = metricRow.querySelector('.ranking-opt-individual-progress');
+        if ((!rankOn || !rankOn.checked) && (!rankInd || !rankInd.checked)) return;
         var rows = getRankingRowsFromBlock(metricRow);
         var changed = false;
         (inviteList || []).forEach(function (inv) {
@@ -345,7 +347,8 @@
       function ensureSelfContributorRankingRow(metricRow) {
         if (!isContributorRankingOnlyForRow(metricRow)) return;
         var rankOn = metricRow.querySelector('.ranking-opt-simple');
-        if (!rankOn || !rankOn.checked) return;
+        var rankInd = metricRow.querySelector('.ranking-opt-individual-progress');
+        if ((!rankOn || !rankOn.checked) && (!rankInd || !rankInd.checked)) return;
         var em = normalizeEmailLocal(userCtx.email);
         if (!em) return;
         var rows = getRankingRowsFromBlock(metricRow);
@@ -382,9 +385,10 @@
           displayAs: 'summary',
           displaySummary: true,
           ranking: {
-            enabled: false,
+            enabled: true,
             displayAsPercent: false,
             showIndividualGoal: false,
+            showSimpleAggregate: false,
             showIndividualGoalProgress: true,
             rankPerformance: true,
             rows: []
@@ -397,12 +401,13 @@
         if (m.showOnMainScreen) return false;
         if ((m.heading || '').trim() || (m.goal || '').trim() || (m.current || '').trim()) return false;
         var r = m.ranking || {};
-        if (r.enabled) return false;
-        var rows = Array.isArray(r.rows) ? r.rows : [];
-        for (var i = 0; i < rows.length; i++) {
-          var row = rows[i];
-          if (!row) continue;
-          if ((row.name || '').trim() || String(row.goal || '').trim() || String(row.current || '').trim()) return false;
+        if (r.enabled) {
+          var rows = Array.isArray(r.rows) ? r.rows : [];
+          for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            if (!row) continue;
+            if ((row.name || '').trim() || String(row.goal || '').trim() || String(row.current || '').trim() || String(row.individualGoal || '').trim()) return false;
+          }
         }
         return true;
       }
@@ -449,6 +454,8 @@
         var rankPct = row.querySelector('.ranking-display-as-pct');
         var optIndProg = row.querySelector('.ranking-opt-individual-progress');
         var optRankPerf = row.querySelector('.ranking-opt-rank-performance');
+        var simpleOn = optSimple ? optSimple.checked : false;
+        var indOn = optIndProg ? optIndProg.checked : true;
         return {
           showOnMainScreen: row.querySelector('input[name="showOnMainScreen"]').checked,
           heading: (row.querySelector('input[name="heading"]') || { value: '' }).value.trim(),
@@ -458,10 +465,11 @@
           displayAs: displayAs,
           displaySummary: displaySummaryCb ? displaySummaryCb.checked : true,
           ranking: {
-            enabled: optSimple ? optSimple.checked : false,
+            enabled: simpleOn || indOn,
+            showSimpleAggregate: simpleOn,
             displayAsPercent: rankPct ? rankPct.checked : false,
             showIndividualGoal: missionCb ? missionCb.checked : false,
-            showIndividualGoalProgress: optIndProg ? optIndProg.checked : true,
+            showIndividualGoalProgress: indOn,
             rankPerformance: optRankPerf ? optRankPerf.checked : true,
             rows: rankRows
           }
@@ -746,16 +754,19 @@
         var radio = row.querySelector('input[type="radio"][name^="displayAs_"][value="' + displayAs + '"]');
         if (radio) radio.checked = true;
         var rank = m.ranking || {};
-        row.querySelector('.ranking-opt-simple').checked = !!rank.enabled;
+        var legEn = !!rank.enabled;
+        var simpleAgg = rank.showSimpleAggregate != null ? !!rank.showSimpleAggregate : legEn;
+        var indProgOn = rank.showIndividualGoalProgress != null ? (rank.showIndividualGoalProgress !== false) : legEn;
+        row.querySelector('.ranking-opt-simple').checked = simpleAgg;
         row.querySelector('.ranking-display-as-pct').checked = !!rank.displayAsPercent;
         var indProg = row.querySelector('.ranking-opt-individual-progress');
-        if (indProg) indProg.checked = rank.showIndividualGoalProgress !== false;
+        if (indProg) indProg.checked = indProgOn;
         var rankPerf = row.querySelector('.ranking-opt-rank-performance');
         if (rankPerf) rankPerf.checked = rank.rankPerformance !== false;
         var missionCb = row.querySelector('.ranking-opt-mission');
         if (missionCb) missionCb.checked = !!rank.showIndividualGoal;
         var wrap = row.querySelector('.metric-ranking-section .ranking-table-wrap');
-        if (wrap) wrap.hidden = !rank.enabled;
+        if (wrap) wrap.hidden = !simpleAgg && !indProgOn;
         var rankRows = rank.rows && rank.rows.length ? rank.rows.slice() : [];
         while (rankRows.length < INITIAL_RANKING_ROWS) {
           rankRows.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '', contributorEmail: '' });
@@ -838,12 +849,21 @@
           else save();
         }
         var wrap = row.querySelector('.metric-ranking-section .ranking-table-wrap');
+        function syncRankingTableWrap() {
+          if (!wrap) return;
+          var s = row.querySelector('.ranking-opt-simple');
+          var ip = row.querySelector('.ranking-opt-individual-progress');
+          wrap.hidden = !((s && s.checked) || (ip && ip.checked));
+        }
         row.querySelector('.ranking-opt-simple').addEventListener('change', function () {
-          wrap.hidden = !this.checked;
+          syncRankingTableWrap();
           touch();
         });
         row.querySelector('.ranking-display-as-pct').addEventListener('change', touch);
-        row.querySelector('.ranking-opt-individual-progress').addEventListener('change', touch);
+        row.querySelector('.ranking-opt-individual-progress').addEventListener('change', function () {
+          syncRankingTableWrap();
+          touch();
+        });
         row.querySelector('.ranking-opt-rank-performance').addEventListener('change', touch);
         var missionCb = row.querySelector('.ranking-opt-mission');
         if (missionCb) {
@@ -1405,7 +1425,8 @@
                   enabled: !!pr.enabled,
                   displayAsPercent: !!pr.displayAsPercent,
                   showIndividualGoal: !!pr.showIndividualGoal,
-                  showIndividualGoalProgress: true,
+                  showSimpleAggregate: !!pr.enabled,
+                  showIndividualGoalProgress: !!pr.enabled,
                   rankPerformance: true,
                   rows: oldRows.slice(0, INITIAL_RANKING_ROWS)
                 };
@@ -1421,6 +1442,9 @@
                   mode: 'data'
                 };
               });
+              var legR = !!ranking.enabled;
+              var showSimpleR = ranking.showSimpleAggregate != null ? !!ranking.showSimpleAggregate : legR;
+              var showIndR = ranking.showIndividualGoalProgress != null ? (ranking.showIndividualGoalProgress !== false) : legR;
               data.metrics.push({
                 showOnMainScreen: !!m.showOnMainScreen,
                 heading: m.heading || '',
@@ -1430,10 +1454,11 @@
                 displayAs: m.displayAs === 'ranking' ? 'ranking' : 'summary',
                 displaySummary: m.displaySummary !== false,
                 ranking: {
-                  enabled: !!ranking.enabled,
+                  enabled: showSimpleR || showIndR,
+                  showSimpleAggregate: showSimpleR,
                   displayAsPercent: !!ranking.displayAsPercent,
                   showIndividualGoal: !!ranking.showIndividualGoal,
-                  showIndividualGoalProgress: ranking.showIndividualGoalProgress !== false,
+                  showIndividualGoalProgress: showIndR,
                   rankPerformance: ranking.rankPerformance !== false,
                   rows: rowsWithInd
                 }
