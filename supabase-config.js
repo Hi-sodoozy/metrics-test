@@ -64,6 +64,12 @@
       return String(email || '').trim().toLowerCase();
     }
 
+    function normalizeInvitePermission(p) {
+      if (p === 'read') return 'read';
+      if (p === 'admin') return 'admin';
+      return 'edit';
+    }
+
     // Invite helper used by invite pages and row-level invite actions.
     // Email wording is controlled by Supabase email templates.
     window.metricsSendInvite = function (email, businessName, redirectTo) {
@@ -107,9 +113,24 @@
         last_name: null,
         business_name: payload.businessName || null,
         invited_by_user_id: payload.invitedByUserId || payload.ownerUserId,
-        permission: payload.permission === 'read' ? 'read' : 'edit',
+        permission: normalizeInvitePermission(payload.permission),
         status: 'invited'
       }, { onConflict: 'owner_user_id,metric_index,email' });
+    };
+
+    window.metricsUpdateMetricInvitePermission = function (payload) {
+      if (!window.metricsSupabase) {
+        return Promise.reject(new Error('Supabase is not initialized.'));
+      }
+      var em = normalizeInviteEmail(payload.email);
+      return window.metricsSupabase
+        .from('metric_invites')
+        .update({ permission: normalizeInvitePermission(payload.permission) })
+        .eq('owner_user_id', payload.ownerUserId)
+        .eq('metric_index', payload.metricIndex)
+        .eq('email', em)
+        .select('email')
+        .maybeSingle();
     };
 
     window.metricsDeleteMetricInvite = function (payload) {
@@ -180,7 +201,7 @@
         byIndex[r.metric_index] = r.payload;
       });
       var metrics = [];
-      for (var i = 0; i < 4; i++) {
+      for (var i = 0; i < 10; i++) {
         metrics.push(byIndex[i] ? JSON.parse(JSON.stringify(byIndex[i])) : defaultMetricPayload());
       }
       return {
@@ -225,7 +246,11 @@
           }, { onConflict: 'owner_user_id' })
         : Promise.resolve({ data: null, error: null });
       var indices = allowedMetricIndexes;
-      if (!indices || !indices.length) indices = [0, 1, 2, 3];
+      if (!indices || !indices.length) {
+        indices = [];
+        var cap = Math.min(Math.max(metrics.length, 1), 10);
+        for (var j = 0; j < cap; j++) indices.push(j);
+      }
       var rows = indices.map(function (i) {
         var payload = metrics[i] ? JSON.parse(JSON.stringify(metrics[i])) : defaultMetricPayload();
         return { owner_user_id: ownerUserId, metric_index: i, payload: payload };

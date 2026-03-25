@@ -24,147 +24,27 @@
   </style>
 </head>
 <body class="metrics-page input-page">
+  <div class="page-top-brand"><span class="app-brand">Metrics View</span></div>
   <main class="ind-main">
-    <div class="ind-top">
-      <h1 style="margin:0;font-size:1.45rem;">Individual Account</h1>
-      <div class="ind-toggle">
-        <button type="button" id="btnBusinessView" class="active">Business Metrics</button>
-        <button type="button" id="btnPersonalView">Personal Metrics</button>
-      </div>
-    </div>
-
-    <section id="businessMetricsPanel"></section>
-    <section id="personalMetricsPanel" hidden>
-      <div class="ind-card">
-        <h3>Personal metrics</h3>
-        <p class="ind-empty">Track your own goals alongside any businesses you collaborate with.</p>
-        <div class="ind-actions">
-          <a href="input.html?view=personal">Edit personal metrics</a>
-          <a href="index.html?view=personal">View personal results</a>
-        </div>
-      </div>
-    </section>
+    <p class="ind-empty" style="margin-top:2rem;">Opening your dashboard…</p>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script>
     (function () {
-      var ctx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
-      if (!ctx || !ctx.email) {
-        window.location.href = 'welcome.html';
-        return;
-      }
-
-      var btnBusinessView = document.getElementById('btnBusinessView');
-      var btnPersonalView = document.getElementById('btnPersonalView');
-      var businessPanel = document.getElementById('businessMetricsPanel');
-      var personalPanel = document.getElementById('personalMetricsPanel');
-
-      function setView(which) {
-        var isBusiness = which === 'business';
-        businessPanel.hidden = !isBusiness;
-        personalPanel.hidden = isBusiness;
-        btnBusinessView.classList.toggle('active', isBusiness);
-        btnPersonalView.classList.toggle('active', !isBusiness);
-      }
-
-      btnBusinessView.addEventListener('click', function () { setView('business'); });
-      btnPersonalView.addEventListener('click', function () { setView('personal'); });
-
-      function metricHeading(dashboard, index) {
-        var m = dashboard && dashboard.metrics && dashboard.metrics[index];
-        if (m && m.heading && String(m.heading).trim()) return String(m.heading).trim();
-        return 'Metric ' + (index + 1);
-      }
-
-      function renderBusinessMetrics() {
-        businessPanel.innerHTML = '<div class="ind-card"><p class="ind-empty">Loading invitations...</p></div>';
-        if (!window.metricsFetchInvitesForEmail || !window.metricsLoadBusinessDashboard) {
-          businessPanel.innerHTML = '<div class="ind-card"><p class="ind-empty">Supabase is not configured.</p></div>';
-          return;
-        }
-        window.metricsFetchInvitesForEmail(ctx.email).then(function (res) {
-          if (res && res.error) throw res.error;
-          var rows = (res && res.data) ? res.data : [];
-          var activeRows = rows.filter(function (r) {
-            return r && r.metric_index != null && r.metric_index >= 0 && r.metric_index <= 3 && r.status !== 'revoked';
-          });
-          if (!activeRows.length) {
-            businessPanel.innerHTML = '<div class="ind-card"><p class="ind-empty">No business metrics invited yet.</p></div>';
-            return;
-          }
-          var byOwner = {};
-          activeRows.forEach(function (r) {
-            var oid = r.owner_user_id;
-            if (!oid) return;
-            if (!byOwner[oid]) byOwner[oid] = [];
-            byOwner[oid].push(r);
-          });
-          var ownerIds = Object.keys(byOwner);
-          return Promise.all(ownerIds.map(function (oid) {
-            return window.metricsLoadBusinessDashboard(oid).then(function (dash) {
-              return { ownerId: oid, dashboard: dash, invites: byOwner[oid] };
-            });
-          })).then(function (bundles) {
-            businessPanel.innerHTML = '';
-            bundles.forEach(function (b) {
-              var dash = b.dashboard || { businessName: '', metrics: [] };
-              var title = dash.businessName || (b.invites[0] && b.invites[0].business_name) || 'Business';
-              var card = document.createElement('div');
-              card.className = 'ind-card';
-              var h3 = document.createElement('h3');
-              h3.textContent = title;
-              card.appendChild(h3);
-
-              b.invites.sort(function (a, x) { return (a.metric_index || 0) - (x.metric_index || 0); });
-              b.invites.forEach(function (inv) {
-                var mi = inv.metric_index || 0;
-                var perm = inv.permission === 'read' ? 'Read only' : 'Can edit';
-                var sub = document.createElement('div');
-                sub.style.marginTop = '12px';
-                sub.innerHTML = '<strong>' + metricHeading(dash, mi) + '</strong> <span style="color:#888;font-size:13px;">(' + perm + ')</span>';
-                var preview = document.createElement('p');
-                preview.className = 'ind-metric-preview';
-                var m = dash.metrics && dash.metrics[mi];
-                if (m && m.displayAs === 'ranking' && m.ranking && m.ranking.enabled) {
-                  preview.textContent = 'Ranking view — open input or results for details.';
-                } else if (m) {
-                  preview.textContent = ('Goal: ' + (m.goal || '—') + ' · Current: ' + (m.current || '—')).slice(0, 200);
-                } else {
-                  preview.textContent = 'No data yet.';
-                }
-                sub.appendChild(preview);
-                var actions = document.createElement('div');
-                actions.className = 'ind-actions';
-                var q = 'input.html?owner=' + encodeURIComponent(b.ownerId);
-                var qRes = 'index.html?owner=' + encodeURIComponent(b.ownerId);
-                actions.innerHTML =
-                  '<a href="' + q + '">Edit / input</a>' +
-                  '<a href="' + qRes + '">View results</a>';
-                sub.appendChild(actions);
-                card.appendChild(sub);
-              });
-              businessPanel.appendChild(card);
-            });
-          });
-        }).catch(function (err) {
-          businessPanel.innerHTML = '<div class="ind-card"><p class="ind-empty">' + ((err && err.message) ? err.message : 'Unable to load invites.') + '</p></div>';
-        });
-      }
-
       Promise.resolve()
         .then(function () {
           return window.metricsSyncContextFromSession ? window.metricsSyncContextFromSession() : null;
         })
         .then(function () {
-          ctx = window.metricsGetUserContext ? window.metricsGetUserContext() : ctx;
+          var ctx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
           if (!ctx || !ctx.email) {
             window.location.href = 'welcome.html';
             return;
           }
-          renderBusinessMetrics();
-          setView('business');
+          var q = window.location.search || '';
+          window.location.replace('input.html' + q);
         });
     })();
   </script>

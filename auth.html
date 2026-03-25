@@ -32,6 +32,7 @@
   </style>
 </head>
 <body class="metrics-page input-page">
+  <div class="page-top-brand"><span class="app-brand">Metrics View</span></div>
   <main class="auth-main">
     <div class="auth-card">
       <h1 id="authTitle">Sign in</h1>
@@ -102,8 +103,7 @@
       }
 
       function routeAfterAuth(ctx) {
-        if (ctx && ctx.accountType === 'business') window.location.href = 'input.html';
-        else window.location.href = 'individual.html';
+        window.location.href = 'input.html';
       }
 
       function applyMode() {

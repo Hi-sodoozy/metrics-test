@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Metrics – Results</title>
+  <title>Results</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="metrics-page results-page">
@@ -51,11 +51,12 @@
           }
         }
 
-        var metrics = (data.metrics && data.metrics.length) ? data.metrics.slice(0, 4) : [];
+        var metrics = (data.metrics && data.metrics.length) ? data.metrics.slice(0, 10) : [];
         var displayed = [];
         for (var i = 0; i < metrics.length; i++) {
           var m = metrics[i];
           if (!m || !m.showOnMainScreen) continue;
+          if (displayed.length >= 4) break;
           var displaySummary = m.displaySummary !== false;
           if (m.displayAs === 'ranking') {
             var rank = m.ranking || {};

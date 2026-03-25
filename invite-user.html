@@ -48,6 +48,7 @@
   </style>
 </head>
 <body class="metrics-page input-page">
+  <div class="page-top-brand"><span class="app-brand">Metrics View</span></div>
   <main class="invite-main">
     <div class="invite-card">
       <h1 class="invite-title">Invite User</h1>
@@ -65,7 +66,8 @@
           <label for="invitePermission">Permission</label>
           <select id="invitePermission" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:4px;font:inherit;">
             <option value="edit">Can edit</option>
-            <option value="read">Read only</option>
+            <option value="read">View only</option>
+            <option value="admin">Admin</option>
           </select>
         </div>
         <button type="submit" class="invite-btn" id="inviteBtn">Send Invite</button>
@@ -85,7 +87,7 @@
         return;
       }
       if (ctx.accountType !== 'business') {
-        window.location.href = 'individual.html';
+        window.location.href = 'input.html';
         return;
       }
 
@@ -106,7 +108,9 @@
         e.preventDefault();
         var email = (emailInput.value || '').trim();
         var inviteName = (nameInput && nameInput.value) ? nameInput.value.trim() : '';
-        var permission = (permissionInput && permissionInput.value === 'read') ? 'read' : 'edit';
+        var permission = (permissionInput && permissionInput.value === 'read')
+          ? 'read'
+          : (permissionInput && permissionInput.value === 'admin') ? 'admin' : 'edit';
         var businessName = '';
         try {
           var raw = localStorage.getItem('metricsDashboard');
