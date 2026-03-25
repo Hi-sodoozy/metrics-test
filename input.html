@@ -9,7 +9,7 @@
 <body class="metrics-page input-page">
   <main class="input-main">
     <header class="input-header">
-      <a href="index.html" class="back-link">View results</a>
+      <a href="index.html" class="back-link" id="linkViewResults">View results</a>
     </header>
     <div class="input-business-header">
       <div class="input-business-pic-wrap">
@@ -239,25 +239,239 @@
   <script src="supabase-config.js"></script>
   <script>
     (function () {
-      var userCtx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
-      if (!userCtx || !userCtx.email) {
-        window.location.href = 'welcome.html';
-        return;
-      }
-      if (userCtx.accountType === 'individual') {
-        window.location.href = 'individual.html';
-        return;
+      var params = new URLSearchParams(window.location.search);
+      var ownerParam = (params.get('owner') || '').trim();
+      var viewPersonalQuery = params.get('view') === 'personal';
+
+      function uuidLooksValid(s) {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s || '');
       }
 
-      var KEY_BUSINESS = 'metricsDashboard';
-      var KEY_PERSONAL = 'metricsPersonalDashboard';
-      var activeView = 'business';
-      var INITIAL_RANKING_ROWS = 4;
+      Promise.resolve()
+        .then(function () {
+          return window.metricsSyncContextFromSession ? window.metricsSyncContextFromSession() : null;
+        })
+        .then(function () {
+          var userCtx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
+          if (!userCtx || !userCtx.email) {
+            window.location.href = 'welcome.html';
+            return;
+          }
+          if (userCtx.accountType === 'individual' && !ownerParam && !viewPersonalQuery) {
+            window.location.href = 'individual.html';
+            return;
+          }
+
+          var KEY_BUSINESS = 'metricsDashboard';
+          var KEY_PERSONAL = 'metricsPersonalDashboard';
+          var activeView = 'business';
+          var INITIAL_RANKING_ROWS = 4;
+          var currentUserCtx = userCtx;
+
+          var dashboardOwnerId = uuidLooksValid(ownerParam) ? ownerParam : userCtx.userId;
+          var isCollaborator = uuidLooksValid(ownerParam) && ownerParam !== userCtx.userId;
+          var collaborViewIndices = [];
+          var collaborEditIndices = [];
+          var remoteSaveTimer = null;
 
       var businessImageDataUrl = '';
 
       function activeKey() {
         return activeView === 'personal' ? KEY_PERSONAL : KEY_BUSINESS;
+      }
+
+      function padMetricsToFour(list) {
+        var out = [];
+        var src = Array.isArray(list) ? list : [];
+        for (var i = 0; i < 4; i++) {
+          out.push(src[i] || null);
+        }
+        return out;
+      }
+
+      function applyDashboardToStorage(data) {
+        if (!data) return;
+        var metrics = padMetricsToFour(data.metrics);
+        var blob = {
+          businessName: data.businessName != null ? String(data.businessName) : '',
+          businessImage: data.businessImage != null ? String(data.businessImage) : '',
+          metrics: metrics
+        };
+        if (blob.businessImage) businessImageDataUrl = blob.businessImage;
+        try {
+          localStorage.setItem(activeKey(), JSON.stringify(blob));
+        } catch (e) {}
+      }
+
+      function collectDashboardFromDom() {
+        var businessName = (document.getElementById('inputBusinessName') || {}).value || '';
+        var metrics = [];
+        var rows = document.querySelectorAll('.input-row.metric-form');
+        for (var i = 0; i < rows.length && i < 4; i++) {
+          var row = rows[i];
+          var displayAsRadio = row.querySelector('input[name="displayAs_' + i + '"]:checked');
+          var displayAs = (displayAsRadio && displayAsRadio.value === 'ranking') ? 'ranking' : 'summary';
+          var rankRows = getRankingRowsFromBlock(row);
+          var displaySummaryCb = row.querySelector('input[name="displaySummary"]');
+          var indBtn = row.querySelector('.btn-individual-goal');
+          metrics.push({
+            showOnMainScreen: row.querySelector('input[name="showOnMainScreen"]').checked,
+            heading: row.querySelector('textarea[name="heading"]').value.trim(),
+            goal: row.querySelector('textarea[name="goal"]').value.trim(),
+            current: row.querySelector('textarea[name="current"]').value.trim(),
+            displayAsPercent: row.querySelector('input[name="displayAsPercent"]').checked,
+            displayAs: displayAs,
+            displaySummary: displaySummaryCb ? displaySummaryCb.checked : true,
+            ranking: {
+              enabled: row.querySelector('.ranking-enabled').checked,
+              displayAsPercent: row.querySelector('.ranking-display-as-pct').checked,
+              showIndividualGoal: indBtn ? indBtn.textContent.indexOf('-') !== -1 : false,
+              rows: rankRows
+            }
+          });
+        }
+        while (metrics.length < 4) {
+          metrics.push({
+            showOnMainScreen: false,
+            heading: '',
+            goal: '',
+            current: '',
+            displayAsPercent: false,
+            displayAs: 'summary',
+            displaySummary: true,
+            ranking: { enabled: false, displayAsPercent: false, showIndividualGoal: false, rows: [] }
+          });
+        }
+        return {
+          businessName: businessName,
+          businessImage: businessImageDataUrl || '',
+          metrics: metrics
+        };
+      }
+
+      function persistRemoteNow() {
+        if (!window.metricsSupabase || !userCtx.userId) return Promise.resolve();
+        if (isCollaborator) {
+          if (!collaborEditIndices.length) return Promise.resolve();
+          var payload = collectDashboardFromDom();
+          return window.metricsSaveBusinessDashboard(
+            dashboardOwnerId,
+            payload,
+            collaborEditIndices,
+            { includeProfile: false }
+          );
+        }
+        if (activeView === 'personal') {
+          return window.metricsSavePersonalDashboard(userCtx.userId, collectDashboardFromDom());
+        }
+        if (userCtx.accountType === 'business' || !isCollaborator) {
+          return window.metricsSaveBusinessDashboard(dashboardOwnerId, collectDashboardFromDom(), null, { includeProfile: true });
+        }
+        return Promise.resolve();
+      }
+
+      function scheduleRemoteSave() {
+        if (!window.metricsSupabase || !userCtx.userId) return;
+        if (isCollaborator && !collaborEditIndices.length) return;
+        if (!isCollaborator && activeView !== 'personal' && userCtx.accountType !== 'business') return;
+        clearTimeout(remoteSaveTimer);
+        remoteSaveTimer = setTimeout(function () {
+          remoteSaveTimer = null;
+          persistRemoteNow().catch(function () {});
+        }, 1800);
+      }
+
+      function applyCollaboratorLocks() {
+        if (!isCollaborator) return;
+        document.querySelectorAll('.input-row.metric-form').forEach(function (row) {
+          var idx = parseInt(row.getAttribute('data-index') || '0', 10);
+          var canView = collaborViewIndices.indexOf(idx) >= 0;
+          var canEdit = collaborEditIndices.indexOf(idx) >= 0;
+          var locked = !canView || !canEdit;
+          row.querySelectorAll('input, textarea, select, button').forEach(function (el) {
+            if (el.closest('.input-carousel-btn')) return;
+            if (el.classList.contains('input-carousel-btn')) return;
+            el.disabled = locked;
+          });
+          if (!canView) {
+            row.querySelectorAll('input, textarea, select, button').forEach(function (el) {
+              el.disabled = true;
+            });
+          }
+          var saveBtn = row.querySelector('.metric-actions .btn-save');
+          if (saveBtn) saveBtn.disabled = !canEdit;
+          var addRow = row.querySelector('.metric-ranking-section .btn-add-row');
+          if (addRow) addRow.disabled = locked;
+        });
+      }
+
+      function updateChromeForMode() {
+        var toggle = document.getElementById('accountViewToggle');
+        if (toggle) toggle.hidden = !!isCollaborator;
+        var nameEl = document.getElementById('inputBusinessName');
+        if (nameEl) nameEl.readOnly = !!isCollaborator;
+        var btnPic = document.getElementById('btnEditPic');
+        if (btnPic) btnPic.disabled = !!isCollaborator;
+        var linkResults = document.getElementById('linkViewResults');
+        if (linkResults) {
+          if (isCollaborator) {
+            linkResults.href = 'index.html?owner=' + encodeURIComponent(dashboardOwnerId);
+          } else if (activeView === 'personal') {
+            linkResults.href = 'index.html?view=personal';
+          } else {
+            linkResults.href = 'index.html';
+          }
+        }
+        document.querySelectorAll('.input-row.metric-form').forEach(function (row) {
+          row.querySelectorAll('.btn-row-invite, .btn-row-invite-send').forEach(function (b) {
+            b.disabled = !!isCollaborator;
+            b.hidden = !!isCollaborator;
+          });
+        });
+      }
+
+      function bootstrapRemote() {
+        if (viewPersonalQuery) activeView = 'personal';
+        else {
+          try {
+            var storedView = localStorage.getItem('metricsActiveView');
+            if (storedView === 'personal' || storedView === 'business') activeView = storedView;
+          } catch (e) {}
+        }
+        if (isCollaborator) {
+          return window.metricsFetchInvitesForOwnerAndEmail(dashboardOwnerId, userCtx.email)
+            .then(function (res) {
+              var rows = (res && res.data) ? res.data : [];
+              collaborViewIndices = [];
+              collaborEditIndices = [];
+              var seenV = {};
+              rows.forEach(function (r) {
+                if (!r || r.status === 'revoked') return;
+                var mi = r.metric_index;
+                if (mi == null || mi < 0 || mi > 3) return;
+                if (!seenV[mi]) {
+                  seenV[mi] = true;
+                  collaborViewIndices.push(mi);
+                }
+                if (r.permission === 'edit' && collaborEditIndices.indexOf(mi) < 0) collaborEditIndices.push(mi);
+              });
+              if (!collaborViewIndices.length) {
+                throw new Error('You do not have access to this business dashboard.');
+              }
+              return window.metricsLoadBusinessDashboard(dashboardOwnerId);
+            })
+            .then(function (data) {
+              applyDashboardToStorage(data);
+            });
+        }
+        if (activeView === 'personal') {
+          return window.metricsLoadPersonalDashboard(userCtx.userId).then(function (data) {
+            applyDashboardToStorage(data);
+          });
+        }
+        return window.metricsLoadBusinessDashboard(dashboardOwnerId).then(function (data) {
+          applyDashboardToStorage(data);
+        });
       }
 
       function getData() {
@@ -378,7 +592,7 @@
         var metricIndex = parseInt(metricRow.getAttribute('data-index') || '0', 10);
         if (!userCtx || !userCtx.userId || !window.metricsFetchMetricInvites) return;
         window.metricsFetchMetricInvites({
-          ownerUserId: userCtx.userId,
+          ownerUserId: dashboardOwnerId,
           metricIndex: metricIndex
         }).then(function (res) {
           if (!res || res.error || !Array.isArray(res.data)) return;
@@ -455,7 +669,7 @@
                     if (res && res.error) throw res.error;
                     if (window.metricsUpsertMetricInvite && userCtx && userCtx.userId) {
                       return window.metricsUpsertMetricInvite({
-                        ownerUserId: userCtx.userId,
+                        ownerUserId: dashboardOwnerId,
                         metricIndex: metricIndex,
                         email: email,
                         firstName: firstName,
@@ -527,7 +741,7 @@
               var userCtx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
               if (removed && removed.mode === 'invite' && removed.inviteEmail && window.metricsDeleteMetricInvite && userCtx && userCtx.userId) {
                 window.metricsDeleteMetricInvite({
-                  ownerUserId: userCtx.userId,
+                  ownerUserId: dashboardOwnerId,
                   metricIndex: metricIndex,
                   email: removed.inviteEmail
                 }).catch(function () {});
@@ -554,6 +768,9 @@
         var data = getData();
         var nameEl = document.getElementById('inputBusinessName');
         var picEl = document.getElementById('inputBusinessPic');
+        if (!data.businessName && currentUserCtx && currentUserCtx.businessName) {
+          data.businessName = currentUserCtx.businessName;
+        }
         if (nameEl) nameEl.value = data.businessName || '';
         if (picEl && data.businessImage) {
           picEl.style.backgroundImage = 'url(' + data.businessImage + ')';
@@ -640,6 +857,7 @@
             metrics: metrics
           }));
         } catch (e) {}
+        scheduleRemoteSave();
       }
 
       document.querySelectorAll('.input-row.metric-form').forEach(function (row) {
@@ -667,7 +885,19 @@
         });
         row.querySelector('.metric-actions .btn-save').addEventListener('click', function () {
           save();
-          window.location.href = 'index.html';
+          persistRemoteNow()
+            .then(function () {
+              if (isCollaborator) {
+                window.location.href = 'index.html?owner=' + encodeURIComponent(dashboardOwnerId);
+              } else if (activeView === 'personal') {
+                window.location.href = 'index.html?view=personal';
+              } else {
+                window.location.href = 'index.html';
+              }
+            })
+            .catch(function (err) {
+              alert((err && err.message) ? err.message : 'Could not save to the server.');
+            });
         });
         var idx = row.getAttribute('data-index');
         row.querySelectorAll('input[name="displayAs_' + idx + '"]').forEach(function (radio) {
@@ -679,9 +909,26 @@
       });
 
       var inputBusinessName = document.getElementById('inputBusinessName');
+      function syncBusinessNameToProfile() {
+        if (isCollaborator || activeView !== 'business') return;
+        if (!window.metricsSupabase || !currentUserCtx || currentUserCtx.accountType !== 'business') return;
+        var latestName = (inputBusinessName && inputBusinessName.value) ? inputBusinessName.value.trim() : '';
+        if (!latestName || latestName === (currentUserCtx.businessName || '')) return;
+        window.metricsSupabase.auth.updateUser({
+          data: { business_name: latestName }
+        }).then(function (res) {
+          if (res && res.error) return;
+          currentUserCtx.businessName = latestName;
+          if (window.metricsSetUserContext) window.metricsSetUserContext(currentUserCtx);
+        }).catch(function () {});
+      }
       if (inputBusinessName) {
         inputBusinessName.addEventListener('change', save);
-        inputBusinessName.addEventListener('blur', save);
+        inputBusinessName.addEventListener('change', syncBusinessNameToProfile);
+        inputBusinessName.addEventListener('blur', function () {
+          save();
+          syncBusinessNameToProfile();
+        });
       }
       var btnEditPic = document.getElementById('btnEditPic');
       var inputPicFile = document.getElementById('inputPicFile');
@@ -710,10 +957,20 @@
       }
 
       function switchMetricsView(nextView) {
+        if (userCtx.accountType === 'individual' && nextView === 'business') {
+          window.location.href = 'individual.html';
+          return;
+        }
         activeView = nextView === 'personal' ? 'personal' : 'business';
         try { localStorage.setItem('metricsActiveView', activeView); } catch (e) {}
-        document.getElementById('btnBusinessMetricsView').classList.toggle('active', activeView === 'business');
-        document.getElementById('btnPersonalMetricsView').classList.toggle('active', activeView === 'personal');
+        var btnB = document.getElementById('btnBusinessMetricsView');
+        var btnP = document.getElementById('btnPersonalMetricsView');
+        if (btnB) btnB.classList.toggle('active', activeView === 'business');
+        if (btnP) btnP.classList.toggle('active', activeView === 'personal');
+        var linkResults = document.getElementById('linkViewResults');
+        if (linkResults && !isCollaborator) {
+          linkResults.href = activeView === 'personal' ? 'index.html?view=personal' : 'index.html';
+        }
         load();
       }
 
@@ -753,11 +1010,22 @@
       }
       updateCarouselButtons();
 
-      try {
-        var storedView = localStorage.getItem('metricsActiveView');
-        if (storedView === 'personal' || storedView === 'business') activeView = storedView;
-      } catch (e) {}
-      switchMetricsView(activeView);
+      bootstrapRemote()
+        .then(function () {
+          updateChromeForMode();
+          switchMetricsView(activeView);
+          applyCollaboratorLocks();
+        })
+        .catch(function (err) {
+          if (isCollaborator) {
+            alert((err && err.message) ? err.message : 'Unable to load this dashboard.');
+            window.location.href = 'individual.html';
+            return;
+          }
+          updateChromeForMode();
+          switchMetricsView(activeView);
+        });
+        });
     })();
   </script>
 </body>

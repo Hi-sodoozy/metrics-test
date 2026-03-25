@@ -142,6 +142,145 @@
         return window.metricsGetUserContext();
       });
     };
+
+    function defaultMetricPayload() {
+      return {
+        showOnMainScreen: false,
+        heading: '',
+        goal: '',
+        current: '',
+        displayAsPercent: false,
+        displayAs: 'summary',
+        displaySummary: true,
+        ranking: { enabled: false, displayAsPercent: false, showIndividualGoal: false, rows: [] }
+      };
+    }
+
+    function slotsRowsToDashboard(profileRow, slotRows) {
+      var byIndex = {};
+      (slotRows || []).forEach(function (r) {
+        byIndex[r.metric_index] = r.payload;
+      });
+      var metrics = [];
+      for (var i = 0; i < 4; i++) {
+        metrics.push(byIndex[i] ? JSON.parse(JSON.stringify(byIndex[i])) : defaultMetricPayload());
+      }
+      return {
+        businessName: (profileRow && profileRow.business_name) ? String(profileRow.business_name) : '',
+        businessImage: (profileRow && profileRow.business_image) ? String(profileRow.business_image) : '',
+        metrics: metrics
+      };
+    }
+
+    window.metricsLoadBusinessDashboard = function (ownerUserId) {
+      if (!window.metricsSupabase) {
+        return Promise.reject(new Error('Supabase is not initialized.'));
+      }
+      var client = window.metricsSupabase;
+      return Promise.all([
+        client.from('business_profiles').select('business_name,business_image').eq('owner_user_id', ownerUserId).maybeSingle(),
+        client.from('business_metric_slots').select('metric_index,payload').eq('owner_user_id', ownerUserId)
+      ]).then(function (results) {
+        var prof = results[0];
+        var slots = results[1];
+        if (prof && prof.error) throw prof.error;
+        if (slots && slots.error) throw slots.error;
+        return slotsRowsToDashboard(prof && prof.data ? prof.data : null, slots && slots.data ? slots.data : []);
+      });
+    };
+
+    window.metricsSaveBusinessDashboard = function (ownerUserId, dashboardData, allowedMetricIndexes, saveOptions) {
+      if (!window.metricsSupabase) {
+        return Promise.reject(new Error('Supabase is not initialized.'));
+      }
+      var opts = saveOptions && typeof saveOptions === 'object' ? saveOptions : {};
+      var includeProfile = opts.includeProfile !== false;
+      var client = window.metricsSupabase;
+      var metrics = (dashboardData && dashboardData.metrics) ? dashboardData.metrics : [];
+      var name = dashboardData && dashboardData.businessName != null ? String(dashboardData.businessName) : '';
+      var img = dashboardData && dashboardData.businessImage != null ? String(dashboardData.businessImage) : '';
+      var profilePromise = includeProfile
+        ? client.from('business_profiles').upsert({
+            owner_user_id: ownerUserId,
+            business_name: name,
+            business_image: img
+          }, { onConflict: 'owner_user_id' })
+        : Promise.resolve({ data: null, error: null });
+      var indices = allowedMetricIndexes;
+      if (!indices || !indices.length) indices = [0, 1, 2, 3];
+      var rows = indices.map(function (i) {
+        var payload = metrics[i] ? JSON.parse(JSON.stringify(metrics[i])) : defaultMetricPayload();
+        return { owner_user_id: ownerUserId, metric_index: i, payload: payload };
+      });
+      var slotsPromise = client.from('business_metric_slots').upsert(rows, { onConflict: 'owner_user_id,metric_index' });
+      return Promise.all([profilePromise, slotsPromise]).then(function (pair) {
+        if (pair[0] && pair[0].error) throw pair[0].error;
+        if (pair[1] && pair[1].error) throw pair[1].error;
+        return true;
+      });
+    };
+
+    window.metricsLoadPersonalDashboard = function (userId) {
+      if (!window.metricsSupabase) {
+        return Promise.reject(new Error('Supabase is not initialized.'));
+      }
+      return window.metricsSupabase
+        .from('personal_dashboards')
+        .select('dashboard')
+        .eq('user_id', userId)
+        .maybeSingle()
+        .then(function (res) {
+          if (res && res.error) throw res.error;
+          var d = res && res.data && res.data.dashboard;
+          if (!d || typeof d !== 'object') {
+            return { businessName: '', businessImage: '', metrics: [] };
+          }
+          return {
+            businessName: d.businessName != null ? String(d.businessName) : '',
+            businessImage: d.businessImage != null ? String(d.businessImage) : '',
+            metrics: Array.isArray(d.metrics) ? d.metrics : []
+          };
+        });
+    };
+
+    window.metricsSavePersonalDashboard = function (userId, dashboardData) {
+      if (!window.metricsSupabase) {
+        return Promise.reject(new Error('Supabase is not initialized.'));
+      }
+      return window.metricsSupabase
+        .from('personal_dashboards')
+        .upsert({
+          user_id: userId,
+          dashboard: {
+            businessName: dashboardData.businessName || '',
+            businessImage: dashboardData.businessImage || '',
+            metrics: dashboardData.metrics || []
+          }
+        }, { onConflict: 'user_id' })
+        .then(function (res) {
+          if (res && res.error) throw res.error;
+          return true;
+        });
+    };
+
+    window.metricsFetchInvitesForOwnerAndEmail = function (ownerUserId, email) {
+      if (!window.metricsSupabase) {
+        return Promise.reject(new Error('Supabase is not initialized.'));
+      }
+      var em = String(email || '').trim().toLowerCase();
+      return window.metricsSupabase
+        .from('metric_invites')
+        .select('metric_index,permission,email,status')
+        .eq('owner_user_id', ownerUserId)
+        .then(function (res) {
+          if (res && res.error) throw res.error;
+          var rows = (res && res.data) ? res.data : [];
+          var filtered = rows.filter(function (r) {
+            return r && String(r.email || '').trim().toLowerCase() === em && r.status !== 'revoked';
+          });
+          return { data: filtered, error: null };
+        });
+    };
   }
 
   init();

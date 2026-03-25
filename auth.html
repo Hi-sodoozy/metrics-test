@@ -57,7 +57,7 @@
             <input id="authPassword" type="password" autocomplete="current-password" required minlength="6" />
             <button type="button" class="password-toggle" data-target="authPassword">Reveal</button>
           </div>
-          <button type="button" class="forgot-link">Forgot password?</button>
+          <button type="button" class="forgot-link" id="forgotPasswordBtn">Forgot password?</button>
         </div>
         <div class="auth-field" id="fieldPasswordConfirm" hidden>
           <label for="authPasswordConfirm">Confirm password</label>
@@ -65,7 +65,6 @@
             <input id="authPasswordConfirm" type="password" autocomplete="new-password" />
             <button type="button" class="password-toggle" data-target="authPasswordConfirm">Reveal</button>
           </div>
-          <button type="button" class="forgot-link">Forgot password?</button>
         </div>
         <button type="submit" class="auth-submit" id="authSubmitBtn">Continue</button>
       </form>
@@ -89,6 +88,7 @@
       var switchSignUp = document.getElementById('switchSignUp');
       var fieldBusinessName = document.getElementById('fieldBusinessName');
       var fieldPasswordConfirm = document.getElementById('fieldPasswordConfirm');
+      var forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
       var authSubmitBtn = document.getElementById('authSubmitBtn');
       var authMessage = document.getElementById('authMessage');
 
@@ -115,6 +115,7 @@
           : 'Individual accounts manage invited business metrics and personal metrics.';
         fieldBusinessName.hidden = !(isSignUp && accountType === 'business');
         fieldPasswordConfirm.hidden = !isSignUp;
+        if (forgotPasswordBtn) forgotPasswordBtn.hidden = isSignUp;
         authSubmitBtn.textContent = isSignUp ? 'Create account' : 'Sign in';
         switchSignIn.classList.toggle('active', !isSignUp);
         switchSignUp.classList.toggle('active', isSignUp);
