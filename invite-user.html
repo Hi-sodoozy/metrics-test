@@ -151,7 +151,7 @@
           })
           .then(function (dbRes) {
             if (dbRes && dbRes.error) throw dbRes.error;
-            showMessage("You've been invited to create an account.", 'info');
+            showMessage('Invitation sent. They will receive an email with a link to sign in or create an account.', 'info');
           })
           .catch(function (err) {
             showMessage((err && err.message) ? err.message : 'Unable to send invite email.', 'error');

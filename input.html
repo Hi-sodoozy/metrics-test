@@ -207,6 +207,143 @@
         });
       }
 
+      function isFullMetricEditorForRow(metricRow) {
+        var idx = parseInt(metricRow.getAttribute('data-index') || '0', 10);
+        if (isIndividualHub && !isSharedBoardRow(metricRow)) return true;
+        if (userCtx.accountType === 'business' && !isCollaborator) return true;
+        if (isCollaborator && !isSharedBoardRow(metricRow)) {
+          return collaborAdminIndices.indexOf(idx) >= 0;
+        }
+        if (isSharedBoardRow(metricRow)) {
+          var oid = getRowOwnerId(metricRow);
+          return (collaborAdminByOwner[oid] || []).indexOf(idx) >= 0;
+        }
+        return false;
+      }
+
+      function isContributorRankingOnlyForRow(metricRow) {
+        if (isFullMetricEditorForRow(metricRow)) return false;
+        var idx = parseInt(metricRow.getAttribute('data-index') || '0', 10);
+        var oid = getRowOwnerId(metricRow);
+        var shared = isSharedBoardRow(metricRow);
+        if (isCollaborator && !shared) {
+          return collaborEditIndices.indexOf(idx) >= 0 && collaborAdminIndices.indexOf(idx) < 0;
+        }
+        if (shared) {
+          var e = collaborEditByOwner[oid] || [];
+          var a = collaborAdminByOwner[oid] || [];
+          return e.indexOf(idx) >= 0 && a.indexOf(idx) < 0;
+        }
+        return false;
+      }
+
+      function mergeMetricForEditContributor(serverMetric, clientMetric, userEmail) {
+        var em = normalizeEmailLocal(userEmail);
+        if (!em) return serverMetric ? JSON.parse(JSON.stringify(serverMetric)) : emptyMetricSlot();
+        var out = JSON.parse(JSON.stringify(serverMetric || emptyMetricSlot()));
+        if (!out.ranking) out.ranking = { enabled: false, displayAsPercent: false, showIndividualGoal: false, rows: [] };
+        if (!Array.isArray(out.ranking.rows)) out.ranking.rows = [];
+        var sr = out.ranking.rows;
+        var cr = (clientMetric && clientMetric.ranking && Array.isArray(clientMetric.ranking.rows)) ? clientMetric.ranking.rows : [];
+        var idxC = -1;
+        var i;
+        for (i = 0; i < cr.length; i++) {
+          if (normalizeEmailLocal(cr[i].contributorEmail) === em) {
+            idxC = i;
+            break;
+          }
+        }
+        if (idxC < 0) return out;
+        var idxS = -1;
+        for (i = 0; i < sr.length; i++) {
+          if (normalizeEmailLocal(sr[i].contributorEmail) === em) {
+            idxS = i;
+            break;
+          }
+        }
+        var src = cr[idxC];
+        if (idxS >= 0) {
+          sr[idxS].goal = src.goal !== undefined && src.goal != null ? String(src.goal) : '';
+          sr[idxS].current = src.current !== undefined && src.current != null ? String(src.current) : '';
+          sr[idxS].individualGoal = src.individualGoal !== undefined && src.individualGoal != null ? String(src.individualGoal) : '';
+          if (!sr[idxS].mode) sr[idxS].mode = 'data';
+          if (!normalizeEmailLocal(sr[idxS].contributorEmail)) sr[idxS].contributorEmail = em;
+        } else {
+          sr.push({
+            mode: 'data',
+            name: (src.name || '').trim() || ([userCtx.firstName, userCtx.lastName].filter(Boolean).join(' ').trim() || em),
+            goal: src.goal !== undefined && src.goal != null ? String(src.goal) : '',
+            current: src.current !== undefined && src.current != null ? String(src.current) : '',
+            individualGoal: src.individualGoal !== undefined && src.individualGoal != null ? String(src.individualGoal) : '',
+            contributorEmail: em
+          });
+        }
+        return out;
+      }
+
+      function ensureRankingRowsForEditInvites(metricRow, inviteList) {
+        var metricIndex = parseInt(metricRow.getAttribute('data-index') || '0', 10);
+        if (!canManageInvitesForMetric(metricIndex, metricRow)) return;
+        var rankOn = metricRow.querySelector('.ranking-enabled');
+        if (!rankOn || !rankOn.checked) return;
+        var rows = getRankingRowsFromBlock(metricRow);
+        var changed = false;
+        (inviteList || []).forEach(function (inv) {
+          if (!inv || inv.status === 'revoked' || inv.permission !== 'edit') return;
+          var em = normalizeEmailLocal(inv.email);
+          if (!em) return;
+          var exists = rows.some(function (r) {
+            return normalizeEmailLocal(r.contributorEmail) === em;
+          });
+          if (!exists) {
+            rows.push({
+              mode: 'data',
+              name: dbInviteDisplayName(inv),
+              goal: '',
+              current: '',
+              individualGoal: '',
+              contributorEmail: em
+            });
+            changed = true;
+          }
+        });
+        if (changed) {
+          renderRankingRowsInBlock(metricRow, rows, { skipInviteRefresh: true });
+          if (isSharedBoardRow(metricRow)) scheduleSharedRowSave(metricRow);
+          else save();
+        }
+      }
+
+      function ensureSelfContributorRankingRow(metricRow) {
+        if (!isContributorRankingOnlyForRow(metricRow)) return;
+        var rankOn = metricRow.querySelector('.ranking-enabled');
+        if (!rankOn || !rankOn.checked) return;
+        var em = normalizeEmailLocal(userCtx.email);
+        if (!em) return;
+        var rows = getRankingRowsFromBlock(metricRow);
+        if (rows.some(function (r) {
+          return normalizeEmailLocal(r.contributorEmail) === em;
+        })) {
+          return;
+        }
+        var display = [userCtx.firstName, userCtx.lastName].filter(Boolean).join(' ').trim() || em;
+        rows.push({
+          mode: 'data',
+          name: display,
+          goal: '',
+          current: '',
+          individualGoal: '',
+          contributorEmail: em
+        });
+        renderRankingRowsInBlock(metricRow, rows, { skipInviteRefresh: true });
+        refreshInvitedUsersSection(metricRow);
+        if (isSharedBoardRow(metricRow)) {
+          persistSharedRowNow(metricRow).catch(function () {});
+        } else {
+          persistRemoteNow().catch(function () {});
+        }
+      }
+
       function emptyMetricSlot() {
         return {
           showOnMainScreen: false,
@@ -318,13 +455,29 @@
         if (!window.metricsSupabase || !userCtx.userId) return Promise.resolve();
         if (isCollaborator) {
           if (!collaborEditIndices.length) return Promise.resolve();
-          var payload = collectDashboardFromDom();
-          return window.metricsSaveBusinessDashboard(
-            dashboardOwnerId,
-            payload,
-            collaborEditIndices,
-            { includeProfile: false }
-          );
+          return window.metricsLoadBusinessDashboard(dashboardOwnerId).then(function (serverDash) {
+            var metrics = padMetricsToMaxSlots(serverDash.metrics, MAX_METRICS);
+            collaborEditIndices.forEach(function (mi) {
+              var form = document.querySelector('#inputCarousel .input-row.metric-form[data-index="' + mi + '"]');
+              if (!form) return;
+              var clientM = collectOneMetricFromFormRow(form);
+              if (collaborAdminIndices.indexOf(mi) >= 0) {
+                metrics[mi] = clientM;
+              } else {
+                metrics[mi] = mergeMetricForEditContributor(metrics[mi] || emptyMetricSlot(), clientM, userCtx.email);
+              }
+            });
+            return window.metricsSaveBusinessDashboard(
+              dashboardOwnerId,
+              {
+                businessName: serverDash.businessName || '',
+                businessImage: serverDash.businessImage || '',
+                metrics: metrics
+              },
+              collaborEditIndices,
+              { includeProfile: false }
+            );
+          });
         }
         if (isIndividualHub) {
           return window.metricsSavePersonalDashboard(userCtx.userId, collectDashboardFromDom());
@@ -350,7 +503,12 @@
         if (editList.indexOf(mi) < 0) return Promise.resolve();
         return window.metricsLoadBusinessDashboard(oid).then(function (d) {
           var metrics = padMetricsToMaxSlots(d.metrics, MAX_METRICS);
-          metrics[mi] = collectOneMetricFromFormRow(row);
+          var clientM = collectOneMetricFromFormRow(row);
+          if (isFullMetricEditorForRow(row)) {
+            metrics[mi] = clientM;
+          } else {
+            metrics[mi] = mergeMetricForEditContributor(metrics[mi] || emptyMetricSlot(), clientM, userCtx.email);
+          }
           return window.metricsSaveBusinessDashboard(
             oid,
             {
@@ -407,46 +565,93 @@
           var oid = getRowOwnerId(row);
           var shared = isSharedBoardRow(row);
           var canView = false;
-          var canEdit = false;
           if (userCtx.accountType === 'business' && !isCollaborator) {
             canView = true;
-            canEdit = true;
           } else if (isIndividualHub && !shared) {
             canView = true;
-            canEdit = true;
           } else if (isCollaborator && !shared) {
             canView = collaborViewIndices.indexOf(idx) >= 0;
-            canEdit = collaborEditIndices.indexOf(idx) >= 0;
           } else if (shared) {
             var v = collaborViewByOwner[oid] || [];
-            var e = collaborEditByOwner[oid] || [];
             canView = v.indexOf(idx) >= 0;
-            canEdit = e.indexOf(idx) >= 0;
           }
-          var locked = !canView || !canEdit;
+          var accessFullEdit = isFullMetricEditorForRow(row);
+          var accessRankingOnly = canView && !accessFullEdit && isContributorRankingOnlyForRow(row);
+          var mayEdit = accessFullEdit || accessRankingOnly;
           var titleField = row.querySelector('.metric-block-title-field');
           var invitedTitleLocked = isCollaborator || shared;
           if (titleField) {
             titleField.readOnly = invitedTitleLocked;
           }
-          row.querySelectorAll('input, textarea, select, button').forEach(function (el) {
-            if (el.closest('.invited-users-wrap')) return;
-            if (el.classList.contains('input-carousel-btn')) return;
-            if (el === titleField) return;
-            el.disabled = locked;
-          });
           if (!canView) {
             row.querySelectorAll('input, textarea, select, button').forEach(function (el) {
               if (el.closest('.invited-users-wrap')) return;
+              if (el.classList.contains('input-carousel-btn')) return;
               if (el === titleField) return;
               el.disabled = true;
             });
+            row.querySelectorAll('.metric-actions .btn-save').forEach(function (saveBtn) {
+              saveBtn.disabled = true;
+            });
+            var addRow0 = row.querySelector('.metric-ranking-section .btn-add-row');
+            if (addRow0) addRow0.disabled = true;
+          } else if (accessFullEdit) {
+            row.querySelectorAll('input, textarea, select, button').forEach(function (el) {
+              if (el.closest('.invited-users-wrap')) return;
+              if (el.classList.contains('input-carousel-btn')) return;
+              if (el === titleField) return;
+              el.disabled = false;
+            });
+            row.querySelectorAll('.metric-actions .btn-save').forEach(function (saveBtn) {
+              saveBtn.disabled = false;
+            });
+            var addRow1 = row.querySelector('.metric-ranking-section .btn-add-row');
+            if (addRow1) addRow1.disabled = false;
+          } else if (accessRankingOnly) {
+            row.querySelectorAll('input, textarea, select, button').forEach(function (el) {
+              if (el.closest('.invited-users-wrap')) return;
+              if (el.closest('.ranking-table')) return;
+              if (el.classList.contains('input-carousel-btn')) return;
+              if (el === titleField) return;
+              if (el.classList.contains('btn-save')) return;
+              el.disabled = true;
+            });
+            row.querySelectorAll('.ranking-tbody input, .ranking-tbody button').forEach(function (el) {
+              el.disabled = true;
+            });
+            row.querySelectorAll('.metric-actions .btn-save').forEach(function (saveBtn) {
+              saveBtn.disabled = false;
+            });
+            var addRow2 = row.querySelector('.metric-ranking-section .btn-add-row');
+            if (addRow2) addRow2.disabled = true;
+            var myEm = normalizeEmailLocal(userCtx.email);
+            row.querySelectorAll('.ranking-tbody .ranking-row').forEach(function (tr) {
+              var rowEm = normalizeEmailLocal(tr.getAttribute('data-contributor-email') || '');
+              var isMine = rowEm && rowEm === myEm;
+              var nameIn = tr.querySelector('input[name="rankName"]');
+              var goalIn = tr.querySelector('input[name="rankGoal"]');
+              var curIn = tr.querySelector('input[name="rankCurrent"]');
+              var indIn = tr.querySelector('input[name="rankIndividualGoal"]');
+              var rmBtn = tr.querySelector('.btn-remove-row');
+              if (nameIn) nameIn.disabled = true;
+              if (goalIn) goalIn.disabled = !isMine;
+              if (curIn) curIn.disabled = !isMine;
+              if (indIn) indIn.disabled = !isMine;
+              if (rmBtn) rmBtn.disabled = true;
+            });
+          } else {
+            row.querySelectorAll('input, textarea, select, button').forEach(function (el) {
+              if (el.closest('.invited-users-wrap')) return;
+              if (el.classList.contains('input-carousel-btn')) return;
+              if (el === titleField) return;
+              el.disabled = true;
+            });
+            row.querySelectorAll('.metric-actions .btn-save').forEach(function (saveBtn) {
+              saveBtn.disabled = true;
+            });
+            var addRow3 = row.querySelector('.metric-ranking-section .btn-add-row');
+            if (addRow3) addRow3.disabled = true;
           }
-          row.querySelectorAll('.metric-actions .btn-save').forEach(function (saveBtn) {
-            saveBtn.disabled = !canEdit;
-          });
-          var addRow = row.querySelector('.metric-ranking-section .btn-add-row');
-          if (addRow) addRow.disabled = locked;
           var canManageInv = canManageInvitesForMetric(idx, row);
           row.querySelectorAll('.invited-users-wrap input, .invited-users-wrap select, .invited-users-wrap button').forEach(function (el) {
             el.disabled = !canView || !canManageInv;
@@ -508,7 +713,9 @@
         var wrap = row.querySelector('.metric-ranking-section .ranking-table-wrap');
         if (wrap) wrap.hidden = !rank.enabled;
         var rankRows = rank.rows && rank.rows.length ? rank.rows.slice() : [];
-        while (rankRows.length < INITIAL_RANKING_ROWS) rankRows.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '' });
+        while (rankRows.length < INITIAL_RANKING_ROWS) {
+          rankRows.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '', contributorEmail: '' });
+        }
         renderRankingRowsInBlock(row, rankRows);
       }
 
@@ -616,7 +823,7 @@
         }
         row.querySelector('.metric-ranking-section .btn-add-row').addEventListener('click', function () {
           var data = getRankingRowsFromBlock(row);
-          data.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '' });
+          data.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '', contributorEmail: '' });
           renderRankingRowsInBlock(row, data);
           touch();
         });
@@ -941,6 +1148,7 @@
                   goal: r.goal !== undefined ? String(r.goal) : '',
                   current: r.current !== undefined ? String(r.current) : '',
                   individualGoal: r.individualGoal !== undefined ? String(r.individualGoal) : '',
+                  contributorEmail: r.contributorEmail ? normalizeEmailLocal(r.contributorEmail) : '',
                   mode: 'data'
                 };
               });
@@ -1008,12 +1216,14 @@
         if (!tbody) return arr;
         tbody.querySelectorAll('.ranking-row').forEach(function (tr) {
           var indInput = tr.querySelector('input[name="rankIndividualGoal"]');
+          var cEm = tr.getAttribute('data-contributor-email');
           arr.push({
             mode: 'data',
             name: fieldValue(tr.querySelector('input[name="rankName"]')),
             goal: fieldValue(tr.querySelector('input[name="rankGoal"]')),
             current: fieldValue(tr.querySelector('input[name="rankCurrent"]')),
-            individualGoal: indInput ? fieldValue(indInput) : ''
+            individualGoal: indInput ? fieldValue(indInput) : '',
+            contributorEmail: cEm ? normalizeEmailLocal(cEm) : ''
           });
         });
         return arr;
@@ -1090,6 +1300,7 @@
               permCell;
             body.appendChild(tr);
           });
+          if (canManage) ensureRankingRowsForEditInvites(metricRow, list);
           if (canManage) {
             body.querySelectorAll('.invited-perm-select').forEach(function (sel) {
               sel.addEventListener('change', function () {
@@ -1228,7 +1439,7 @@
         }
       }
 
-      function renderRankingRowsInBlock(metricRow, rowsData) {
+      function renderRankingRowsInBlock(metricRow, rowsData, opts) {
         var tbody = metricRow.querySelector('.ranking-tbody');
         if (!tbody) return;
         var showInd = getShowIndividualGoalInBlock(metricRow);
@@ -1240,6 +1451,8 @@
           var tr = document.createElement('tr');
           tr.className = 'ranking-row';
           tr.setAttribute('data-mode', 'data');
+          var cEm = r.contributorEmail ? normalizeEmailLocal(r.contributorEmail) : '';
+          if (cEm) tr.setAttribute('data-contributor-email', cEm);
           var nameCell = '<td><input type="text" name="rankName" placeholder="Name" /></td>';
           var indCell = showInd ? '<td class="td-individual-goal"><input type="text" name="rankIndividualGoal" placeholder="Individual goal" /></td>' : '<td class="td-individual-goal" hidden><input type="text" name="rankIndividualGoal" placeholder="Individual goal" /></td>';
           tr.innerHTML = nameCell + indCell +
@@ -1271,7 +1484,7 @@
             });
           })(ri);
         }
-        refreshInvitedUsersSection(metricRow);
+        if (!opts || !opts.skipInviteRefresh) refreshInvitedUsersSection(metricRow);
         bindRankingInputsInBlock(metricRow);
       }
 
@@ -1447,6 +1660,9 @@
         .then(function () {
           updateChromeForMode();
           load();
+          document.querySelectorAll('#inputCarousel .input-row.metric-form, #sharedBoardsHost .input-row.metric-form').forEach(function (form) {
+            ensureSelfContributorRankingRow(form);
+          });
           applyRowAccessLocks();
           syncTitleRowFromTextareasCarousel();
         })
@@ -1458,6 +1674,9 @@
           }
           updateChromeForMode();
           load();
+          document.querySelectorAll('#inputCarousel .input-row.metric-form, #sharedBoardsHost .input-row.metric-form').forEach(function (form) {
+            ensureSelfContributorRankingRow(form);
+          });
           applyRowAccessLocks();
           syncTitleRowFromTextareasCarousel();
         });
