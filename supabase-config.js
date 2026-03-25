@@ -211,6 +211,7 @@
       };
     }
 
+    /** Load profile + slots for the given dashboard owner (same id as business_metric_slots.owner_user_id). */
     window.metricsLoadBusinessDashboard = function (ownerUserId) {
       if (!window.metricsSupabase) {
         return Promise.reject(new Error('Supabase is not initialized.'));
@@ -228,6 +229,13 @@
       });
     };
 
+    /**
+     * Upsert business metric slots (0–9) for a dashboard.
+     *
+     * @param {string} ownerUserId - The business dashboard owner's UUID (auth.users.id), NOT necessarily
+     *   the logged-in user. For the owner editing their own boards this equals auth.uid(); for invited
+     *   editors it is the admin's id. RLS (bms_owner_* / bms_invitee_*) enforces who may write which owner row.
+     */
     window.metricsSaveBusinessDashboard = function (ownerUserId, dashboardData, allowedMetricIndexes, saveOptions) {
       if (!window.metricsSupabase) {
         return Promise.reject(new Error('Supabase is not initialized.'));
@@ -251,10 +259,12 @@
         var cap = Math.min(Math.max(metrics.length, 1), 10);
         for (var j = 0; j < cap; j++) indices.push(j);
       }
+      // Each row keys data under the dashboard owner (see RLS policies on business_metric_slots).
       var rows = indices.map(function (i) {
         var payload = metrics[i] ? JSON.parse(JSON.stringify(metrics[i])) : defaultMetricPayload();
         return { owner_user_id: ownerUserId, metric_index: i, payload: payload };
       });
+      // Upsert = insert if missing, else update (invitees may rely on bms_invitee_insert / bms_invitee_update).
       var slotsPromise = client.from('business_metric_slots').upsert(rows, { onConflict: 'owner_user_id,metric_index' });
       return Promise.all([profilePromise, slotsPromise]).then(function (pair) {
         if (pair[0] && pair[0].error) throw pair[0].error;

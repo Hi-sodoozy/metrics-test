@@ -685,6 +685,16 @@
   gap: 12px;
 }
 
+/* Numeric goal/current fields: single-line look without browser spin buttons */
+.metric-number-input {
+  -moz-appearance: textfield;
+}
+.metric-number-input::-webkit-outer-spin-button,
+.metric-number-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .metric-single-line-input {
   width: 100%;
   padding: 10px 12px;
@@ -1389,7 +1399,8 @@
     min-height: 3em;
   }
 
-  .input-table input[type="text"] {
+  .input-table input[type="text"],
+  .input-table input[type="number"] {
     padding: 10px;
     min-height: 44px;
   }

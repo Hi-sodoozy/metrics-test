@@ -47,8 +47,8 @@
         <div class="form-block goal-current-block">
           <label class="form-label">Goal + Current</label>
           <div class="goal-current-fields">
-            <input type="text" name="goal" class="metric-single-line-input" placeholder="Goal" autocomplete="off" aria-label="Goal" />
-            <input type="text" name="current" class="metric-single-line-input" placeholder="Current" autocomplete="off" aria-label="Current" />
+            <input type="number" name="goal" class="metric-single-line-input metric-number-input" placeholder="0" inputmode="decimal" step="any" autocomplete="off" aria-label="Goal (numeric)" />
+            <input type="number" name="current" class="metric-single-line-input metric-number-input" placeholder="0" inputmode="decimal" step="any" autocomplete="off" aria-label="Current (numeric)" />
           </div>
         </div>
         <div class="form-block options-block">
@@ -738,12 +738,11 @@
         carousel.querySelectorAll('.input-row.metric-form').forEach(function (row) {
           var tf = row.querySelector('.metric-block-title-field');
           var heading = row.querySelector('input[name="heading"]');
-          var goal = row.querySelector('input[name="goal"]');
           var badge = row.querySelector('.metric-business-badge');
-          if (!tf || !heading || !goal) return;
+          if (!tf || !heading) return;
           if (isIndividualHub) {
             tf.readOnly = false;
-            tf.value = (goal.value || '').trim() || (heading.value || '').trim();
+            tf.value = (heading.value || '').trim();
             if (badge) {
               badge.textContent = '';
               badge.hidden = true;
@@ -773,29 +772,15 @@
         row.setAttribute('data-title-wired', '1');
         var tf = row.querySelector('.metric-block-title-field');
         var heading = row.querySelector('input[name="heading"]');
-        var goal = row.querySelector('input[name="goal"]');
-        if (!tf || !heading || !goal) return;
-        if (isIndividualHub) {
-          tf.addEventListener('input', function () {
-            goal.value = tf.value;
-            heading.value = tf.value;
-            save();
-            scheduleRemoteSave();
-          });
-          goal.addEventListener('input', function () {
-            tf.value = goal.value;
-            heading.value = goal.value;
-          });
-        } else {
-          tf.addEventListener('input', function () {
-            heading.value = tf.value;
-            save();
-            scheduleRemoteSave();
-          });
-          heading.addEventListener('input', function () {
-            tf.value = heading.value;
-          });
-        }
+        if (!tf || !heading) return;
+        tf.addEventListener('input', function () {
+          heading.value = tf.value;
+          save();
+          scheduleRemoteSave();
+        });
+        heading.addEventListener('input', function () {
+          tf.value = heading.value;
+        });
       }
 
       function bindCarouselMetricRow(row) {
@@ -1456,8 +1441,8 @@
           var nameCell = '<td><input type="text" name="rankName" placeholder="Name" /></td>';
           var indCell = showInd ? '<td class="td-individual-goal"><input type="text" name="rankIndividualGoal" placeholder="Individual goal" /></td>' : '<td class="td-individual-goal" hidden><input type="text" name="rankIndividualGoal" placeholder="Individual goal" /></td>';
           tr.innerHTML = nameCell + indCell +
-            '<td class="goal-current-cell"><input type="text" name="rankGoal" class="metric-single-line-input" placeholder="Goal" autocomplete="off" /></td>' +
-            '<td class="goal-current-cell"><input type="text" name="rankCurrent" class="metric-single-line-input" placeholder="Current" autocomplete="off" /></td>' +
+            '<td class="goal-current-cell"><input type="number" name="rankGoal" class="metric-single-line-input metric-number-input" placeholder="0" inputmode="decimal" step="any" autocomplete="off" aria-label="Row goal" /></td>' +
+            '<td class="goal-current-cell"><input type="number" name="rankCurrent" class="metric-single-line-input metric-number-input" placeholder="0" inputmode="decimal" step="any" autocomplete="off" aria-label="Row current" /></td>' +
             '<td class="td-row-actions">' +
               '<button type="button" class="btn-remove-row" aria-label="Remove row"><span class="btn-remove-icon" aria-hidden="true">−</span></button>' +
             '</td>';
