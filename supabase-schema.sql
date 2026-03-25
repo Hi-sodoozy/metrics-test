@@ -12,14 +12,14 @@ create table if not exists public.metric_invites (
   first_name text,
   last_name text,
   business_name text,
-  permission text not null default 'edit' check (permission in ('edit', 'read')),
+  permission text not null default 'edit' check (permission in ('edit', 'read', 'admin')),
   status text not null default 'invited' check (status in ('invited', 'accepted', 'revoked')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 alter table public.metric_invites
-  add column if not exists permission text not null default 'edit' check (permission in ('edit', 'read'));
+  add column if not exists permission text not null default 'edit' check (permission in ('edit', 'read', 'admin'));
 
 -- Plain column unique index so PostgREST upsert onConflict=(owner_user_id,metric_index,email) works.
 -- Always store lowercase email from the app (see supabase-config.js).
@@ -81,5 +81,80 @@ for select
 to authenticated
 using (
   lower(email) = lower(coalesce(auth.jwt() ->> 'email', ''))
-  and status <> 'revoked'
+  and status is distinct from 'revoked'
+);
+
+-- Metric admins: manage all invites for the same owner + metric_index as their admin row
+drop policy if exists "metric_invite_delegate_select" on public.metric_invites;
+create policy "metric_invite_delegate_select"
+on public.metric_invites
+for select
+to authenticated
+using (
+  exists (
+    select 1 from public.metric_invites mi
+    where mi.owner_user_id = metric_invites.owner_user_id
+      and mi.metric_index = metric_invites.metric_index
+      and lower(mi.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+      and mi.status is distinct from 'revoked'
+      and mi.permission = 'admin'
+  )
+);
+
+drop policy if exists "metric_invite_delegate_insert" on public.metric_invites;
+create policy "metric_invite_delegate_insert"
+on public.metric_invites
+for insert
+to authenticated
+with check (
+  exists (
+    select 1 from public.metric_invites mi
+    where mi.owner_user_id = metric_invites.owner_user_id
+      and mi.metric_index = metric_invites.metric_index
+      and lower(mi.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+      and mi.status is distinct from 'revoked'
+      and mi.permission = 'admin'
+  )
+);
+
+drop policy if exists "metric_invite_delegate_update" on public.metric_invites;
+create policy "metric_invite_delegate_update"
+on public.metric_invites
+for update
+to authenticated
+using (
+  exists (
+    select 1 from public.metric_invites mi
+    where mi.owner_user_id = metric_invites.owner_user_id
+      and mi.metric_index = metric_invites.metric_index
+      and lower(mi.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+      and mi.status is distinct from 'revoked'
+      and mi.permission = 'admin'
+  )
+)
+with check (
+  exists (
+    select 1 from public.metric_invites mi
+    where mi.owner_user_id = metric_invites.owner_user_id
+      and mi.metric_index = metric_invites.metric_index
+      and lower(mi.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+      and mi.status is distinct from 'revoked'
+      and mi.permission = 'admin'
+  )
+);
+
+drop policy if exists "metric_invite_delegate_delete" on public.metric_invites;
+create policy "metric_invite_delegate_delete"
+on public.metric_invites
+for delete
+to authenticated
+using (
+  exists (
+    select 1 from public.metric_invites mi
+    where mi.owner_user_id = metric_invites.owner_user_id
+      and mi.metric_index = metric_invites.metric_index
+      and lower(mi.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+      and mi.status is distinct from 'revoked'
+      and mi.permission = 'admin'
+  )
 );

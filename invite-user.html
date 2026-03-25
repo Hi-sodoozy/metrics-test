@@ -45,6 +45,8 @@
     .invite-message.error { background: #fce8e8; color: #6b1a1a; border: 1px solid #e8c0c0; }
     .invite-back { display: inline-block; margin-top: 16px; color: #4a6fa5; text-decoration: none; font-size: 14px; }
     .invite-back:hover { text-decoration: underline; }
+    .invite-footer-actions { margin: 20px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+    .invite-footer-actions .invite-back { margin-top: 0; }
   </style>
 </head>
 <body class="metrics-page input-page">
@@ -74,7 +76,10 @@
       </form>
       <div id="inviteMessage" hidden></div>
     </div>
-    <a href="input.html" class="invite-back">← Back to input</a>
+    <p class="invite-footer-actions">
+      <a href="input.html" class="invite-back">← Back to input</a>
+      <a href="#" class="invite-back" id="linkLogout">Log out</a>
+    </p>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -155,6 +160,14 @@
             btn.disabled = false;
           });
       });
+
+      var linkLogout = document.getElementById('linkLogout');
+      if (linkLogout) {
+        linkLogout.addEventListener('click', function (e) {
+          e.preventDefault();
+          if (window.metricsLogout) window.metricsLogout();
+        });
+      }
     })();
   </script>
 </body>

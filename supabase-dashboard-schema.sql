@@ -41,10 +41,10 @@ using (
   )
 );
 
--- Metric slots 0–3 per owner (payload = one metric object: heading, ranking, etc.)
+-- Metric slots 0–9 per owner (payload = one metric object: heading, ranking, etc.)
 create table if not exists public.business_metric_slots (
   owner_user_id uuid not null references auth.users(id) on delete cascade,
-  metric_index integer not null check (metric_index >= 0 and metric_index <= 3),
+  metric_index integer not null check (metric_index >= 0 and metric_index <= 9),
   payload jsonb not null default '{}'::jsonb,
   updated_at timestamptz not null default now(),
   primary key (owner_user_id, metric_index)
@@ -81,7 +81,7 @@ using (
   )
 );
 
--- Invitee can update only if invited with edit permission
+-- Invitee can update if invited with edit or admin permission
 drop policy if exists "bms_invitee_update" on public.business_metric_slots;
 create policy "bms_invitee_update"
 on public.business_metric_slots
@@ -94,7 +94,7 @@ using (
       and mi.metric_index = business_metric_slots.metric_index
       and lower(mi.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
       and mi.status is distinct from 'revoked'
-      and mi.permission = 'edit'
+      and mi.permission in ('edit', 'admin')
   )
 )
 with check (
@@ -104,11 +104,11 @@ with check (
       and mi.metric_index = business_metric_slots.metric_index
       and lower(mi.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
       and mi.status is distinct from 'revoked'
-      and mi.permission = 'edit'
+      and mi.permission in ('edit', 'admin')
   )
 );
 
--- Edit invitees may insert a slot row (e.g. first upsert) for metrics they are allowed to edit
+-- Edit or admin invitees may insert a slot row (e.g. first upsert) for metrics they are allowed to edit
 drop policy if exists "bms_invitee_insert" on public.business_metric_slots;
 create policy "bms_invitee_insert"
 on public.business_metric_slots
@@ -121,7 +121,7 @@ with check (
       and mi.metric_index = business_metric_slots.metric_index
       and lower(mi.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
       and mi.status is distinct from 'revoked'
-      and mi.permission = 'edit'
+      and mi.permission in ('edit', 'admin')
   )
 );
 

@@ -326,5 +326,20 @@
     };
   }
 
+  window.metricsLogout = function (redirectTo) {
+    var dest = redirectTo || 'welcome.html';
+    function finish() {
+      try {
+        if (window.metricsSetUserContext) window.metricsSetUserContext(null);
+      } catch (e) {}
+      window.location.href = dest;
+    }
+    if (window.metricsSupabase && window.metricsSupabase.auth && typeof window.metricsSupabase.auth.signOut === 'function') {
+      window.metricsSupabase.auth.signOut().then(finish).catch(finish);
+    } else {
+      finish();
+    }
+  };
+
   init();
 })();

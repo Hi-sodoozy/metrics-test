@@ -121,6 +121,7 @@
       <a href="#" class="footer-link">Business Profile</a>
       <a href="invite-user.html" class="footer-link">Invite User</a>
       <a href="auth.html" class="footer-link">Create Account</a>
+      <a href="#" class="footer-link" id="linkLogout">Log out</a>
     </footer>
   </main>
   <input type="file" accept="image/*" id="inputPicFile" hidden aria-hidden="true" />
@@ -1392,6 +1393,14 @@
           updateAllSummaryInputsState();
           applyRowAccessLocks();
           scheduleRemoteSave();
+        });
+      }
+
+      var linkLogoutEl = document.getElementById('linkLogout');
+      if (linkLogoutEl) {
+        linkLogoutEl.addEventListener('click', function (e) {
+          e.preventDefault();
+          if (window.metricsLogout) window.metricsLogout();
         });
       }
 

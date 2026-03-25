@@ -15,7 +15,11 @@
       <h1 class="results-business-name" id="resultsBusinessName">Your business name</h1>
     </header>
     <div class="results-grid" id="resultsGrid"></div>
-    <a href="input.html" class="input-link" id="linkToInput">Input</a>
+    <div class="results-footer-bar" role="navigation" aria-label="Page actions">
+      <a href="input.html" class="input-link" id="linkToInput">Input</a>
+      <span class="results-footer-sep" aria-hidden="true">·</span>
+      <a href="#" class="results-footer-link" id="linkLogout">Log out</a>
+    </div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
@@ -187,6 +191,14 @@
           if (!userCtx || !userCtx.email) {
             window.location.href = 'welcome.html';
             return null;
+          }
+
+          var linkLogout = document.getElementById('linkLogout');
+          if (linkLogout) {
+            linkLogout.addEventListener('click', function (e) {
+              e.preventDefault();
+              if (window.metricsLogout) window.metricsLogout();
+            });
           }
 
           var linkInput = document.getElementById('linkToInput');
