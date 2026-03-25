@@ -309,6 +309,15 @@
 
 .input-business-pic-wrap .input-edit-icon { right: -4px; bottom: -4px; }
 
+.hero-name-wrap .btn-edit-name {
+  position: static;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #d5d9df;
+  background: #fff;
+}
+
 .input-business-name-wrap {
   display: flex;
   align-items: center;
@@ -317,15 +326,21 @@
   min-width: 200px;
 }
 
+.hero-name-wrap {
+  justify-content: center;
+}
+
 .input-business-name {
   flex: 1;
   min-width: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: clamp(1.45rem, 2.2vw, 2rem);
+  font-weight: 700;
   padding: 8px 12px;
-  border: 1px solid #e2e4e8;
+  border: 1px solid transparent;
   border-radius: 4px;
   color: #1a1a1a;
+  text-align: center;
+  background: transparent;
 }
 
 .input-business-name:focus {
@@ -434,6 +449,23 @@
   font-size: 1rem;
   font-weight: 600;
   color: #1a1a1a;
+}
+
+.boards-toc-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.boards-toc-head-row .boards-toc-title {
+  margin: 0;
+}
+
+.boards-toc-head-row .btn-add-metric-board {
+  padding: 8px 12px;
+  font-size: 13px;
 }
 
 .boards-toc-hint {
@@ -608,6 +640,36 @@
   margin-right: auto;
 }
 
+.input-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.display-mode-toggle {
+  display: inline-flex;
+  border: 1px solid #d5d9df;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.display-mode-btn {
+  border: 0;
+  background: transparent;
+  color: #4b5563;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.display-mode-btn-active {
+  background: #4a6fa5;
+  color: #fff;
+}
+
 .input-header h1 {
   margin: 0;
   font-size: 1.5rem;
@@ -622,6 +684,22 @@
 }
 
 .back-link:hover { text-decoration: underline; }
+
+.back-link-prominent {
+  border: 1px solid #4a6fa5;
+  background: #4a6fa5;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 10px 14px;
+  text-decoration: none;
+}
+
+.back-link-prominent:hover {
+  background: #3d5d8c;
+  border-color: #3d5d8c;
+  text-decoration: none;
+}
 
 /* Metric cards – one card per metric */
 .metric-cards {
@@ -802,7 +880,7 @@
 
 .btn-remove-metric {
   display: inline-block;
-  margin: 4px 0 12px;
+  margin: 14px 0 0;
   padding: 8px 14px;
   font: inherit;
   font-size: 14px;
@@ -840,6 +918,14 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 16px 24px;
+}
+
+.view-as-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin-top: 12px;
 }
 
 .option-check {
@@ -1612,6 +1698,10 @@
   padding: 22px 24px;
 }
 
+.mv-landing-nav-right {
+  justify-content: flex-end;
+}
+
 .mv-landing-logo {
   font-size: 1.05rem;
   font-weight: 700;
@@ -1795,4 +1885,62 @@
 .mv-landing-footer-meta {
   font-size: 13px;
   color: #4b5563;
+}
+
+/* ----- Input dark/light mode ----- */
+
+.input-page.input-theme-dark {
+  color: #e8eaef;
+  background:
+    radial-gradient(ellipse 120% 80% at 20% -20%, rgba(99, 140, 255, 0.35), transparent 50%),
+    radial-gradient(ellipse 100% 60% at 100% 30%, rgba(56, 189, 248, 0.12), transparent 45%),
+    linear-gradient(180deg, #0a0c10 0%, #0f1419 40%, #0a0c10 100%);
+}
+
+.input-page.input-theme-dark .metric-card,
+.input-page.input-theme-dark .boards-toc {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  color: #e8eaef;
+}
+
+.input-page.input-theme-dark .input-business-name,
+.input-page.input-theme-dark .metric-block-title-field,
+.input-page.input-theme-dark .metric-single-line-input,
+.input-page.input-theme-dark .invite-email-input,
+.input-page.input-theme-dark .invite-permission-select {
+  color: #e8eaef;
+  background: rgba(15, 20, 25, 0.7);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.input-page.input-theme-dark .app-brand,
+.input-page.input-theme-dark .form-label,
+.input-page.input-theme-dark .boards-toc-title,
+.input-page.input-theme-dark .boards-toc-hint,
+.input-page.input-theme-dark .input-hint,
+.input-page.input-theme-dark .input-hint-inline,
+.input-page.input-theme-dark .show-as-label,
+.input-page.input-theme-dark .option-check,
+.input-page.input-theme-dark .option-radio {
+  color: #9aa3b2;
+}
+
+.input-page.input-theme-dark .input-carousel-btn,
+.input-page.input-theme-dark .display-mode-toggle {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #e8eaef;
+}
+
+.input-page.input-theme-dark .hero-name-wrap .btn-edit-name {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #e8eaef;
+}
+
+.input-page.input-theme-dark .back-link-prominent {
+  background: linear-gradient(135deg, #7dd3fc 0%, #60a5fa 100%);
+  color: #0a0c10;
+  border-color: transparent;
 }

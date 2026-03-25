@@ -10,29 +10,33 @@
   <main class="input-main">
     <header class="input-header">
       <span class="app-brand" aria-label="Metrics View">Metrics View</span>
-      <a href="index.html" class="back-link" id="linkViewResults">View results</a>
+      <div class="input-header-actions">
+        <div class="display-mode-toggle" role="group" aria-label="Display mode">
+          <button type="button" class="display-mode-btn" id="btnLightMode" aria-pressed="true">Display in light mode</button>
+          <button type="button" class="display-mode-btn" id="btnDarkMode" aria-pressed="false">Display in dark mode</button>
+        </div>
+        <a href="index.html" class="back-link back-link-prominent" id="linkViewResults">View results</a>
+      </div>
     </header>
     <div class="input-business-header" id="inputBusinessHeader">
       <div class="input-business-pic-wrap">
         <div class="input-business-pic" id="inputBusinessPic"></div>
         <button type="button" class="input-edit-icon btn-edit-pic" id="btnEditPic" aria-label="Edit display picture">✎</button>
       </div>
-      <div class="input-business-name-wrap">
-        <input type="text" class="input-business-name" id="inputBusinessName" placeholder="Workspace name (optional)" aria-label="Workspace or business name" />
+      <div class="input-business-name-wrap hero-name-wrap">
+        <input type="text" class="input-business-name" id="inputBusinessName" placeholder="Workspace name (optional)" aria-label="Workspace or business name" readonly />
         <button type="button" class="input-edit-icon btn-edit-name" id="btnEditName" aria-label="Edit business name">✎</button>
       </div>
       <nav class="boards-toc" id="boardsToc" aria-label="Jump to board" hidden>
-        <h3 class="boards-toc-title" id="boardsTocTitle">Boards</h3>
-        <p class="boards-toc-hint" id="boardsTocHint">Open a board from the list or use the arrows to move between them.</p>
+        <div class="boards-toc-head-row">
+          <h3 class="boards-toc-title" id="boardsTocTitle">Boards</h3>
+          <button type="button" class="btn-add-metric-board" id="btnAddMetricBoard">Add metric</button>
+        </div>
+        <p class="boards-toc-hint" id="boardsTocHint">Open a board from the list or use the arrows to move between them. <span id="metricBoardHelp" class="input-hint-inline" aria-live="polite"></span></p>
         <ul class="boards-toc-list" id="boardsTocList" role="list"></ul>
       </nav>
     </div>
     <div id="sharedBoardsHost" class="shared-boards-host"></div>
-    <h2 id="personalSectionHeading" class="metrics-section-heading" hidden>Your boards</h2>
-    <div class="personal-metrics-toolbar" id="personalMetricsToolbar">
-      <button type="button" class="btn-add-metric-board" id="btnAddMetricBoard">+ Add metric board</button>
-      <p id="metricBoardHelp" class="input-hint-inline" aria-live="polite"></p>
-    </div>
     <div class="input-metrics-carousel carousel-1up" id="inputCarousel">
       <button type="button" class="input-carousel-btn input-carousel-prev" id="carouselPrev" aria-label="Previous metrics">‹</button>
       <div class="input-carousel-viewport">
@@ -61,12 +65,13 @@
           <div class="options-row">
             <label class="option-check"><input type="checkbox" name="displaySummary" class="display-summary-cb" checked aria-label="Display summary" /> Display summary</label>
             <label class="option-check"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /> Display as %?</label>
-            <span class="show-as-label">Show as</span>
+          </div>
+          <div class="view-as-row">
+            <span class="show-as-label">View as</span>
             <label class="option-radio"><input type="radio" name="displayAs_0" value="summary" /> Summary</label>
             <label class="option-radio"><input type="radio" name="displayAs_0" value="ranking" /> Ranking</label>
           </div>
         </div>
-        <button type="button" class="btn-remove-metric">Remove this metric</button>
         <div class="metric-actions"><button type="button" class="btn-save">Save</button></div>
         <div class="metric-ranking-section">
           <h4 class="metric-ranking-heading">Ranking data</h4>
@@ -111,6 +116,7 @@
             </div>
             <p class="invited-add-hint">Set viewer, editor, or admin access in the table after someone is invited.</p>
           </div>
+          <button type="button" class="btn-remove-metric">Remove this metric</button>
         </div>
       </div>
       </div>
@@ -170,6 +176,7 @@
           var individualSharedDashboardCache = {};
 
       var businessImageDataUrl = '';
+      var INPUT_THEME_KEY = 'metricsInputDisplayTheme';
 
       function maybeMigratePersonalLocalStorage() {
         if (isCollaborator) return;
@@ -679,13 +686,9 @@
         var sharedHost = document.getElementById('sharedBoardsHost');
         if (sharedHost) sharedHost.hidden = true;
         var nameEl = document.getElementById('inputBusinessName');
-        if (nameEl) nameEl.readOnly = !!isCollaborator;
+        if (nameEl) nameEl.readOnly = true;
         var btnPic = document.getElementById('btnEditPic');
         if (btnPic) btnPic.disabled = !!isCollaborator;
-        var personalHeading = document.getElementById('personalSectionHeading');
-        if (personalHeading) personalHeading.hidden = !isHomeDashboard;
-        var personalToolbar = document.getElementById('personalMetricsToolbar');
-        if (personalToolbar) personalToolbar.hidden = !!isCollaborator;
         var linkResults = document.getElementById('linkViewResults');
         if (linkResults) {
           if (isCollaborator) {
@@ -1043,11 +1046,10 @@
       }
 
       function updateAddMetricToolbar(metricCount) {
-        var toolbar = document.getElementById('personalMetricsToolbar');
         var btn = document.getElementById('btnAddMetricBoard');
         var hint = document.getElementById('metricBoardHelp');
-        if (toolbar) toolbar.hidden = !!isCollaborator;
         if (!btn) return;
+        btn.hidden = !!isCollaborator;
         btn.disabled = metricCount >= MAX_METRICS;
         if (hint) {
           hint.textContent = metricCount + ' of ' + MAX_METRICS + ' boards. Up to ' + MAX_ON_RESULTS_SCREEN + ' can appear on the display screen at once.';
@@ -1768,8 +1770,8 @@
         var currentInput = row.querySelector('input[name="current"]');
         goalInput.disabled = isRanking;
         currentInput.disabled = isRanking;
-        goalInput.placeholder = isRanking ? 'From table' : 'Goal';
-        currentInput.placeholder = isRanking ? 'From table' : 'Current';
+        goalInput.placeholder = isRanking ? 'Using Ranking Data. Select "Summary" to edit this field' : 'Goal';
+        currentInput.placeholder = isRanking ? 'Using Ranking Data. Select "Summary" to edit this field' : 'Current';
       }
 
       function updateAllSummaryInputsState() {
@@ -1833,8 +1835,41 @@
       }
       var btnEditName = document.getElementById('btnEditName');
       if (btnEditName && inputBusinessName) {
-        btnEditName.addEventListener('click', function () { inputBusinessName.focus(); });
+        btnEditName.addEventListener('click', function () {
+          if (isCollaborator) return;
+          inputBusinessName.readOnly = false;
+          inputBusinessName.focus();
+          inputBusinessName.select();
+        });
+        inputBusinessName.addEventListener('blur', function () {
+          if (!isCollaborator) inputBusinessName.readOnly = true;
+        });
       }
+
+      var btnLightMode = document.getElementById('btnLightMode');
+      var btnDarkMode = document.getElementById('btnDarkMode');
+      function applyDisplayTheme(theme) {
+        var t = theme === 'dark' ? 'dark' : 'light';
+        document.body.classList.toggle('input-theme-dark', t === 'dark');
+        document.body.classList.toggle('input-theme-light', t !== 'dark');
+        if (btnLightMode) {
+          btnLightMode.classList.toggle('display-mode-btn-active', t !== 'dark');
+          btnLightMode.setAttribute('aria-pressed', t !== 'dark' ? 'true' : 'false');
+        }
+        if (btnDarkMode) {
+          btnDarkMode.classList.toggle('display-mode-btn-active', t === 'dark');
+          btnDarkMode.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+        }
+        try { localStorage.setItem(INPUT_THEME_KEY, t); } catch (e) {}
+      }
+      function initDisplayTheme() {
+        var stored = 'light';
+        try { stored = localStorage.getItem(INPUT_THEME_KEY) || 'light'; } catch (e) {}
+        applyDisplayTheme(stored);
+      }
+      if (btnLightMode) btnLightMode.addEventListener('click', function () { applyDisplayTheme('light'); });
+      if (btnDarkMode) btnDarkMode.addEventListener('click', function () { applyDisplayTheme('dark'); });
+      initDisplayTheme();
 
       var carouselPrev = document.getElementById('carouselPrev');
       var carouselNext = document.getElementById('carouselNext');
