@@ -251,39 +251,6 @@
   color: #5a5a5a;
 }
 
-.results-footer-bar {
-  position: fixed;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  z-index: 10;
-  font-size: 13px;
-}
-
-.results-footer-bar .input-link {
-  position: static;
-  left: auto;
-  transform: none;
-}
-
-.results-footer-link {
-  color: #9a9a9a;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.results-footer-link:hover {
-  color: #5a5a5a;
-}
-
-.results-footer-sep {
-  color: #c8c8c8;
-  user-select: none;
-}
-
 /* ----- Input page ----- */
 
 .input-page .input-main {
@@ -718,8 +685,68 @@
   gap: 12px;
 }
 
-.goal-current-fields textarea {
-  min-height: 3.2em;
+.metric-single-line-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font: inherit;
+  font-size: inherit;
+  color: #2c2c2c;
+  line-height: 1.4;
+  height: 2.75rem;
+  box-sizing: border-box;
+}
+
+.metric-single-line-input:focus {
+  outline: none;
+  border-color: #6b9bd1;
+  box-shadow: 0 0 0 2px rgba(107, 155, 209, 0.2);
+}
+
+.metric-single-line-input:disabled {
+  background: #f0f0f0;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.ranking-table .metric-single-line-input {
+  max-width: 100%;
+}
+
+.btn-remove-metric {
+  display: inline-block;
+  margin: 4px 0 12px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #9a2222;
+  background: #fff;
+  border: 1px solid #e0a0a0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-remove-metric:hover:not(:disabled) {
+  background: #fff8f8;
+  border-color: #c77;
+}
+
+.btn-remove-metric:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.metric-actions-after-ranking {
+  margin-top: 16px;
+}
+
+.invited-add-hint {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #6b6b6b;
+  line-height: 1.45;
 }
 
 .options-row {
@@ -1282,29 +1309,6 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .results-footer-bar {
-    bottom: 16px;
-    max-width: calc(100vw - 24px);
-    flex-wrap: wrap;
-    justify-content: center;
-    row-gap: 8px;
-  }
-
-  .results-footer-bar .input-link {
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px 4px;
-  }
-
-  .results-footer-link {
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-    padding: 8px 4px;
   }
 
   .input-page .input-main {

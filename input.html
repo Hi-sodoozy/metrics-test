@@ -43,15 +43,12 @@
           <span class="metric-business-badge" hidden></span>
         </div>
         <label class="option-check option-show-main"><input type="checkbox" name="showOnMainScreen" aria-label="Show on main screen" /> Show on main screen</label>
-        <div class="form-block">
-          <label class="form-label">What are we measuring?</label>
-          <textarea name="heading" placeholder="What are we measuring?" rows="2" aria-label="What are we measuring?"></textarea>
-        </div>
+        <input type="hidden" name="heading" value="" />
         <div class="form-block goal-current-block">
           <label class="form-label">Goal + Current</label>
           <div class="goal-current-fields">
-            <textarea name="goal" placeholder="Goal" rows="2" aria-label="Goal"></textarea>
-            <textarea name="current" placeholder="Current" rows="2" aria-label="Current"></textarea>
+            <input type="text" name="goal" class="metric-single-line-input" placeholder="Goal" autocomplete="off" aria-label="Goal" />
+            <input type="text" name="current" class="metric-single-line-input" placeholder="Current" autocomplete="off" aria-label="Current" />
           </div>
         </div>
         <div class="form-block options-block">
@@ -64,6 +61,8 @@
             <label class="option-radio"><input type="radio" name="displayAs_0" value="ranking" /> Ranking</label>
           </div>
         </div>
+        <button type="button" class="btn-remove-metric">Remove this metric</button>
+        <div class="metric-actions"><button type="button" class="btn-save">Save</button></div>
         <div class="metric-ranking-section">
           <h4 class="metric-ranking-heading">Ranking data</h4>
           <div class="ranking-toggles">
@@ -80,6 +79,7 @@
             </table>
             <button type="button" class="btn-add-row">Add more rows</button>
           </div>
+          <div class="metric-actions metric-actions-after-ranking"><button type="button" class="btn-save">Save</button></div>
         </div>
         <div class="invited-users-wrap">
           <h5 class="invited-users-title">Invited users</h5>
@@ -102,16 +102,11 @@
             <div class="invited-add-grid">
               <input type="text" class="invite-add-name invite-email-input" placeholder="Name" aria-label="Invitee name" />
               <input type="email" class="invite-add-email invite-email-input" placeholder="Email" aria-label="Invitee email" />
-              <select class="invite-add-permission invite-permission-select" aria-label="Permission">
-                <option value="read">View only</option>
-                <option value="edit" selected>Can edit</option>
-                <option value="admin">Admin</option>
-              </select>
               <button type="button" class="btn-send-metric-invite">Send invite</button>
             </div>
+            <p class="invited-add-hint">Set view or edit access in the table after someone is invited.</p>
           </div>
         </div>
-        <div class="metric-actions"><button type="button" class="btn-save">Save</button></div>
       </div>
       </div>
     </div>
@@ -280,9 +275,9 @@
         var indBtn = row.querySelector('.btn-individual-goal');
         return {
           showOnMainScreen: row.querySelector('input[name="showOnMainScreen"]').checked,
-          heading: row.querySelector('textarea[name="heading"]').value.trim(),
-          goal: row.querySelector('textarea[name="goal"]').value.trim(),
-          current: row.querySelector('textarea[name="current"]').value.trim(),
+          heading: (row.querySelector('input[name="heading"]') || { value: '' }).value.trim(),
+          goal: (row.querySelector('input[name="goal"]') || { value: '' }).value.trim(),
+          current: (row.querySelector('input[name="current"]') || { value: '' }).value.trim(),
           displayAsPercent: row.querySelector('input[name="displayAsPercent"]').checked,
           displayAs: displayAs,
           displaySummary: displaySummaryCb ? displaySummaryCb.checked : true,
@@ -447,8 +442,9 @@
               el.disabled = true;
             });
           }
-          var saveBtn = row.querySelector('.metric-actions .btn-save');
-          if (saveBtn) saveBtn.disabled = !canEdit;
+          row.querySelectorAll('.metric-actions .btn-save').forEach(function (saveBtn) {
+            saveBtn.disabled = !canEdit;
+          });
           var addRow = row.querySelector('.metric-ranking-section .btn-add-row');
           if (addRow) addRow.disabled = locked;
           var canManageInv = canManageInvitesForMetric(idx, row);
@@ -492,9 +488,12 @@
         m = m || {};
         var i = parseInt(row.getAttribute('data-index') || '0', 10);
         row.querySelector('input[name="showOnMainScreen"]').checked = !!m.showOnMainScreen;
-        row.querySelector('textarea[name="heading"]').value = m.heading || '';
-        row.querySelector('textarea[name="goal"]').value = m.goal !== undefined && m.goal != null ? String(m.goal) : '';
-        row.querySelector('textarea[name="current"]').value = m.current !== undefined && m.current != null ? String(m.current) : '';
+        var hEl = row.querySelector('input[name="heading"]');
+        if (hEl) hEl.value = m.heading || '';
+        var gEl = row.querySelector('input[name="goal"]');
+        if (gEl) gEl.value = m.goal !== undefined && m.goal != null ? String(m.goal) : '';
+        var cEl = row.querySelector('input[name="current"]');
+        if (cEl) cEl.value = m.current !== undefined && m.current != null ? String(m.current) : '';
         var dsCb = row.querySelector('input[name="displaySummary"]');
         if (dsCb) dsCb.checked = m.displaySummary !== false;
         row.querySelector('input[name="displayAsPercent"]').checked = !!m.displayAsPercent;
@@ -531,8 +530,8 @@
         if (!carousel) return;
         carousel.querySelectorAll('.input-row.metric-form').forEach(function (row) {
           var tf = row.querySelector('.metric-block-title-field');
-          var heading = row.querySelector('textarea[name="heading"]');
-          var goal = row.querySelector('textarea[name="goal"]');
+          var heading = row.querySelector('input[name="heading"]');
+          var goal = row.querySelector('input[name="goal"]');
           var badge = row.querySelector('.metric-business-badge');
           if (!tf || !heading || !goal) return;
           if (isIndividualHub) {
@@ -566,8 +565,8 @@
         if (isSharedBoardRow(row) || isCollaborator) return;
         row.setAttribute('data-title-wired', '1');
         var tf = row.querySelector('.metric-block-title-field');
-        var heading = row.querySelector('textarea[name="heading"]');
-        var goal = row.querySelector('textarea[name="goal"]');
+        var heading = row.querySelector('input[name="heading"]');
+        var goal = row.querySelector('input[name="goal"]');
         if (!tf || !heading || !goal) return;
         if (isIndividualHub) {
           tf.addEventListener('input', function () {
@@ -621,33 +620,63 @@
           renderRankingRowsInBlock(row, data);
           touch();
         });
-        row.querySelector('.metric-actions .btn-save').addEventListener('click', function () {
-          if (isSharedBoardRow(row)) {
-            persistSharedRowNow(row)
-              .then(function () {
-                var oid = row.getAttribute('data-dashboard-owner') || '';
-                window.location.href = 'index.html?owner=' + encodeURIComponent(oid);
-              })
-              .catch(function (err) {
-                alert((err && err.message) ? err.message : 'Could not save to the server.');
-              });
-          } else {
-            save();
-            persistRemoteNow()
-              .then(function () {
-                if (isCollaborator) {
-                  window.location.href = 'index.html?owner=' + encodeURIComponent(dashboardOwnerId);
-                } else if (isIndividualHub) {
-                  window.location.href = 'index.html?view=personal';
-                } else {
-                  window.location.href = 'index.html';
-                }
-              })
-              .catch(function (err) {
-                alert((err && err.message) ? err.message : 'Could not save to the server.');
-              });
-          }
+        row.querySelectorAll('.metric-actions .btn-save').forEach(function (saveBtn) {
+          saveBtn.addEventListener('click', function () {
+            if (isSharedBoardRow(row)) {
+              persistSharedRowNow(row)
+                .then(function () {
+                  var oid = row.getAttribute('data-dashboard-owner') || '';
+                  window.location.href = 'index.html?owner=' + encodeURIComponent(oid);
+                })
+                .catch(function (err) {
+                  alert((err && err.message) ? err.message : 'Could not save to the server.');
+                });
+            } else {
+              save();
+              persistRemoteNow()
+                .then(function () {
+                  if (isCollaborator) {
+                    window.location.href = 'index.html?owner=' + encodeURIComponent(dashboardOwnerId);
+                  } else if (isIndividualHub) {
+                    window.location.href = 'index.html?view=personal';
+                  } else {
+                    window.location.href = 'index.html';
+                  }
+                })
+                .catch(function (err) {
+                  alert((err && err.message) ? err.message : 'Could not save to the server.');
+                });
+            }
+          });
         });
+        var btnRmMetric = row.querySelector('.btn-remove-metric');
+        if (btnRmMetric) {
+          btnRmMetric.addEventListener('click', function () {
+            if (isSharedBoardRow(row) || isCollaborator) return;
+            if (!window.confirm('Once deleted, this cannot be undone.\n\nRemove this metric?')) return;
+            var ix = parseInt(row.getAttribute('data-index') || '0', 10);
+            var d = getData();
+            var arr = d.metrics.slice();
+            if (arr.length <= 1) {
+              alert('You need at least one metric board.');
+              return;
+            }
+            arr.splice(ix, 1);
+            try {
+              localStorage.setItem(activeKey(), JSON.stringify({
+                businessName: (document.getElementById('inputBusinessName') || {}).value || '',
+                businessImage: businessImageDataUrl || '',
+                metrics: arr
+              }));
+            } catch (e) {}
+            carouselPageIndex = 0;
+            renderPersonalMetricsCarousel(trimMetricsArrayForUi(arr));
+            syncTitleRowFromTextareasCarousel();
+            updateAllSummaryInputsState();
+            applyRowAccessLocks();
+            scheduleRemoteSave();
+          });
+        }
         row.querySelectorAll('input[type="radio"][name^="displayAs_"]').forEach(function (radio) {
           radio.addEventListener('change', function () {
             updateSummaryInputsState(row);
@@ -768,6 +797,13 @@
           }
           track.appendChild(pageEl);
         }
+        document.querySelectorAll('#inputCarousel .input-row.metric-form').forEach(function (form) {
+          var btnR = form.querySelector('.btn-remove-metric');
+          if (btnR) {
+            btnR.hidden = isCollaborator || n <= 1;
+            btnR.disabled = btnR.hidden;
+          }
+        });
         document.querySelectorAll('#inputCarousel .input-row.metric-form').forEach(bindCarouselMetricRow);
         applyCarouselTransform();
         updateCarouselNavUI();
@@ -812,6 +848,11 @@
           rewriteMetricFormDisplayAsNames(form, 'sb' + invIdx);
           loadMetricFormFromData(form, m);
           setInvitedBoardTitleAndBadge(form, bn, m.heading || '');
+          var rmShared = form.querySelector('.btn-remove-metric');
+          if (rmShared) {
+            rmShared.hidden = true;
+            rmShared.disabled = true;
+          }
           host.appendChild(card);
           bindCarouselMetricRow(form);
         });
@@ -970,8 +1011,8 @@
           arr.push({
             mode: 'data',
             name: fieldValue(tr.querySelector('input[name="rankName"]')),
-            goal: fieldValue(tr.querySelector('textarea[name="rankGoal"]')),
-            current: fieldValue(tr.querySelector('textarea[name="rankCurrent"]')),
+            goal: fieldValue(tr.querySelector('input[name="rankGoal"]')),
+            current: fieldValue(tr.querySelector('input[name="rankCurrent"]')),
             individualGoal: indInput ? fieldValue(indInput) : ''
           });
         });
@@ -1056,7 +1097,7 @@
                 var newPerm = sel.value;
                 sel.disabled = true;
                 window.metricsUpdateMetricInvitePermission({
-                  ownerUserId: dashboardOwnerId,
+                  ownerUserId: getRowOwnerId(metricRow),
                   metricIndex: metricIndex,
                   email: email,
                   permission: newPerm
@@ -1095,7 +1136,6 @@
             if (!canManageInvitesForMetric(metricIndex, metricRow)) return;
             var nameEl = metricRow.querySelector('.invite-add-name');
             var emailEl = metricRow.querySelector('.invite-add-email');
-            var permEl = metricRow.querySelector('.invite-add-permission');
             var businessName = fieldValue(document.getElementById('inputBusinessName'));
             if (!String(businessName || '').trim() && isSharedBoardRow(metricRow)) {
               businessName = (metricRow.getAttribute('data-business-name') || '').trim();
@@ -1120,7 +1160,7 @@
                   metricIndex: metricIndex,
                   email: email,
                   name: fieldValue(nameEl),
-                  permission: permEl ? permEl.value : 'edit',
+                  permission: 'read',
                   businessName: businessName,
                   invitedByUserId: userCtx.userId
                 });
@@ -1131,7 +1171,6 @@
               alert('Invitation sent.');
               if (nameEl) nameEl.value = '';
               if (emailEl) emailEl.value = '';
-              if (permEl) permEl.value = 'edit';
               save();
               refreshInvitedUsersSection(metricRow);
             }).catch(function (err) {
@@ -1204,16 +1243,16 @@
           var nameCell = '<td><input type="text" name="rankName" placeholder="Name" /></td>';
           var indCell = showInd ? '<td class="td-individual-goal"><input type="text" name="rankIndividualGoal" placeholder="Individual goal" /></td>' : '<td class="td-individual-goal" hidden><input type="text" name="rankIndividualGoal" placeholder="Individual goal" /></td>';
           tr.innerHTML = nameCell + indCell +
-            '<td class="goal-current-cell"><textarea name="rankGoal" placeholder="Goal" rows="2"></textarea></td>' +
-            '<td class="goal-current-cell"><textarea name="rankCurrent" placeholder="Current" rows="2"></textarea></td>' +
+            '<td class="goal-current-cell"><input type="text" name="rankGoal" class="metric-single-line-input" placeholder="Goal" autocomplete="off" /></td>' +
+            '<td class="goal-current-cell"><input type="text" name="rankCurrent" class="metric-single-line-input" placeholder="Current" autocomplete="off" /></td>' +
             '<td class="td-row-actions">' +
               '<button type="button" class="btn-remove-row" aria-label="Remove row"><span class="btn-remove-icon" aria-hidden="true">−</span></button>' +
             '</td>';
           tr.querySelector('input[name="rankName"]').value = r.name || '';
           var indInput = tr.querySelector('input[name="rankIndividualGoal"]');
           if (indInput) indInput.value = r.individualGoal !== undefined && r.individualGoal !== null ? String(r.individualGoal) : '';
-          tr.querySelector('textarea[name="rankGoal"]').value = r.goal !== undefined && r.goal !== null ? String(r.goal) : '';
-          tr.querySelector('textarea[name="rankCurrent"]').value = r.current !== undefined && r.current !== null ? String(r.current) : '';
+          tr.querySelector('input[name="rankGoal"]').value = r.goal !== undefined && r.goal !== null ? String(r.goal) : '';
+          tr.querySelector('input[name="rankCurrent"]').value = r.current !== undefined && r.current !== null ? String(r.current) : '';
           if (tr.querySelector('.td-individual-goal')) tr.querySelector('.td-individual-goal').hidden = !showInd;
           tbody.appendChild(tr);
         }
@@ -1276,8 +1315,8 @@
         if (!row) return;
         var picked = row.querySelector('input[type="radio"][name^="displayAs_"]:checked');
         var isRanking = (picked || {}).value === 'ranking';
-        var goalInput = row.querySelector('textarea[name="goal"]');
-        var currentInput = row.querySelector('textarea[name="current"]');
+        var goalInput = row.querySelector('input[name="goal"]');
+        var currentInput = row.querySelector('input[name="current"]');
         goalInput.disabled = isRanking;
         currentInput.disabled = isRanking;
         goalInput.placeholder = isRanking ? 'From table' : 'Goal';
