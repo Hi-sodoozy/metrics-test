@@ -22,7 +22,6 @@
   <script>
     (function () {
       var params = new URLSearchParams(window.location.search);
-      var viewPersonal = params.get('view') === 'personal';
       var ownerParam = (params.get('owner') || '').trim();
 
       function uuidLooksValid(s) {
@@ -190,19 +189,6 @@
           }
 
           var linkInput = document.getElementById('linkToInput');
-          if (viewPersonal) {
-            if (linkInput) linkInput.href = 'input.html?view=personal';
-            if (!window.metricsLoadPersonalDashboard) {
-              renderDashboard(loadFromLocalStorage('metricsPersonalDashboard'));
-              return null;
-            }
-            return window.metricsLoadPersonalDashboard(userCtx.userId).then(function (data) {
-              renderDashboard(data);
-            }).catch(function () {
-              renderDashboard(loadFromLocalStorage('metricsPersonalDashboard'));
-            });
-          }
-
           var ownerId = uuidLooksValid(ownerParam) ? ownerParam : userCtx.userId;
           if (linkInput) {
             linkInput.href = uuidLooksValid(ownerParam) && ownerParam !== userCtx.userId

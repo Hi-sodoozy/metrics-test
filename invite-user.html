@@ -67,8 +67,8 @@
         <div class="invite-field">
           <label for="invitePermission">Permission</label>
           <select id="invitePermission" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:4px;font:inherit;">
-            <option value="edit">Can edit</option>
-            <option value="read">View only</option>
+            <option value="read">Viewer</option>
+            <option value="edit">Editor</option>
             <option value="admin">Admin</option>
           </select>
         </div>
@@ -91,11 +91,6 @@
         window.location.href = 'welcome.html';
         return;
       }
-      if (ctx.accountType !== 'business') {
-        window.location.href = 'input.html';
-        return;
-      }
-
       var form = document.getElementById('inviteForm');
       var emailInput = document.getElementById('inviteEmail');
       var nameInput = document.getElementById('inviteName');

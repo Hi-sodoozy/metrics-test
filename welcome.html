@@ -3,64 +3,57 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Metrics – Welcome</title>
+  <title>Metrics View – Welcome</title>
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .welcome-main { max-width: 980px; margin: 0 auto; padding: 36px 20px 56px; }
-    .welcome-title { margin: 0 0 24px; text-align: center; font-size: clamp(1.8rem, 4vw, 2.5rem); }
-    .welcome-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .welcome-card {
-      background: #fff;
-      border: 1px solid #e2e4e8;
-      border-radius: 10px;
-      padding: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    }
-    .welcome-card h2 { margin: 0 0 8px; font-size: 1.35rem; }
-    .welcome-card p { margin: 0 0 18px; color: #6b6b6b; font-size: 14px; }
-    .welcome-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .welcome-link {
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 42px;
-      border-radius: 6px;
-      border: 1px solid #4a6fa5;
-      color: #4a6fa5;
-      text-decoration: none;
-      font-weight: 600;
-      background: #fff;
-    }
-    .welcome-link.primary { background: #4a6fa5; color: #fff; }
-    .welcome-link:hover { opacity: 0.92; }
-    @media (max-width: 760px) {
-      .welcome-grid { grid-template-columns: 1fr; }
-    }
-  </style>
 </head>
-<body class="metrics-page input-page">
-  <div class="page-top-brand"><span class="app-brand">Metrics View</span></div>
-  <main class="welcome-main">
-    <h1 class="welcome-title">Welcome to your metrics tracker</h1>
-    <div class="welcome-grid">
-      <section class="welcome-card">
-        <h2>Business</h2>
-        <p>For admin functionality</p>
-        <div class="welcome-actions">
-          <a class="welcome-link primary" href="auth.html?account=business&mode=signup">Sign up</a>
-          <a class="welcome-link" href="auth.html?account=business&mode=signin">Sign in</a>
-        </div>
-      </section>
-      <section class="welcome-card">
-        <h2>Individual</h2>
-        <p>For employees and personal use</p>
-        <div class="welcome-actions">
-          <a class="welcome-link primary" href="auth.html?account=individual&mode=signup">Sign up</a>
-          <a class="welcome-link" href="auth.html?account=individual&mode=signin">Sign in</a>
-        </div>
-      </section>
-    </div>
+<body class="metrics-page mv-landing">
+  <div class="mv-landing-bg" aria-hidden="true"></div>
+  <header class="mv-landing-nav">
+    <span class="mv-landing-logo">Metrics View</span>
+    <a class="mv-landing-nav-link" href="auth.html?mode=signin">Sign in</a>
+  </header>
+
+  <main class="mv-landing-main">
+    <section class="mv-landing-hero">
+      <p class="mv-landing-eyebrow">Placeholder — product tagline</p>
+      <h1 class="mv-landing-title">Welcome to Metrics View</h1>
+      <p class="mv-landing-lead">
+        Placeholder hero copy: a short sentence about clarity, alignment, and outcomes. Replace with your real value proposition when ready.
+      </p>
+      <div class="mv-landing-cta-row">
+        <a class="mv-btn mv-btn-primary" href="auth.html?mode=signup">Get started</a>
+        <a class="mv-btn mv-btn-ghost" href="auth.html?mode=signin">Sign in</a>
+      </div>
+      <p class="mv-landing-note">Placeholder: mention optional workspace name, board admins, and invites — edit to match launch messaging.</p>
+    </section>
+
+    <section class="mv-landing-features" aria-label="Highlights">
+      <article class="mv-landing-card">
+        <h2 class="mv-landing-card-title">Placeholder feature one</h2>
+        <p class="mv-landing-card-text">Replace with a benefit-led description (e.g. boards, goals, rankings).</p>
+      </article>
+      <article class="mv-landing-card">
+        <h2 class="mv-landing-card-title">Placeholder feature two</h2>
+        <p class="mv-landing-card-text">Replace with collaboration or permission story (viewer, editor, admin).</p>
+      </article>
+      <article class="mv-landing-card">
+        <h2 class="mv-landing-card-title">Placeholder feature three</h2>
+        <p class="mv-landing-card-text">Replace with display / results or workflow copy.</p>
+      </article>
+    </section>
+
+    <section class="mv-landing-strip">
+      <p class="mv-landing-strip-text">
+        Placeholder strip: one line for trust, security, or “built for teams” — swap for real proof points later.
+      </p>
+    </section>
   </main>
+
+  <footer class="mv-landing-footer">
+    <span class="mv-landing-footer-brand">Metrics View</span>
+    <span class="mv-landing-footer-meta">Placeholder footer links or legal — amend later.</span>
+  </footer>
+
   <script>
     (function () {
       try {

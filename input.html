@@ -18,21 +18,21 @@
         <button type="button" class="input-edit-icon btn-edit-pic" id="btnEditPic" aria-label="Edit display picture">✎</button>
       </div>
       <div class="input-business-name-wrap">
-        <input type="text" class="input-business-name" id="inputBusinessName" placeholder="Your business name" aria-label="Business name" />
+        <input type="text" class="input-business-name" id="inputBusinessName" placeholder="Workspace name (optional)" aria-label="Workspace or business name" />
         <button type="button" class="input-edit-icon btn-edit-name" id="btnEditName" aria-label="Edit business name">✎</button>
       </div>
+      <nav class="boards-toc" id="boardsToc" aria-label="Jump to board" hidden>
+        <h3 class="boards-toc-title" id="boardsTocTitle">Boards</h3>
+        <p class="boards-toc-hint" id="boardsTocHint">Open a board from the list or use the arrows to move between them.</p>
+        <ul class="boards-toc-list" id="boardsTocList" role="list"></ul>
+      </nav>
     </div>
     <div id="sharedBoardsHost" class="shared-boards-host"></div>
-    <h2 id="personalSectionHeading" class="metrics-section-heading" hidden>Your metrics</h2>
+    <h2 id="personalSectionHeading" class="metrics-section-heading" hidden>Your boards</h2>
     <div class="personal-metrics-toolbar" id="personalMetricsToolbar">
       <button type="button" class="btn-add-metric-board" id="btnAddMetricBoard">+ Add metric board</button>
       <p id="metricBoardHelp" class="input-hint-inline" aria-live="polite"></p>
     </div>
-    <nav class="boards-toc" id="boardsToc" aria-label="Jump to board" hidden>
-      <h3 class="boards-toc-title" id="boardsTocTitle">Boards</h3>
-      <p class="boards-toc-hint" id="boardsTocHint">Open a board from the list or use the arrows to move between them.</p>
-      <ul class="boards-toc-list" id="boardsTocList" role="list"></ul>
-    </nav>
     <div class="input-metrics-carousel carousel-1up" id="inputCarousel">
       <button type="button" class="input-carousel-btn input-carousel-prev" id="carouselPrev" aria-label="Previous metrics">‹</button>
       <div class="input-carousel-viewport">
@@ -109,7 +109,7 @@
               <input type="email" class="invite-add-email invite-email-input" placeholder="Email" aria-label="Invitee email" />
               <button type="button" class="btn-send-metric-invite">Send invite</button>
             </div>
-            <p class="invited-add-hint">Set view or edit access in the table after someone is invited.</p>
+            <p class="invited-add-hint">Set viewer, editor, or admin access in the table after someone is invited.</p>
           </div>
         </div>
       </div>
@@ -153,7 +153,7 @@
 
           var dashboardOwnerId = uuidLooksValid(ownerParam) ? ownerParam : userCtx.userId;
           var isCollaborator = uuidLooksValid(ownerParam) && ownerParam !== userCtx.userId;
-          var isIndividualHub = userCtx.accountType === 'individual' && !isCollaborator;
+          var isHomeDashboard = !isCollaborator;
           var collaborViewIndices = [];
           var collaborEditIndices = [];
           var collaborAdminIndices = [];
@@ -165,13 +165,26 @@
           var MAX_ON_RESULTS_SCREEN = 4;
           var invitedBoardsCount = 0;
           var carouselPageIndex = 0;
-          var tocSharedActiveBtn = null;
           var boardTocRefreshTimer = null;
+          var individualSlotInviteList = [];
+          var individualSharedDashboardCache = {};
 
       var businessImageDataUrl = '';
 
+      function maybeMigratePersonalLocalStorage() {
+        if (isCollaborator) return;
+        try {
+          var biz = localStorage.getItem(KEY_BUSINESS);
+          var per = localStorage.getItem(KEY_PERSONAL);
+          if (!biz && per) {
+            localStorage.setItem(KEY_BUSINESS, per);
+            localStorage.removeItem(KEY_PERSONAL);
+          }
+        } catch (e) {}
+      }
+      maybeMigratePersonalLocalStorage();
+
       function activeKey() {
-        if (isIndividualHub) return KEY_PERSONAL;
         return KEY_BUSINESS;
       }
 
@@ -216,8 +229,7 @@
 
       function isFullMetricEditorForRow(metricRow) {
         var idx = parseInt(metricRow.getAttribute('data-index') || '0', 10);
-        if (isIndividualHub && !isSharedBoardRow(metricRow)) return true;
-        if (userCtx.accountType === 'business' && !isCollaborator) return true;
+        if (isHomeDashboard && !isSharedBoardRow(metricRow)) return true;
         if (isCollaborator && !isSharedBoardRow(metricRow)) {
           return collaborAdminIndices.indexOf(idx) >= 0;
         }
@@ -441,6 +453,7 @@
         var byIndex = {};
         var maxIx = -1;
         forms.forEach(function (row) {
+          if (isSharedBoardRow(row)) return;
           var ix = parseInt(row.getAttribute('data-index') || '0', 10);
           if (ix > maxIx) maxIx = ix;
           byIndex[ix] = collectOneMetricFromFormRow(row);
@@ -486,15 +499,10 @@
             );
           });
         }
-        if (isIndividualHub) {
-          return window.metricsSavePersonalDashboard(userCtx.userId, collectDashboardFromDom());
-        }
-        if (userCtx.accountType === 'business' || !isCollaborator) {
+        if (isHomeDashboard) {
           var payloadBiz = collectDashboardFromDom();
-          if (userCtx.accountType === 'business' && !isCollaborator) {
-            while (payloadBiz.metrics.length < MAX_METRICS) {
-              payloadBiz.metrics.push(emptyMetricSlot());
-            }
+          while (payloadBiz.metrics.length < MAX_METRICS) {
+            payloadBiz.metrics.push(emptyMetricSlot());
           }
           return window.metricsSaveBusinessDashboard(dashboardOwnerId, payloadBiz, null, { includeProfile: true });
         }
@@ -533,8 +541,6 @@
         if (!window.metricsSupabase || !userCtx.userId) return;
         if (isCollaborator) {
           if (!collaborEditIndices.length) return;
-        } else if (!isIndividualHub && userCtx.accountType !== 'business') {
-          return;
         }
         clearTimeout(remoteSaveTimer);
         remoteSaveTimer = setTimeout(function () {
@@ -554,7 +560,6 @@
 
       function canManageInvitesForMetric(metricIndex, metricRow) {
         var row = metricRow || null;
-        if (isIndividualHub && row && !isSharedBoardRow(row)) return false;
         var oid = getRowOwnerId(row);
         if (isCollaborator && oid === dashboardOwnerId) {
           return collaborAdminIndices.indexOf(metricIndex) >= 0;
@@ -563,7 +568,7 @@
           var admins = collaborAdminByOwner[oid] || [];
           return admins.indexOf(metricIndex) >= 0;
         }
-        return userCtx.accountType === 'business' && !isCollaborator;
+        return isHomeDashboard;
       }
 
       function applyRowAccessLocks() {
@@ -572,9 +577,7 @@
           var oid = getRowOwnerId(row);
           var shared = isSharedBoardRow(row);
           var canView = false;
-          if (userCtx.accountType === 'business' && !isCollaborator) {
-            canView = true;
-          } else if (isIndividualHub && !shared) {
+          if (!isCollaborator && !shared) {
             canView = true;
           } else if (isCollaborator && !shared) {
             canView = collaborViewIndices.indexOf(idx) >= 0;
@@ -668,21 +671,25 @@
 
       function updateChromeForMode() {
         var bizHeader = document.getElementById('inputBusinessHeader');
-        if (bizHeader) bizHeader.hidden = !!isIndividualHub;
+        var picWrap = bizHeader && bizHeader.querySelector('.input-business-pic-wrap');
+        var nameWrap = bizHeader && bizHeader.querySelector('.input-business-name-wrap');
+        if (bizHeader) bizHeader.hidden = false;
+        if (picWrap) picWrap.hidden = false;
+        if (nameWrap) nameWrap.hidden = false;
+        var sharedHost = document.getElementById('sharedBoardsHost');
+        if (sharedHost) sharedHost.hidden = true;
         var nameEl = document.getElementById('inputBusinessName');
         if (nameEl) nameEl.readOnly = !!isCollaborator;
         var btnPic = document.getElementById('btnEditPic');
         if (btnPic) btnPic.disabled = !!isCollaborator;
         var personalHeading = document.getElementById('personalSectionHeading');
-        if (personalHeading) personalHeading.hidden = !isIndividualHub;
+        if (personalHeading) personalHeading.hidden = !isHomeDashboard;
         var personalToolbar = document.getElementById('personalMetricsToolbar');
         if (personalToolbar) personalToolbar.hidden = !!isCollaborator;
         var linkResults = document.getElementById('linkViewResults');
         if (linkResults) {
           if (isCollaborator) {
             linkResults.href = 'index.html?owner=' + encodeURIComponent(dashboardOwnerId);
-          } else if (isIndividualHub) {
-            linkResults.href = 'index.html?view=personal';
           } else {
             linkResults.href = 'index.html';
           }
@@ -747,12 +754,13 @@
           var heading = row.querySelector('input[name="heading"]');
           var badge = row.querySelector('.metric-business-badge');
           if (!tf || !heading) return;
-          if (isIndividualHub) {
-            tf.readOnly = false;
-            tf.value = (heading.value || '').trim();
+          if (isSharedBoardRow(row)) {
+            tf.readOnly = true;
+            tf.value = (heading.value || '').trim() || 'Metric';
+            var bns = (row.getAttribute('data-business-name') || '').trim();
             if (badge) {
-              badge.textContent = '';
-              badge.hidden = true;
+              badge.textContent = bns;
+              badge.hidden = !bns;
             }
           } else if (isCollaborator) {
             tf.readOnly = true;
@@ -838,8 +846,6 @@
                 .then(function () {
                   if (isCollaborator) {
                     window.location.href = 'index.html?owner=' + encodeURIComponent(dashboardOwnerId);
-                  } else if (isIndividualHub) {
-                    window.location.href = 'index.html?view=personal';
                   } else {
                     window.location.href = 'index.html';
                   }
@@ -871,7 +877,7 @@
               }));
             } catch (e) {}
             carouselPageIndex = 0;
-            renderPersonalMetricsCarousel(trimMetricsArrayForUi(arr));
+            renderMainInputCarousel(trimMetricsArrayForUi(arr));
             syncTitleRowFromTextareasCarousel();
             updateAllSummaryInputsState();
             applyRowAccessLocks();
@@ -897,13 +903,13 @@
       }
 
       function slidesPerViewForInput() {
-        // Individual accounts and invited employees: one board per slide (horizontal carousel + TOC).
-        if (isCollaborator || isIndividualHub) return 1;
+        // Home dashboard and invited collaborators: one board per slide (carousel + TOC).
+        if (isCollaborator || isHomeDashboard) return 1;
         return 1;
       }
 
       function usesBoardToc() {
-        return isIndividualHub || isCollaborator;
+        return isHomeDashboard || isCollaborator;
       }
 
       function scheduleBoardTocRefresh() {
@@ -927,19 +933,6 @@
         return raw;
       }
 
-      function findCarouselPageForMetricIndex(metricIndex) {
-        var forms = document.querySelectorAll('#inputCarousel .input-row.metric-form');
-        var n = forms.length;
-        if (n === 0) return 0;
-        var spv = slidesPerViewForInput();
-        var pages = chunkPageIndices(n, spv);
-        var p;
-        for (p = 0; p < pages.length; p++) {
-          if (pages[p].indexOf(metricIndex) >= 0) return p;
-        }
-        return 0;
-      }
-
       function updateBoardTocActive() {
         var nav = document.getElementById('boardsToc');
         if (!nav || nav.hidden) return;
@@ -948,16 +941,9 @@
           b.classList.remove('boards-toc-btn-active');
           b.removeAttribute('aria-current');
         });
-        if (tocSharedActiveBtn && tocSharedActiveBtn.parentNode && nav.contains(tocSharedActiveBtn)) {
-          tocSharedActiveBtn.classList.add('boards-toc-btn-active');
-          tocSharedActiveBtn.setAttribute('aria-current', 'true');
-          return;
-        }
-        var sharedN = isIndividualHub ? document.querySelectorAll('#sharedBoardsHost .metric-card').length : 0;
-        var idx = sharedN + carouselPageIndex;
-        if (btns[idx]) {
-          btns[idx].classList.add('boards-toc-btn-active');
-          btns[idx].setAttribute('aria-current', 'true');
+        if (btns[carouselPageIndex]) {
+          btns[carouselPageIndex].classList.add('boards-toc-btn-active');
+          btns[carouselPageIndex].setAttribute('aria-current', 'true');
         }
       }
 
@@ -965,7 +951,6 @@
         var nav = document.getElementById('boardsToc');
         var list = document.getElementById('boardsTocList');
         if (!nav || !list) return;
-        tocSharedActiveBtn = null;
         if (!usesBoardToc()) {
           nav.hidden = true;
           list.innerHTML = '';
@@ -982,35 +967,22 @@
           btn.className = 'boards-toc-btn';
           btn.textContent = label;
           btn.addEventListener('click', function () {
-            onActivate(btn);
+            onActivate();
           });
           li.appendChild(btn);
           list.appendChild(li);
         }
 
-        if (isIndividualHub) {
-          document.querySelectorAll('#sharedBoardsHost .metric-card').forEach(function (card) {
-            var form = card.querySelector('.input-row.metric-form');
-            var badge = form ? form.querySelector('.metric-business-badge') : null;
-            var base = getTocLabelFromForm(form);
-            var label = base;
-            if (badge && !badge.hidden && (badge.textContent || '').trim()) {
-              label = (badge.textContent || '').trim() + ' — ' + base;
-            }
-            appendEntry(label, function (btn) {
-              tocSharedActiveBtn = btn;
-              card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              updateBoardTocActive();
-            });
-          });
-        }
-
-        document.querySelectorAll('#inputCarousel .input-row.metric-form').forEach(function (form) {
-          var mi = parseInt(form.getAttribute('data-index') || '0', 10);
+        document.querySelectorAll('#inputCarousel .input-row.metric-form').forEach(function (form, slideIdx) {
           var label = getTocLabelFromForm(form);
+          if (isSharedBoardRow(form)) {
+            var badge = form.querySelector('.metric-business-badge');
+            if (badge && !badge.hidden && (badge.textContent || '').trim()) {
+              label = (badge.textContent || '').trim() + ' — ' + label;
+            }
+          }
           appendEntry(label, function () {
-            tocSharedActiveBtn = null;
-            carouselPageIndex = findCarouselPageForMetricIndex(mi);
+            carouselPageIndex = slideIdx;
             applyCarouselTransform();
             updateCarouselNavUI();
             var carEl = document.getElementById('inputCarousel');
@@ -1043,7 +1015,11 @@
       }
 
       function refreshInvitedBoardCount() {
-        invitedBoardsCount = document.querySelectorAll('#sharedBoardsHost .input-row.metric-form').length;
+        if (isHomeDashboard) {
+          invitedBoardsCount = individualSlotInviteList.length;
+        } else {
+          invitedBoardsCount = document.querySelectorAll('#sharedBoardsHost .input-row.metric-form').length;
+        }
       }
 
       function applyCarouselTransform() {
@@ -1076,6 +1052,121 @@
         if (hint) {
           hint.textContent = metricCount + ' of ' + MAX_METRICS + ' boards. Up to ' + MAX_ON_RESULTS_SCREEN + ' can appear on the display screen at once.';
         }
+      }
+
+      function renderMainInputCarousel(personalMetricsArray) {
+        if (isHomeDashboard) {
+          renderIndividualCombinedCarousel(individualSlotInviteList, individualSharedDashboardCache, personalMetricsArray);
+        } else {
+          renderPersonalMetricsCarousel(personalMetricsArray);
+        }
+      }
+
+      function renderIndividualCombinedCarousel(slotInvites, cache, personalMetricsArray) {
+        var track = document.getElementById('carouselTrack');
+        var carouselEl = document.getElementById('inputCarousel');
+        var src = document.getElementById('metricCardCloneSource');
+        if (!track || !src) return;
+        var tmplCard = src.querySelector('.metric-card');
+        if (!tmplCard) return;
+
+        var invites = Array.isArray(slotInvites) ? slotInvites.slice() : [];
+        invites.sort(function (a, b) {
+          var an = String(a.business_name || '').localeCompare(String(b.business_name || ''));
+          if (an !== 0) return an;
+          return (a.metric_index || 0) - (b.metric_index || 0);
+        });
+
+        var personal = Array.isArray(personalMetricsArray) ? personalMetricsArray.slice() : [];
+        if (personal.length === 0) personal.push(emptyMetricSlot());
+        if (personal.length > MAX_METRICS) personal = personal.slice(0, MAX_METRICS);
+
+        var slides = [];
+        invites.forEach(function (inv) {
+          slides.push({ kind: 'shared', inv: inv });
+        });
+        personal.forEach(function (m, pi) {
+          slides.push({ kind: 'personal', personalIndex: pi, data: m });
+        });
+
+        var n = slides.length;
+        var spv = slidesPerViewForInput();
+        if (carouselEl) {
+          carouselEl.classList.toggle('carousel-2up', spv === 2);
+          carouselEl.classList.toggle('carousel-1up', spv === 1);
+        }
+        var pages = chunkPageIndices(n, spv);
+        var pageCount = Math.max(pages.length, 1);
+        carouselPageIndex = Math.max(0, Math.min(carouselPageIndex, pageCount - 1));
+        track.innerHTML = '';
+        track.setAttribute('data-page-count', String(pageCount));
+        track.style.width = (pageCount * 100) + '%';
+        var slideFlexPct = 100 / pageCount;
+        var p;
+        for (p = 0; p < pages.length; p++) {
+          var pageEl = document.createElement('div');
+          pageEl.className = 'input-carousel-slide';
+          pageEl.style.flex = '0 0 ' + slideFlexPct + '%';
+          pageEl.style.boxSizing = 'border-box';
+          var q;
+          for (q = 0; q < pages[p].length; q++) {
+            var sidx = pages[p][q];
+            var slide = slides[sidx];
+            var card = tmplCard.cloneNode(true);
+            var form = card.querySelector('.input-row.metric-form');
+            if (slide.kind === 'shared') {
+              var inv = slide.inv;
+              var mi = inv.metric_index;
+              var oid = inv.owner_user_id;
+              var dash = (cache && cache[oid]) ? cache[oid] : { metrics: [], businessName: '' };
+              var m = (dash.metrics && dash.metrics[mi]) ? dash.metrics[mi] : {};
+              form.removeAttribute('data-metric-events-wired');
+              form.removeAttribute('data-title-wired');
+              form.removeAttribute('data-invite-wired');
+              form.setAttribute('data-index', String(mi));
+              form.setAttribute('data-dashboard-owner', oid);
+              form.setAttribute('data-shared-board', '1');
+              var bn = (dash.businessName || inv.business_name || '').trim();
+              form.setAttribute('data-business-name', bn);
+              rewriteMetricFormDisplayAsNames(form, 'icomb' + sidx);
+              loadMetricFormFromData(form, m);
+              setInvitedBoardTitleAndBadge(form, bn, m.heading || '');
+              var rmShared = form.querySelector('.btn-remove-metric');
+              if (rmShared) {
+                rmShared.hidden = true;
+                rmShared.disabled = true;
+              }
+            } else {
+              form.removeAttribute('data-dashboard-owner');
+              form.removeAttribute('data-shared-board');
+              form.removeAttribute('data-business-name');
+              form.removeAttribute('data-metric-events-wired');
+              form.removeAttribute('data-title-wired');
+              form.removeAttribute('data-invite-wired');
+              refactorMetricFormIndex(form, slide.personalIndex);
+              loadMetricFormFromData(form, slide.data || emptyMetricSlot());
+              var btnR = form.querySelector('.btn-remove-metric');
+              if (btnR) {
+                btnR.hidden = isCollaborator || personal.length <= 1;
+                btnR.disabled = btnR.hidden;
+              }
+            }
+            pageEl.appendChild(card);
+          }
+          track.appendChild(pageEl);
+        }
+        document.querySelectorAll('#inputCarousel .input-row.metric-form').forEach(bindCarouselMetricRow);
+        applyCarouselTransform();
+        updateCarouselNavUI();
+        updateAddMetricToolbar(personal.length);
+        invites.forEach(function (inv) {
+          var form = document.querySelector(
+            '#inputCarousel .metric-form[data-dashboard-owner="' + inv.owner_user_id + '"][data-index="' + inv.metric_index + '"]'
+          );
+          if (form) refreshInvitedUsersSection(form);
+        });
+        applyRowAccessLocks();
+        refreshBoardToc();
       }
 
       function renderPersonalMetricsCarousel(metricsArray) {
@@ -1135,6 +1226,11 @@
       function renderSharedBoardsIntoHost(slotInvites, cache) {
         var host = document.getElementById('sharedBoardsHost');
         if (!host) return Promise.resolve();
+        if (isHomeDashboard) {
+          host.innerHTML = '';
+          host.hidden = true;
+          return Promise.resolve();
+        }
         host.innerHTML = '';
         if (!slotInvites || !slotInvites.length) {
           host.hidden = true;
@@ -1188,7 +1284,7 @@
       }
 
       function bootstrapRemote() {
-        if (isIndividualHub) {
+        if (isHomeDashboard) {
           return window.metricsFetchInvitesForEmail(userCtx.email)
             .then(function (res) {
               if (res && res.error) throw res.error;
@@ -1197,8 +1293,10 @@
                 return r && r.metric_index != null && r.metric_index >= 0 && r.metric_index <= 9 && r.status !== 'revoked';
               });
               rebuildCollaborMapsFromInvites(slotInvites);
+              individualSlotInviteList = slotInvites.slice();
               if (!slotInvites.length) {
-                return renderSharedBoardsIntoHost([], {});
+                individualSharedDashboardCache = {};
+                return Promise.resolve();
               }
               var owners = {};
               slotInvites.forEach(function (r) { owners[r.owner_user_id] = true; });
@@ -1206,16 +1304,36 @@
               return Promise.all(ownerIds.map(function (oid) {
                 return window.metricsLoadBusinessDashboard(oid);
               })).then(function (dashboards) {
-                var cacheObj = {};
-                ownerIds.forEach(function (oid, i) { cacheObj[oid] = dashboards[i]; });
-                return renderSharedBoardsIntoHost(slotInvites, cacheObj);
+                individualSharedDashboardCache = {};
+                ownerIds.forEach(function (oid, i) {
+                  individualSharedDashboardCache[oid] = dashboards[i];
+                });
+                return Promise.resolve();
               });
             })
             .then(function () {
               refreshInvitedBoardCount();
-              return window.metricsLoadPersonalDashboard(userCtx.userId).then(function (data) {
-                applyDashboardToStorage(data);
+              return window.metricsLoadBusinessDashboard(userCtx.userId).then(function (biz) {
+                function dashboardsEmpty(d) {
+                  var m = d && d.metrics;
+                  if (!m || !m.length) return true;
+                  return m.every(metricRowIsEffectivelyEmpty);
+                }
+                if (dashboardsEmpty(biz) && window.metricsLoadPersonalDashboard) {
+                  return window.metricsLoadPersonalDashboard(userCtx.userId).then(function (p) {
+                    if (!dashboardsEmpty(p)) {
+                      return window.metricsSaveBusinessDashboard(userCtx.userId, p, null, { includeProfile: true }).then(function () {
+                        return p;
+                      });
+                    }
+                    return biz;
+                  });
+                }
+                return biz;
               });
+            })
+            .then(function (data) {
+              applyDashboardToStorage(data);
             });
         }
         if (isCollaborator) {
@@ -1225,7 +1343,7 @@
               var rows = (res && res.data) ? res.data : [];
               rebuildCollaborMapsFromInvites(rows);
               if (!collaborViewIndices.length) {
-                throw new Error('You do not have access to this business dashboard.');
+                throw new Error('You do not have access to this dashboard.');
               }
               return window.metricsLoadBusinessDashboard(dashboardOwnerId);
             })
@@ -1233,10 +1351,7 @@
               applyDashboardToStorage(data);
             });
         }
-        invitedBoardsCount = 0;
-        return window.metricsLoadBusinessDashboard(dashboardOwnerId).then(function (data) {
-          applyDashboardToStorage(data);
-        });
+        return Promise.resolve();
       }
 
       function getData() {
@@ -1304,9 +1419,9 @@
       }
 
       function permissionLabelText(p) {
-        if (p === 'read') return 'View only';
+        if (p === 'read') return 'Viewer';
         if (p === 'admin') return 'Admin';
-        return 'Can edit';
+        return 'Editor';
       }
 
       function normalizeEmailLocal(e) {
@@ -1366,10 +1481,6 @@
         var wrap = metricRow.querySelector('.invited-users-wrap');
         var body = metricRow.querySelector('.invited-users-body');
         if (!wrap || !body) return;
-        if (isIndividualHub && !isSharedBoardRow(metricRow)) {
-          wrap.hidden = true;
-          return;
-        }
         wrap.hidden = false;
         var canManage = canManageInvitesForMetric(metricIndex, metricRow);
         var thCb = metricRow.querySelector('.th-invite-cb');
@@ -1413,8 +1524,8 @@
               : '<td></td>';
             var permCell = canManage
               ? '<td><select class="invited-perm-select invite-permission-select" data-email="' + escapeAttr(em) + '" aria-label="Permission">' +
-                '<option value="read"' + (perm === 'read' ? ' selected' : '') + '>View only</option>' +
-                '<option value="edit"' + (perm === 'edit' ? ' selected' : '') + '>Can edit</option>' +
+                '<option value="read"' + (perm === 'read' ? ' selected' : '') + '>Viewer</option>' +
+                '<option value="edit"' + (perm === 'edit' ? ' selected' : '') + '>Editor</option>' +
                 '<option value="admin"' + (perm === 'admin' ? ' selected' : '') + '>Admin</option></select></td>'
               : '<td>' + escapeHtmlStr(permissionLabelText(perm)) + '</td>';
             tr.innerHTML = cbCell +
@@ -1644,7 +1755,7 @@
           picEl.style.backgroundSize = 'cover';
         }
         var m = trimMetricsArrayForUi(data.metrics);
-        renderPersonalMetricsCarousel(m);
+        renderMainInputCarousel(m);
         syncTitleRowFromTextareasCarousel();
         updateAllSummaryInputsState();
       }
@@ -1679,8 +1790,8 @@
 
       var inputBusinessName = document.getElementById('inputBusinessName');
       function syncBusinessNameToProfile() {
-        if (isCollaborator || isIndividualHub) return;
-        if (!window.metricsSupabase || !currentUserCtx || currentUserCtx.accountType !== 'business') return;
+        if (isCollaborator) return;
+        if (!window.metricsSupabase || !currentUserCtx) return;
         var latestName = (inputBusinessName && inputBusinessName.value) ? inputBusinessName.value.trim() : '';
         if (!latestName || latestName === (currentUserCtx.businessName || '')) return;
         window.metricsSupabase.auth.updateUser({
@@ -1730,7 +1841,6 @@
       if (carouselPrev) {
         carouselPrev.addEventListener('click', function () {
           if (carouselPageIndex > 0) {
-            tocSharedActiveBtn = null;
             carouselPageIndex--;
             applyCarouselTransform();
             updateCarouselNavUI();
@@ -1742,7 +1852,6 @@
           var tr = document.getElementById('carouselTrack');
           var pageCount = parseInt(tr && tr.getAttribute('data-page-count') || '1', 10);
           if (carouselPageIndex < pageCount - 1) {
-            tocSharedActiveBtn = null;
             carouselPageIndex++;
             applyCarouselTransform();
             updateCarouselNavUI();
@@ -1765,9 +1874,13 @@
               metrics: m
             }));
           } catch (e) {}
-          var spv = slidesPerViewForInput();
-          carouselPageIndex = Math.max(0, Math.ceil(m.length / spv) - 1);
-          renderPersonalMetricsCarousel(m);
+          if (isHomeDashboard) {
+            carouselPageIndex = individualSlotInviteList.length + m.length - 1;
+          } else {
+            var spv = slidesPerViewForInput();
+            carouselPageIndex = Math.max(0, Math.ceil(m.length / spv) - 1);
+          }
+          renderMainInputCarousel(m);
           syncTitleRowFromTextareasCarousel();
           updateAllSummaryInputsState();
           applyRowAccessLocks();

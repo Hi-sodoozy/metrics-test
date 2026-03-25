@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Metrics – Account access</title>
+  <title>Metrics View – Sign in</title>
   <link rel="stylesheet" href="style.css" />
   <style>
     .auth-main { max-width: 480px; margin: 0 auto; padding: 32px 20px 48px; }
@@ -17,6 +17,7 @@
     .auth-field label { display:block; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.03em; color:#5a5a5a; margin-bottom:6px; }
     .auth-field input { width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:4px; font:inherit; box-sizing:border-box; }
     .auth-field input:focus { outline:none; border-color:#6b9bd1; box-shadow:0 0 0 2px rgba(107,155,209,0.2); }
+    .auth-field-hint { font-size:12px; color:#7a7a7a; margin:6px 0 0; }
     .password-wrap { position:relative; }
     .password-toggle { position:absolute; right:8px; top:50%; transform:translateY(-50%); border:none; background:none; color:#4a6fa5; cursor:pointer; font-size:12px; font-weight:600; }
     .forgot-link { margin-top:6px; border:none; background:none; color:#4a6fa5; font-size:12px; padding:0; cursor:pointer; text-decoration:underline; }
@@ -36,7 +37,7 @@
   <main class="auth-main">
     <div class="auth-card">
       <h1 id="authTitle">Sign in</h1>
-      <p class="lead" id="authLead">Access your account.</p>
+      <p class="lead" id="authLead">Access your Metrics View workspace.</p>
 
       <div class="auth-switch">
         <a id="switchSignIn" href="#">Sign in</a>
@@ -45,8 +46,9 @@
 
       <form id="authForm" novalidate>
         <div class="auth-field" id="fieldBusinessName" hidden>
-          <label for="businessName">Business name</label>
-          <input id="businessName" type="text" placeholder="Your business name" />
+          <label for="businessName">Workspace or business name</label>
+          <input id="businessName" type="text" placeholder="Optional — add anytime later" autocomplete="organization" />
+          <p class="auth-field-hint">Optional. Shown on your boards and invites.</p>
         </div>
         <div class="auth-field">
           <label for="authEmail">Email</label>
@@ -80,7 +82,6 @@
     (function () {
       var client = window.metricsSupabase;
       var qs = new URLSearchParams(window.location.search);
-      var accountType = qs.get('account') === 'business' ? 'business' : 'individual';
       var mode = qs.get('mode') === 'signup' ? 'signup' : 'signin';
 
       var authTitle = document.getElementById('authTitle');
@@ -93,8 +94,8 @@
       var authSubmitBtn = document.getElementById('authSubmitBtn');
       var authMessage = document.getElementById('authMessage');
 
-      switchSignIn.href = 'auth.html?account=' + accountType + '&mode=signin';
-      switchSignUp.href = 'auth.html?account=' + accountType + '&mode=signup';
+      switchSignIn.href = 'auth.html?mode=signin';
+      switchSignUp.href = 'auth.html?mode=signup';
 
       function showMessage(text, kind) {
         authMessage.hidden = !text;
@@ -108,12 +109,11 @@
 
       function applyMode() {
         var isSignUp = mode === 'signup';
-        var accountLabel = accountType === 'business' ? 'Business' : 'Individual';
-        authTitle.textContent = (isSignUp ? 'Sign up' : 'Sign in') + ' – ' + accountLabel;
-        authLead.textContent = accountType === 'business'
-          ? 'Business accounts manage team metrics and invitations.'
-          : 'Individual accounts manage invited business metrics and personal metrics.';
-        fieldBusinessName.hidden = !(isSignUp && accountType === 'business');
+        authTitle.textContent = isSignUp ? 'Create your account' : 'Sign in';
+        authLead.textContent = isSignUp
+          ? 'One account for your boards, invites, and collaborators.'
+          : 'Welcome back. Continue to your boards.';
+        fieldBusinessName.hidden = !isSignUp;
         fieldPasswordConfirm.hidden = !isSignUp;
         if (forgotPasswordBtn) forgotPasswordBtn.hidden = isSignUp;
         authSubmitBtn.textContent = isSignUp ? 'Create account' : 'Sign in';
@@ -174,36 +174,29 @@
             showMessage('Passwords do not match.', 'error');
             return;
           }
-          if (accountType === 'business' && !businessName) {
-            showMessage('Business name is required for business sign up.', 'error');
-            return;
-          }
         }
         authSubmitBtn.disabled = true;
         try {
           if (mode === 'signin') {
             var signInRes = await client.auth.signInWithPassword({ email: email, password: password });
             if (signInRes.error) throw signInRes.error;
-            var ctx = window.metricsSetUserContext ? {
-              userId: signInRes.data.user.id,
-              email: signInRes.data.user.email || '',
-              accountType: (signInRes.data.user.user_metadata && signInRes.data.user.user_metadata.account_type) || 'individual',
-              businessName: (signInRes.data.user.user_metadata && signInRes.data.user.user_metadata.business_name) || '',
-              firstName: (signInRes.data.user.user_metadata && signInRes.data.user.user_metadata.first_name) || '',
-              lastName: (signInRes.data.user.user_metadata && signInRes.data.user.user_metadata.last_name) || ''
-            } : null;
+            var ctx = (window.metricsSetUserContext && signInRes.data.user)
+              ? (window.metricsNormalizeContextFromUser
+                ? window.metricsNormalizeContextFromUser(signInRes.data.user)
+                : null)
+              : null;
             if (window.metricsSetUserContext) window.metricsSetUserContext(ctx);
             routeAfterAuth(ctx);
             return;
           }
-          var redirectTo = window.location.origin + window.location.pathname.replace(/[^/]*$/, 'auth.html?account=' + accountType + '&mode=signin');
+          var redirectTo = window.location.origin + window.location.pathname.replace(/[^/]*$/, 'auth.html?mode=signin');
           var signUpRes = await client.auth.signUp({
             email: email,
             password: password,
             options: {
               emailRedirectTo: redirectTo,
               data: {
-                account_type: accountType,
+                account_type: 'user',
                 business_name: businessName
               }
             }
@@ -216,7 +209,7 @@
           var ctx2 = {
             userId: signUpRes.data.user.id,
             email: signUpRes.data.user.email || '',
-            accountType: accountType,
+            accountType: 'user',
             businessName: businessName
           };
           if (window.metricsSetUserContext) window.metricsSetUserContext(ctx2);

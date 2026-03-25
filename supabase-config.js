@@ -19,16 +19,16 @@
   function normalizeContextFromUser(user) {
     if (!user) return null;
     var meta = user.user_metadata || {};
-    var accountType = (meta.account_type === 'business') ? 'business' : 'individual';
     return {
       userId: user.id,
       email: user.email || '',
-      accountType: accountType,
+      accountType: 'user',
       businessName: meta.business_name || '',
       firstName: meta.first_name || '',
       lastName: meta.last_name || ''
     };
   }
+  window.metricsNormalizeContextFromUser = normalizeContextFromUser;
 
   window.metricsGetUserContext = function () {
     try {
