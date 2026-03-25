@@ -8,18 +8,11 @@
 </head>
 <body class="metrics-page results-page">
   <main class="results-main">
-    <header class="results-header" id="resultsHeader">
-      <div class="results-header-pic-wrap">
-        <div class="results-header-pic" id="resultsHeaderPic"></div>
-      </div>
-      <h1 class="results-business-name" id="resultsBusinessName">Your business name</h1>
-    </header>
     <div class="results-grid" id="resultsGrid"></div>
     <div class="results-bottom-actions">
       <a href="input.html" class="input-link" id="linkToInput">Input</a>
       <button type="button" class="results-theme-toggle" id="resultsThemeToggle" aria-label="Toggle display theme">
-        <span class="results-theme-icon" id="resultsThemeIcon" aria-hidden="true">◓</span>
-        <span class="results-theme-label" id="resultsThemeLabel">Dark</span>
+        <span class="results-theme-label" id="resultsThemeLabel">change to dark mode</span>
       </button>
     </div>
   </main>
@@ -44,18 +37,6 @@
         var grid = document.getElementById('resultsGrid');
         if (!grid) return;
 
-        var headerName = document.getElementById('resultsBusinessName');
-        var headerPic = document.getElementById('resultsHeaderPic');
-        if (headerName) headerName.textContent = (data.businessName || 'Your business name');
-        if (headerPic) {
-          if (data.businessImage) {
-            headerPic.style.backgroundImage = 'url(' + data.businessImage + ')';
-            headerPic.style.backgroundSize = 'cover';
-          } else {
-            headerPic.style.backgroundImage = '';
-          }
-        }
-
         var metrics = (data.metrics && data.metrics.length) ? data.metrics.slice(0, 10) : [];
         var displayed = [];
         for (var i = 0; i < metrics.length; i++) {
@@ -65,6 +46,8 @@
           var displaySummary = m.displaySummary !== false;
           if (m.displayAs === 'ranking') {
             var rank = m.ranking || {};
+            var showIndListValues = rank.showIndividualGoalProgress !== false;
+            var rankByPerf = rank.rankPerformance !== false;
             var rows = (rank.rows && rank.rows.length) ? rank.rows : [];
             rows = rows.filter(function (r) { return r && (String(r.name).trim() || String(r.goal).trim() || String(r.current).trim()); });
             var totalGoal = 0, totalCurrent = 0;
@@ -81,6 +64,8 @@
               valuesHtml: valuesText,
               achieved: achieved,
               displaySummary: displaySummary,
+              showIndividualGoalProgress: showIndListValues,
+              rankByPerformance: rankByPerf,
               ranking: rank,
               rows: rows,
               sourceBusinessName: m.sourceBusinessName || data.businessName || '',
@@ -156,7 +141,9 @@
                 if (!isNaN(indGoal) && indGoal > 0) goal = indGoal;
                 return { name: r.name || '', goal: r.goal, current: r.current, individualGoal: r.individualGoal, pct: goal > 0 ? (cur / goal) * 100 : 0 };
               });
-              withPct.sort(function (a, b) { return b.pct - a.pct; });
+              if (item.rankByPerformance !== false) {
+                withPct.sort(function (a, b) { return b.pct - a.pct; });
+              }
               var displayAsPct = !!(item.ranking && item.ranking.displayAsPercent);
               var list = document.createElement('div');
               list.className = 'ranking-results' + (item.displaySummary ? '' : ' ranking-results-full');
@@ -169,7 +156,9 @@
                 var valText = displayAsPct ? (Math.round(it.pct) + '%') : (escapeHtml(String(it.current)) + ' / ' + escapeHtml(String(it.goal)));
                 var parts = ['<span class="ranking-name">' + escapeHtml(it.name) + '</span>'];
                 if (indGoalPart) parts.push(indGoalPart);
-                parts.push('<span class="ranking-value">' + valText + '</span>');
+                if (item.showIndividualGoalProgress !== false) {
+                  parts.push('<span class="ranking-value">' + valText + '</span>');
+                }
                 var li = document.createElement('li');
                 li.className = 'ranking-list-item';
                 li.innerHTML = parts.join(' ');
@@ -270,13 +259,8 @@
         var toggle = document.getElementById('resultsThemeToggle');
         if (toggle) {
           var label = document.getElementById('resultsThemeLabel');
-          var icon = document.getElementById('resultsThemeIcon');
-          var nextTheme = t === 'dark' ? 'light' : 'dark';
-          var nextLabel = nextTheme === 'dark' ? 'Dark' : 'Light';
-          var nextIcon = nextTheme === 'dark' ? '◔' : '◑';
-          if (label) label.textContent = nextLabel;
-          if (icon) icon.textContent = nextIcon;
-          toggle.setAttribute('aria-label', 'Switch to ' + nextTheme + ' view');
+          if (label) label.textContent = t === 'dark' ? 'change to light mode' : 'change to dark mode';
+          toggle.setAttribute('aria-label', t === 'dark' ? 'Change to light mode' : 'Change to dark mode');
         }
       }
       function initResultsTheme() {

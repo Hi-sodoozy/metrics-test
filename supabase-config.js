@@ -191,7 +191,14 @@
         displayAsPercent: false,
         displayAs: 'summary',
         displaySummary: true,
-        ranking: { enabled: false, displayAsPercent: false, showIndividualGoal: false, rows: [] }
+        ranking: {
+          enabled: false,
+          displayAsPercent: false,
+          showIndividualGoal: false,
+          showIndividualGoalProgress: true,
+          rankPerformance: true,
+          rows: []
+        }
       };
     }
 
