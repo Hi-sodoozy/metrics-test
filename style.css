@@ -104,7 +104,8 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  gap: 4px;
+  flex: 1 1 0;
+  gap: 0;
   border: 1px solid #e2e4e8;
   border-radius: 4px;
   overflow: hidden;
@@ -135,10 +136,11 @@
 .result-column-metric-title {
   flex-shrink: 0;
   padding: 10px 12px;
-  font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+  font-size: clamp(1.75rem, 5vw, 4rem);
   font-weight: 700;
   text-align: center;
-  line-height: 1.3;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
   color: #1a1a1a;
   background: #eef2f7;
   border-bottom: 1px solid #e2e4e8;
@@ -152,10 +154,6 @@
   margin-left: auto;
   margin-right: auto;
   width: 100%;
-}
-
-.results-grid.count-1 .result-column-metric-title {
-  font-size: clamp(1.05rem, 2.2vw, 1.4rem);
 }
 
 .results-grid.count-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
@@ -212,18 +210,30 @@
   text-align: center;
 }
 
-.result-column-type-summary .result-card-numbers-only {
+.result-column-type-summary .result-card.result-card-numbers-only {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
   justify-content: center;
+  align-items: stretch;
 }
 
 .result-column-type-summary .result-card-numbers-only .result-card-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
   width: 100%;
+  min-height: 0;
 }
 
 .result-card-numbers-only .result-values {
   text-align: center;
   width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .result-card.achieved {
@@ -395,10 +405,6 @@
   background: rgba(30, 58, 95, 0.35);
 }
 
-.results-theme-dark .result-owner-name {
-  color: #e2e8f0;
-}
-
 .results-theme-dark .results-grid {
   background: #070b10;
   gap: 1px;
@@ -412,44 +418,48 @@
 
 .results-theme-dark .result-column-metric-title {
   background: rgba(10, 22, 42, 0.98);
-  color: #e8eaef;
+  color: #ffffff;
   border-bottom: 1px solid #1e3a5f;
 }
 
 .results-theme-dark .result-card,
 .results-theme-dark .ranking-results {
   background: #0c1219;
-  color: #e8eaef;
+  color: #ffffff;
   border: none;
 }
 
 .results-theme-dark .result-card-inner .result-heading,
 .results-theme-dark .ranking-results-title {
-  color: #e8eaef;
+  color: #ffffff;
 }
 
 .results-theme-dark .result-card-inner .result-values,
+.results-theme-dark .result-values .current,
+.results-theme-dark .result-values .goal,
+.results-theme-dark .ranking-list,
 .results-theme-dark .ranking-value,
-.results-theme-dark .ranking-individual-goal {
-  color: #cbd5e1;
-}
-
+.results-theme-dark .ranking-individual-goal,
 .results-theme-dark .ranking-list-item .ranking-name {
-  color: #e8eaef;
+  color: #ffffff;
 }
 
 .results-theme-dark .ranking-name-empty {
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.results-theme-dark .result-owner-name {
+  color: #ffffff;
 }
 
 .results-theme-dark .input-link,
 .results-theme-dark .results-theme-toggle {
-  color: #94a3b8;
+  color: #ffffff;
 }
 
 .results-theme-dark .input-link:hover,
 .results-theme-dark .results-theme-toggle:hover {
-  color: #cbd5e1;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .results-theme-dark .result-card.achieved {
@@ -464,8 +474,9 @@
   background: #0c1219;
 }
 
-.results-theme-dark .result-card.achieved .result-values .current {
-  color: #6ee7a8;
+.results-theme-dark .result-card.achieved .result-values .current,
+.results-theme-dark .result-card.achieved .result-values .goal {
+  color: #ffffff;
 }
 
 .results-theme-dark .ranking-list {

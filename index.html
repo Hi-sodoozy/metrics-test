@@ -48,10 +48,19 @@
             var rank = m.ranking || {};
             var legacyEnabled = !!rank.enabled;
             var showSimpleAgg = rank.showSimpleAggregate != null ? !!rank.showSimpleAggregate : legacyEnabled;
-            var showIndListValues = rank.showIndividualGoalProgress != null ? (rank.showIndividualGoalProgress !== false) : legacyEnabled;
+            var sip = rank.showIndividualGoalProgress;
+            var showIndListValues = sip !== false && sip !== 0 && sip !== 'false';
             var rankByPerf = rank.rankPerformance !== false;
             var rows = (rank.rows && rank.rows.length) ? rank.rows : [];
-            rows = rows.filter(function (r) { return r && (String(r.name).trim() || String(r.goal).trim() || String(r.current).trim()); });
+            rows = rows.filter(function (r) {
+              if (!r) return false;
+              return !!(
+                String(r.name || '').trim() ||
+                String(r.goal != null ? r.goal : '').trim() ||
+                String(r.current != null ? r.current : '').trim() ||
+                String(r.individualGoal != null ? r.individualGoal : '').trim()
+              );
+            });
             var showMainTotalsCard = displaySummary && rows.length > 0 && (showSimpleAgg || showIndListValues);
             var totalGoal = 0, totalCurrent = 0, achieved = false, valuesText = '';
             if (showMainTotalsCard) {
