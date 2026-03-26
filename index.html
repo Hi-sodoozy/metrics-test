@@ -62,7 +62,7 @@
               String(r.individualGoal != null ? r.individualGoal : '').trim()
             );
           });
-          var useRankingLayout = (m.displayAs === 'ranking') || (showIndListValues && rows.length > 0);
+          var useRankingLayout = m.displayAs === 'ranking';
           if (useRankingLayout) {
             var legacyEnabled = !!rank.enabled;
             var showSimpleAgg = rank.showSimpleAggregate != null ? !!rank.showSimpleAggregate : legacyEnabled;
@@ -160,7 +160,7 @@
                 '</div>';
               col.appendChild(card2);
             }
-            if (item.rows && item.rows.length > 0 && item.showIndividualGoalProgress !== false) {
+            if (item.rows && item.rows.length > 0 && item.showIndividualGoalProgress) {
               var withPct = item.rows.map(function (r) {
                 var cur = parseFloat(r.current, 10) || 0;
                 var goal = parseFloat(r.goal, 10) || 0;
