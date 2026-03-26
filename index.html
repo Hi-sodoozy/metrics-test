@@ -151,49 +151,59 @@
               '</div>';
             col.appendChild(card);
           } else {
-            if (item.showMainTotalsCard) {
-              var card2 = document.createElement('div');
-              card2.className = 'result-card result-card-summary result-card-numbers-only' + (item.achieved ? ' achieved' : '');
-              card2.innerHTML =
-                '<div class="result-card-inner">' +
-                '<p class="result-values">' + item.valuesHtml + '</p>' +
-                '</div>';
-              col.appendChild(card2);
-            }
-            if (item.rows && item.rows.length > 0 && item.showIndividualGoalProgress) {
-              var withPct = item.rows.map(function (r) {
-                var cur = parseFloat(r.current, 10) || 0;
-                var goal = parseFloat(r.goal, 10) || 0;
-                var indGoal = r.individualGoal != null ? parseFloat(r.individualGoal, 10) : NaN;
-                if (!isNaN(indGoal) && indGoal > 0) goal = indGoal;
-                return { name: r.name || '', goal: r.goal, current: r.current, individualGoal: r.individualGoal, pct: goal > 0 ? (cur / goal) * 100 : 0 };
-              });
-              if (item.rankByPerformance !== false) {
-                withPct.sort(function (a, b) { return b.pct - a.pct; });
+            var hasTotals = item.showMainTotalsCard;
+            var hasList = item.rows && item.rows.length > 0 && item.showIndividualGoalProgress;
+            if (hasTotals || hasList) {
+              var rankStack = document.createElement('div');
+              rankStack.className = 'result-column-ranking-stack';
+              var rankGroup = document.createElement('div');
+              rankGroup.className = 'result-column-ranking-group';
+              if (hasTotals) {
+                var card2 = document.createElement('div');
+                card2.className = 'result-card result-card-summary result-card-numbers-only' + (item.achieved ? ' achieved' : '');
+                card2.innerHTML =
+                  '<div class="result-card-inner">' +
+                  '<p class="result-values">' + item.valuesHtml + '</p>' +
+                  '</div>';
+                rankGroup.appendChild(card2);
               }
-              var displayAsPct = !!(item.ranking && item.ranking.displayAsPercent);
-              var list = document.createElement('div');
-              var hasAggregate = !!item.showMainTotalsCard;
-              list.className = 'ranking-results' + (hasAggregate ? '' : ' ranking-results-full');
-              var ul = document.createElement('ul');
-              ul.className = 'ranking-list';
-              for (var k = 0; k < withPct.length; k++) {
-                var it = withPct[k];
-                var rawName = it.name != null ? String(it.name).trim() : '';
-                var nameHtml = rawName ? escapeHtml(rawName) : '<span class="ranking-name-empty">—</span>';
-                var indGoalPart = (it.individualGoal != null && String(it.individualGoal).trim()) ? ('<span class="ranking-individual-goal">' + escapeHtml(String(it.individualGoal)) + '</span>') : '';
-                var valText = displayAsPct ? (Math.round(it.pct) + '%') : (escapeHtml(String(it.current)) + ' / ' + escapeHtml(String(it.goal)));
-                var mid = indGoalPart ? ('<span class="ranking-mission-slot">' + indGoalPart + '</span>') : '';
-                var li = document.createElement('li');
-                li.className = 'ranking-list-item';
-                li.innerHTML =
-                  '<span class="ranking-name">' + nameHtml + '</span>' +
-                  mid +
-                  '<span class="ranking-value">' + valText + '</span>';
-                ul.appendChild(li);
+              if (hasList) {
+                var withPct = item.rows.map(function (r) {
+                  var cur = parseFloat(r.current, 10) || 0;
+                  var goal = parseFloat(r.goal, 10) || 0;
+                  var indGoal = r.individualGoal != null ? parseFloat(r.individualGoal, 10) : NaN;
+                  if (!isNaN(indGoal) && indGoal > 0) goal = indGoal;
+                  return { name: r.name || '', goal: r.goal, current: r.current, individualGoal: r.individualGoal, pct: goal > 0 ? (cur / goal) * 100 : 0 };
+                });
+                if (item.rankByPerformance !== false) {
+                  withPct.sort(function (a, b) { return b.pct - a.pct; });
+                }
+                var displayAsPct = !!(item.ranking && item.ranking.displayAsPercent);
+                var list = document.createElement('div');
+                var hasAggregate = !!item.showMainTotalsCard;
+                list.className = 'ranking-results' + (hasAggregate ? '' : ' ranking-results-full');
+                var ul = document.createElement('ul');
+                ul.className = 'ranking-list';
+                for (var k = 0; k < withPct.length; k++) {
+                  var it = withPct[k];
+                  var rawName = it.name != null ? String(it.name).trim() : '';
+                  var nameHtml = rawName ? escapeHtml(rawName) : '<span class="ranking-name-empty">—</span>';
+                  var indGoalPart = (it.individualGoal != null && String(it.individualGoal).trim()) ? ('<span class="ranking-individual-goal">' + escapeHtml(String(it.individualGoal)) + '</span>') : '';
+                  var valText = displayAsPct ? (Math.round(it.pct) + '%') : (escapeHtml(String(it.current)) + ' / ' + escapeHtml(String(it.goal)));
+                  var mid = indGoalPart ? ('<span class="ranking-mission-slot">' + indGoalPart + '</span>') : '';
+                  var li = document.createElement('li');
+                  li.className = 'ranking-list-item';
+                  li.innerHTML =
+                    '<span class="ranking-name">' + nameHtml + '</span>' +
+                    mid +
+                    '<span class="ranking-value">' + valText + '</span>';
+                  ul.appendChild(li);
+                }
+                list.appendChild(ul);
+                rankGroup.appendChild(list);
               }
-              list.appendChild(ul);
-              col.appendChild(list);
+              rankStack.appendChild(rankGroup);
+              col.appendChild(rankStack);
             }
           }
           grid.appendChild(col);
