@@ -67,7 +67,6 @@
   justify-content: center;
   gap: 8px;
   padding: 8px 10px;
-  border-bottom: 1px solid #e2e4e8;
   background: #f8fafc;
 }
 
@@ -133,6 +132,18 @@
   flex: 1;
 }
 
+.result-column-metric-title {
+  flex-shrink: 0;
+  padding: 10px 12px;
+  font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.3;
+  color: #1a1a1a;
+  background: #eef2f7;
+  border-bottom: 1px solid #e2e4e8;
+}
+
 .results-grid { grid-template-columns: 1fr; grid-template-rows: 1fr; }
 
 /* Single metric: center content on screen */
@@ -141,6 +152,10 @@
   margin-left: auto;
   margin-right: auto;
   width: 100%;
+}
+
+.results-grid.count-1 .result-column-metric-title {
+  font-size: clamp(1.05rem, 2.2vw, 1.4rem);
 }
 
 .results-grid.count-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
@@ -195,6 +210,20 @@
   flex: 1;
   width: 100%;
   text-align: center;
+}
+
+.result-column-type-summary .result-card-numbers-only {
+  justify-content: center;
+}
+
+.result-column-type-summary .result-card-numbers-only .result-card-inner {
+  justify-content: center;
+  width: 100%;
+}
+
+.result-card-numbers-only .result-values {
+  text-align: center;
+  width: 100%;
 }
 
 .result-card.achieved {
@@ -262,6 +291,44 @@
   text-align: left;
 }
 
+.ranking-list-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.ranking-list-item:last-child {
+  margin-bottom: 0;
+}
+
+.ranking-list-item .ranking-name {
+  flex: 1 1 120px;
+  min-width: 5rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  word-break: break-word;
+}
+
+.ranking-name-empty {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.ranking-mission-slot {
+  flex: 0 1 auto;
+  font-size: 0.9em;
+}
+
+.ranking-list-item .ranking-value {
+  flex: 0 0 auto;
+  margin-left: 0;
+  text-align: right;
+}
+
 .ranking-individual-goal {
   font-size: 0.9em;
   color: #6b6b6b;
@@ -306,9 +373,13 @@
   color: #5a5a5a;
 }
 
+.results-page.results-theme-dark.metrics-page {
+  background: #070b10;
+}
+
 .results-theme-dark .results-header {
   background: #0f1419;
-  border-bottom-color: rgba(255,255,255,0.12);
+  border-bottom: 1px solid #1e3a5f;
 }
 
 .results-theme-dark .results-business-name {
@@ -316,28 +387,40 @@
 }
 
 .results-theme-dark .result-owner-meta {
-  background: rgba(12, 20, 38, 0.96);
-  border-bottom: 1px solid #1e3a5f;
+  background: rgba(10, 18, 34, 0.98);
 }
 
 .results-theme-dark .result-owner-pic {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid #1e3a5f;
+  background: rgba(30, 58, 95, 0.35);
 }
 
 .results-theme-dark .result-owner-name {
   color: #e2e8f0;
 }
 
+.results-theme-dark .results-grid {
+  background: #070b10;
+  gap: 1px;
+  padding: 1px;
+}
+
 .results-theme-dark .result-column {
   border: 1px solid #1e3a5f;
+  background: #0c1219;
+}
+
+.results-theme-dark .result-column-metric-title {
+  background: rgba(10, 22, 42, 0.98);
+  color: #e8eaef;
+  border-bottom: 1px solid #1e3a5f;
 }
 
 .results-theme-dark .result-card,
 .results-theme-dark .ranking-results {
-  background: #0f1419;
+  background: #0c1219;
   color: #e8eaef;
-  border-color: rgba(255,255,255,0.12);
+  border: none;
 }
 
 .results-theme-dark .result-card-inner .result-heading,
@@ -351,6 +434,24 @@
   color: #cbd5e1;
 }
 
+.results-theme-dark .ranking-list-item .ranking-name {
+  color: #e8eaef;
+}
+
+.results-theme-dark .ranking-name-empty {
+  color: #64748b;
+}
+
+.results-theme-dark .input-link,
+.results-theme-dark .results-theme-toggle {
+  color: #94a3b8;
+}
+
+.results-theme-dark .input-link:hover,
+.results-theme-dark .results-theme-toggle:hover {
+  color: #cbd5e1;
+}
+
 .results-theme-dark .result-card.achieved {
   background: #0a1f14;
   border: 1px solid #14532d;
@@ -360,6 +461,7 @@
 .results-theme-dark .results-grid.count-3 .result-card,
 .results-theme-dark .results-grid.count-4 .result-card {
   border: 1px solid #1e3a5f;
+  background: #0c1219;
 }
 
 .results-theme-dark .result-card.achieved .result-values .current {
@@ -1661,12 +1763,6 @@
   text-align: left;
 }
 
-.ranking-list-item {
-  margin-bottom: 6px;
-}
-
-.ranking-list-item:last-child { margin-bottom: 0; }
-
 .ranking-name { font-weight: 600; }
 .ranking-value { color: #505050; margin-left: 0.25em; }
 
@@ -2142,8 +2238,8 @@
 
 .input-page.input-theme-dark .metric-card,
 .input-page.input-theme-dark .boards-toc {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #1e3a5f;
+  background: rgba(12, 18, 30, 0.85);
   color: #e8eaef;
 }
 
@@ -2153,8 +2249,8 @@
 .input-page.input-theme-dark .invite-email-input,
 .input-page.input-theme-dark .invite-permission-select {
   color: #e8eaef;
-  background: rgba(15, 20, 25, 0.7);
-  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(10, 16, 28, 0.92);
+  border: 1px solid #243b56;
 }
 
 .input-page.input-theme-dark .app-brand,
@@ -2170,7 +2266,7 @@
 }
 
 .input-page.input-theme-dark .info-tip {
-  border-color: rgba(255, 255, 255, 0.35);
+  border: 1px solid #2a4d73;
   color: #cbd5e1;
 }
 
@@ -2179,8 +2275,8 @@
 }
 
 .input-page.input-theme-dark .input-carousel-btn {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(12, 18, 30, 0.9);
+  border: 1px solid #1e3a5f;
   color: #e8eaef;
 }
 
@@ -2201,8 +2297,8 @@
 }
 
 .input-page.input-theme-dark .individual-data-summary-hint {
-  background: rgba(30, 58, 95, 0.4);
-  border-color: rgba(125, 211, 252, 0.22);
+  background: rgba(16, 28, 48, 0.9);
+  border: 1px solid #1e3a5f;
 }
 
 .input-page.input-theme-dark .individual-data-summary-note {
@@ -2218,14 +2314,14 @@
 }
 
 .input-page.input-theme-dark .goal-current-block-muted .metric-single-line-input:disabled {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(10, 16, 28, 0.6);
   color: #64748b;
-  border-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid #1e3a5f;
 }
 
 .input-page.input-theme-dark .hero-name-wrap .btn-edit-name {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(12, 18, 30, 0.9);
+  border: 1px solid #243b56;
   color: #e8eaef;
 }
 

@@ -11,7 +11,7 @@
     <header class="input-header">
       <span class="app-brand" aria-label="Metrics View">Metrics View</span>
       <div class="input-header-actions">
-        <button type="button" class="theme-text-toggle" id="themeTextToggle">change to dark mode</button>
+        <button type="button" class="theme-text-toggle" id="themeTextToggle">Dark mode</button>
         <a href="index.html" class="back-link back-link-prominent" id="linkViewResults">View Metrics Board</a>
       </div>
     </header>
@@ -463,9 +463,14 @@
         var optRankPerf = row.querySelector('.ranking-opt-rank-performance');
         var simpleOn = optSimple ? optSimple.checked : false;
         var indOn = optIndProg ? optIndProg.checked : true;
+        var headingHidden = row.querySelector('input[name="heading"]');
+        var titleFieldCollect = row.querySelector('.metric-block-title-field');
+        var headingStr = '';
+        if (titleFieldCollect && titleFieldCollect.value != null) headingStr = String(titleFieldCollect.value).trim();
+        if (!headingStr && headingHidden) headingStr = String(headingHidden.value || '').trim();
         return {
           showOnMainScreen: row.querySelector('input[name="showOnMainScreen"]').checked,
-          heading: (row.querySelector('input[name="heading"]') || { value: '' }).value.trim(),
+          heading: headingStr,
           goal: (row.querySelector('input[name="goal"]') || { value: '' }).value.trim(),
           current: (row.querySelector('input[name="current"]') || { value: '' }).value.trim(),
           displayAsPercent: row.querySelector('input[name="displayAsPercent"]').checked,
@@ -1959,8 +1964,8 @@
         document.body.classList.toggle('input-theme-dark', t === 'dark');
         document.body.classList.toggle('input-theme-light', t !== 'dark');
         if (themeTextToggle) {
-          themeTextToggle.textContent = t === 'dark' ? 'change to light mode' : 'change to dark mode';
-          themeTextToggle.setAttribute('aria-label', t === 'dark' ? 'Change to light mode' : 'Change to dark mode');
+          themeTextToggle.textContent = t === 'dark' ? 'Light mode' : 'Dark mode';
+          themeTextToggle.setAttribute('aria-label', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
         }
         try { localStorage.setItem(INPUT_THEME_KEY, t); } catch (e) {}
       }

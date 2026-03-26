@@ -12,7 +12,7 @@
     <div class="results-bottom-actions">
       <a href="input.html" class="input-link" id="linkToInput">Input</a>
       <button type="button" class="results-theme-toggle" id="resultsThemeToggle" aria-label="Toggle display theme">
-        <span class="results-theme-label" id="resultsThemeLabel">change to dark mode</span>
+        <span class="results-theme-label" id="resultsThemeLabel">Dark mode</span>
       </button>
     </div>
   </main>
@@ -116,30 +116,32 @@
         for (var j = 0; j < displayed.length; j++) {
           var item = displayed[j];
           var col = document.createElement('div');
-          col.className = 'result-column';
+          col.className = 'result-column result-column-type-' + item.type;
           var ownerMeta = document.createElement('div');
           ownerMeta.className = 'result-owner-meta';
           ownerMeta.innerHTML =
             '<span class="result-owner-pic"' + (item.sourceBusinessImage ? (' style="background-image:url(' + item.sourceBusinessImage + ')"') : '') + '></span>' +
             '<span class="result-owner-name">' + escapeHtml(item.sourceBusinessName || 'Board') + '</span>';
           col.appendChild(ownerMeta);
+          var metricTitleBar = document.createElement('div');
+          metricTitleBar.className = 'result-column-metric-title';
+          metricTitleBar.textContent = item.heading || (item.type === 'summary' ? 'Metric' : 'Summary');
+          col.appendChild(metricTitleBar);
 
           if (item.type === 'summary') {
             var card = document.createElement('div');
-            card.className = 'result-card' + (item.achieved ? ' achieved' : '');
+            card.className = 'result-card result-card-numbers-only' + (item.achieved ? ' achieved' : '');
             card.innerHTML =
               '<div class="result-card-inner">' +
-              '<h2 class="result-heading">' + escapeHtml(item.heading) + '</h2>' +
               '<p class="result-values">' + item.valuesHtml + '</p>' +
               '</div>';
             col.appendChild(card);
           } else {
             if (item.showMainTotalsCard) {
               var card2 = document.createElement('div');
-              card2.className = 'result-card result-card-summary' + (item.achieved ? ' achieved' : '');
+              card2.className = 'result-card result-card-summary result-card-numbers-only' + (item.achieved ? ' achieved' : '');
               card2.innerHTML =
                 '<div class="result-card-inner">' +
-                '<h2 class="result-heading">' + escapeHtml(item.heading) + '</h2>' +
                 '<p class="result-values">' + item.valuesHtml + '</p>' +
                 '</div>';
               col.appendChild(card2);
@@ -159,19 +161,21 @@
               var list = document.createElement('div');
               var hasAggregate = !!item.showMainTotalsCard;
               list.className = 'ranking-results' + (hasAggregate ? '' : ' ranking-results-full');
-              list.innerHTML = '<h2 class="ranking-results-title">' + escapeHtml(item.heading) + '</h2>';
               var ul = document.createElement('ul');
               ul.className = 'ranking-list';
               for (var k = 0; k < withPct.length; k++) {
                 var it = withPct[k];
+                var rawName = it.name != null ? String(it.name).trim() : '';
+                var nameHtml = rawName ? escapeHtml(rawName) : '<span class="ranking-name-empty">—</span>';
                 var indGoalPart = (it.individualGoal != null && String(it.individualGoal).trim()) ? ('<span class="ranking-individual-goal">' + escapeHtml(String(it.individualGoal)) + '</span>') : '';
                 var valText = displayAsPct ? (Math.round(it.pct) + '%') : (escapeHtml(String(it.current)) + ' / ' + escapeHtml(String(it.goal)));
-                var parts = ['<span class="ranking-name">' + escapeHtml(it.name) + '</span>'];
-                if (indGoalPart) parts.push(indGoalPart);
-                parts.push('<span class="ranking-value">' + valText + '</span>');
+                var mid = indGoalPart ? ('<span class="ranking-mission-slot">' + indGoalPart + '</span>') : '';
                 var li = document.createElement('li');
                 li.className = 'ranking-list-item';
-                li.innerHTML = parts.join(' ');
+                li.innerHTML =
+                  '<span class="ranking-name">' + nameHtml + '</span>' +
+                  mid +
+                  '<span class="ranking-value">' + valText + '</span>';
                 ul.appendChild(li);
               }
               list.appendChild(ul);
@@ -269,8 +273,8 @@
         var toggle = document.getElementById('resultsThemeToggle');
         if (toggle) {
           var label = document.getElementById('resultsThemeLabel');
-          if (label) label.textContent = t === 'dark' ? 'change to light mode' : 'change to dark mode';
-          toggle.setAttribute('aria-label', t === 'dark' ? 'Change to light mode' : 'Change to dark mode');
+          if (label) label.textContent = t === 'dark' ? 'Light mode' : 'Dark mode';
+          toggle.setAttribute('aria-label', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
         }
       }
       function initResultsTheme() {
