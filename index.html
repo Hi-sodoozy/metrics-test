@@ -44,23 +44,28 @@
           if (!m || !m.showOnMainScreen) continue;
           if (displayed.length >= 4) break;
           var displaySummary = m.displaySummary !== false;
-          if (m.displayAs === 'ranking') {
-            var rank = m.ranking || {};
+          var rank = m.ranking || {};
+          var sip = rank.showIndividualGoalProgress;
+          var showIndListValues =
+            sip !== false &&
+            sip !== 0 &&
+            sip !== '0' &&
+            String(sip).toLowerCase() !== 'false';
+          var rankByPerf = rank.rankPerformance !== false;
+          var rows = (rank.rows && rank.rows.length) ? rank.rows.slice() : [];
+          rows = rows.filter(function (r) {
+            if (!r) return false;
+            return !!(
+              String(r.name || '').trim() ||
+              String(r.goal != null ? r.goal : '').trim() ||
+              String(r.current != null ? r.current : '').trim() ||
+              String(r.individualGoal != null ? r.individualGoal : '').trim()
+            );
+          });
+          var useRankingLayout = (m.displayAs === 'ranking') || (showIndListValues && rows.length > 0);
+          if (useRankingLayout) {
             var legacyEnabled = !!rank.enabled;
             var showSimpleAgg = rank.showSimpleAggregate != null ? !!rank.showSimpleAggregate : legacyEnabled;
-            var sip = rank.showIndividualGoalProgress;
-            var showIndListValues = sip !== false && sip !== 0 && sip !== 'false';
-            var rankByPerf = rank.rankPerformance !== false;
-            var rows = (rank.rows && rank.rows.length) ? rank.rows : [];
-            rows = rows.filter(function (r) {
-              if (!r) return false;
-              return !!(
-                String(r.name || '').trim() ||
-                String(r.goal != null ? r.goal : '').trim() ||
-                String(r.current != null ? r.current : '').trim() ||
-                String(r.individualGoal != null ? r.individualGoal : '').trim()
-              );
-            });
             var showMainTotalsCard = displaySummary && rows.length > 0 && (showSimpleAgg || showIndListValues);
             var totalGoal = 0, totalCurrent = 0, achieved = false, valuesText = '';
             if (showMainTotalsCard) {

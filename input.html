@@ -805,6 +805,27 @@
           rankRows.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '', contributorEmail: '' });
         }
         renderRankingRowsInBlock(row, rankRows);
+        var indProgAfter = row.querySelector('.ranking-opt-individual-progress');
+        if (indProgAfter && indProgAfter.checked) {
+          var pickedAfter = row.querySelector('input[type="radio"][name^="displayAs_"]:checked');
+          if (pickedAfter && pickedAfter.value === 'summary') {
+            var migratedRows = getRankingRowsFromBlock(row);
+            var hasRankData = migratedRows.some(function (r) {
+              return r && (
+                String(r.name || '').trim() ||
+                String(r.goal != null ? r.goal : '').trim() ||
+                String(r.current != null ? r.current : '').trim() ||
+                String(r.individualGoal != null ? r.individualGoal : '').trim()
+              );
+            });
+            if (hasRankData) {
+              var rRank = row.querySelector('input[type="radio"][name^="displayAs_"][value="ranking"]');
+              if (rRank) rRank.checked = true;
+              updateSummaryInputsState(row);
+              applySummaryModeUiForRow(row);
+            }
+          }
+        }
       }
 
       function setInvitedBoardTitleAndBadge(row, businessLabel, headingText) {
@@ -895,6 +916,13 @@
         row.querySelector('.ranking-display-as-pct').addEventListener('change', touch);
         row.querySelector('.ranking-opt-individual-progress').addEventListener('change', function () {
           syncRankingTableWrap();
+          var ipEl = row.querySelector('.ranking-opt-individual-progress');
+          if (ipEl && ipEl.checked) {
+            var rr = row.querySelector('input[type="radio"][name^="displayAs_"][value="ranking"]');
+            if (rr) rr.checked = true;
+            updateSummaryInputsState(row);
+            applySummaryModeUiForRow(row);
+          }
           touch();
         });
         row.querySelector('.ranking-opt-rank-performance').addEventListener('change', touch);
