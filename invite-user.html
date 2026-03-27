@@ -55,6 +55,7 @@
     <div class="invite-card">
       <h1 class="invite-title">Invite User</h1>
       <p class="invite-copy">Enter an email address to send an invitation to create an account.</p>
+      <p class="invite-copy">Streamlined option: To invite a new user to Metrics View and add them to a Metrics Board, invite them via the "Invite User" option at the bottom of that Metrics Board in the Metrics Centre.</p>
       <form id="inviteForm" novalidate>
         <div class="invite-field">
           <label for="inviteName">Name</label>
@@ -64,20 +65,12 @@
           <label for="inviteEmail">Email address</label>
           <input id="inviteEmail" type="email" autocomplete="email" required />
         </div>
-        <div class="invite-field">
-          <label for="invitePermission">Permission</label>
-          <select id="invitePermission" style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:4px;font:inherit;">
-            <option value="read">Viewer</option>
-            <option value="edit">Editor</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
         <button type="submit" class="invite-btn" id="inviteBtn">Send Invite</button>
       </form>
       <div id="inviteMessage" hidden></div>
     </div>
     <p class="invite-footer-actions">
-      <a href="input.html" class="invite-back">← Back to input</a>
+      <a href="input.html" class="invite-back">← Back to Metrics Centre</a>
       <a href="#" class="invite-back" id="linkLogout">Log out</a>
     </p>
   </main>
@@ -94,7 +87,6 @@
       var form = document.getElementById('inviteForm');
       var emailInput = document.getElementById('inviteEmail');
       var nameInput = document.getElementById('inviteName');
-      var permissionInput = document.getElementById('invitePermission');
       var messageEl = document.getElementById('inviteMessage');
       var btn = document.getElementById('inviteBtn');
 
@@ -108,9 +100,6 @@
         e.preventDefault();
         var email = (emailInput.value || '').trim();
         var inviteName = (nameInput && nameInput.value) ? nameInput.value.trim() : '';
-        var permission = (permissionInput && permissionInput.value === 'read')
-          ? 'read'
-          : (permissionInput && permissionInput.value === 'admin') ? 'admin' : 'edit';
         var businessName = '';
         try {
           var raw = localStorage.getItem('metricsDashboard');
@@ -137,7 +126,7 @@
                 metricIndex: -1,
                 email: email,
                 name: inviteName,
-                permission: permission,
+                permission: 'read',
                 businessName: businessName,
                 invitedByUserId: ctx.userId
               });

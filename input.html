@@ -12,7 +12,7 @@
       <span class="app-brand" aria-label="Metrics View">Metrics View</span>
       <div class="input-header-actions">
         <button type="button" class="theme-text-toggle" id="themeTextToggle">Dark mode</button>
-        <a href="index.html" class="back-link back-link-prominent" id="linkViewResults">View Metrics Board</a>
+        <a href="index.html" class="back-link back-link-prominent" id="linkViewResults">View Metrics Display</a>
       </div>
     </header>
     <div class="input-business-header" id="inputBusinessHeader">
@@ -45,6 +45,7 @@
         <div class="metric-title-row">
           <input type="text" class="metric-block-title-field" maxlength="240" placeholder="Metric" aria-label="Metric title" />
           <span class="metric-business-badge" hidden></span>
+          <span class="metric-permission-badge" hidden title="Your permission for this metric" aria-label="Metric permission"></span>
         </div>
         <label class="option-check option-show-main"><input type="checkbox" name="showOnMainScreen" aria-label="Metrics board visibility" /><span class="show-main-label-text">Add to Metrics Board</span></label>
         <input type="hidden" name="heading" value="" />
@@ -72,7 +73,7 @@
         </div>
         <div class="metric-actions">
           <button type="button" class="btn-save">Save</button>
-          <button type="button" class="btn-view-board">View Metrics Board</button>
+          <button type="button" class="btn-view-board">View Metrics Display</button>
         </div>
         <div class="metric-ranking-section">
           <div class="individual-data-heading-row">
@@ -102,7 +103,7 @@
           </div>
           <div class="metric-actions metric-actions-after-ranking">
             <button type="button" class="btn-save">Save</button>
-            <button type="button" class="btn-view-board">View Metrics Board</button>
+            <button type="button" class="btn-view-board">View Metrics Display</button>
           </div>
           </div>
         </div>
@@ -127,9 +128,14 @@
             <div class="invited-add-grid">
               <input type="text" class="invite-add-name invite-email-input" placeholder="Name" aria-label="Invitee name" />
               <input type="email" class="invite-add-email invite-email-input" placeholder="Email" aria-label="Invitee email" />
+              <select class="invite-add-permission invite-permission-select" aria-label="Invite permission">
+                <option value="read">Viewer</option>
+                <option value="edit" selected>Editor</option>
+                <option value="admin">Admin</option>
+              </select>
               <button type="button" class="btn-send-metric-invite">Send invite</button>
             </div>
-            <p class="invited-add-hint">Set viewer, editor, or admin access in the table after someone is invited.</p>
+            <p class="invited-add-hint">Set permission before you send the invite, or update it later.</p>
           </div>
           <div class="remove-metric-row"><button type="button" class="btn-remove-metric">Remove this metric</button></div>
         </div>
@@ -626,6 +632,44 @@
         return isHomeDashboard;
       }
 
+      function permissionLabelShort(p) {
+        if (p === 'read') return 'Viewer';
+        if (p === 'admin') return 'Admin';
+        return 'Editor';
+      }
+
+      function permissionForRow(metricRow) {
+        var idx = parseInt(metricRow.getAttribute('data-index') || '0', 10);
+        var oid = getRowOwnerId(metricRow);
+        if (!isCollaborator && !isSharedBoardRow(metricRow)) return 'admin';
+        if (isCollaborator && !isSharedBoardRow(metricRow)) {
+          if (collaborAdminIndices.indexOf(idx) >= 0) return 'admin';
+          if (collaborEditIndices.indexOf(idx) >= 0) return 'edit';
+          return 'read';
+        }
+        if (isSharedBoardRow(metricRow)) {
+          var admins = collaborAdminByOwner[oid] || [];
+          var edits = collaborEditByOwner[oid] || [];
+          var views = collaborViewByOwner[oid] || [];
+          if (admins.indexOf(idx) >= 0) return 'admin';
+          if (edits.indexOf(idx) >= 0) return 'edit';
+          if (views.indexOf(idx) >= 0) return 'read';
+        }
+        return 'read';
+      }
+
+      function updateMetricPermissionBadge(metricRow) {
+        var badge = metricRow.querySelector('.metric-permission-badge');
+        if (!badge) return;
+        var perm = permissionForRow(metricRow);
+        var text = permissionLabelShort(perm);
+        badge.hidden = false;
+        badge.textContent = 'i ' + text;
+        badge.classList.toggle('metric-permission-admin', perm === 'admin');
+        badge.classList.toggle('metric-permission-edit', perm === 'edit');
+        badge.classList.toggle('metric-permission-read', perm === 'read');
+      }
+
       function applySummaryModeUiForRow(row) {
         var sec = row.querySelector('.metric-ranking-section');
         if (!sec) return;
@@ -742,6 +786,7 @@
           row.querySelectorAll('.invited-users-wrap input, .invited-users-wrap select, .invited-users-wrap button').forEach(function (el) {
             el.disabled = !canView || !canManageInv;
           });
+          updateMetricPermissionBadge(row);
           applySummaryModeUiForRow(row);
           updateSummaryInputsState(row);
         });
@@ -829,6 +874,7 @@
           badge.textContent = businessLabel || '';
           badge.hidden = !businessLabel;
         }
+        updateMetricPermissionBadge(row);
       }
 
       function syncTitleRowFromTextareasCarousel() {
@@ -863,6 +909,7 @@
               badge.textContent = '';
             }
           }
+          updateMetricPermissionBadge(row);
         });
         scheduleBoardTocRefresh();
       }
@@ -1666,7 +1713,8 @@
               permCell;
             body.appendChild(tr);
           });
-          if (canManage) ensureRankingRowsForEditInvites(metricRow, list);
+          // Keep invites and individual rows independent:
+          // deleting an individual row should not recreate it automatically from invite rows.
           if (canManage) {
             body.querySelectorAll('.invited-perm-select').forEach(function (sel) {
               sel.addEventListener('change', function () {
@@ -1715,6 +1763,7 @@
             if (!canManageInvitesForMetric(metricIndex, metricRow)) return;
             var nameEl = metricRow.querySelector('.invite-add-name');
             var emailEl = metricRow.querySelector('.invite-add-email');
+            var permEl = metricRow.querySelector('.invite-add-permission');
             var businessName = fieldValue(document.getElementById('inputBusinessName'));
             if (!String(businessName || '').trim() && isSharedBoardRow(metricRow)) {
               businessName = (metricRow.getAttribute('data-business-name') || '').trim();
@@ -1739,7 +1788,7 @@
                   metricIndex: metricIndex,
                   email: email,
                   name: fieldValue(nameEl),
-                  permission: 'read',
+                  permission: permEl ? permEl.value : 'edit',
                   businessName: businessName,
                   invitedByUserId: userCtx.userId
                 });

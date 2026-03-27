@@ -118,9 +118,22 @@
         }
 
         grid.innerHTML = '';
+        grid.classList.remove('count-1', 'count-2', 'count-3', 'count-4');
 
         if (displayed.length === 0) {
           grid.classList.add('empty');
+          var emptyWrap = document.createElement('div');
+          emptyWrap.className = 'results-empty-state';
+          var emptyMsg = document.createElement('p');
+          emptyMsg.className = 'results-empty-message';
+          emptyMsg.textContent = 'You are not measuring anything. An invitation might be on its way (check your email) or get in touch with someone in your team. Otherwise, add a metric to get started.';
+          var addBtn = document.createElement('a');
+          addBtn.className = 'results-empty-add-btn';
+          addBtn.textContent = 'Add Metric';
+          addBtn.href = (uuidLooksValid(ownerParam) && ownerParam) ? ('input.html?owner=' + encodeURIComponent(ownerParam)) : 'input.html';
+          emptyWrap.appendChild(emptyMsg);
+          emptyWrap.appendChild(addBtn);
+          grid.appendChild(emptyWrap);
           return;
         }
 
