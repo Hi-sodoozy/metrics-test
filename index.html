@@ -183,7 +183,9 @@
                 var nameHtml = rawName ? escapeHtml(rawName) : '<span class="ranking-name-empty">—</span>';
                 var indGoalPart = (it.individualGoal != null && String(it.individualGoal).trim()) ? ('<span class="ranking-individual-goal">' + escapeHtml(String(it.individualGoal)) + '</span>') : '';
                 var valText = displayAsPct ? (Math.round(it.pct) + '%') : (escapeHtml(String(it.current)) + ' / ' + escapeHtml(String(it.goal)));
-                var mid = indGoalPart ? ('<span class="ranking-mission-slot">' + indGoalPart + '</span>') : '';
+                var mid = indGoalPart
+                  ? ('<span class="ranking-mission-slot">' + indGoalPart + '</span>')
+                  : ('<span class="ranking-mission-slot ranking-mission-slot--empty" aria-hidden="true"></span>');
                 var li = document.createElement('li');
                 li.className = 'ranking-list-item';
                 li.innerHTML =
@@ -279,6 +281,20 @@
 
       var RESULTS_THEME_KEY = 'metricsResultsDisplayTheme';
       var INPUT_THEME_KEY = 'metricsInputDisplayTheme';
+      var DISPLAY_REFRESH_SIGNAL_KEY = 'metricsDisplayRefreshSignal';
+      var lastRenderedHash = '';
+      var autoRefreshTimer = null;
+
+      function stableHash(obj) {
+        try { return JSON.stringify(obj || {}); } catch (e) { return ''; }
+      }
+
+      function renderDashboardIfChanged(data) {
+        var h = stableHash(data);
+        if (h && h === lastRenderedHash) return;
+        lastRenderedHash = h;
+        renderDashboard(data || {});
+      }
       function applyResultsTheme(theme) {
         var t = theme === 'dark' ? 'dark' : 'light';
         document.body.classList.toggle('results-theme-dark', t === 'dark');
@@ -297,6 +313,32 @@
           stored = localStorage.getItem(RESULTS_THEME_KEY) || localStorage.getItem(INPUT_THEME_KEY) || 'light';
         } catch (e) {}
         applyResultsTheme(stored);
+      }
+
+      function loadDashboardForOwner(ownerId, userCtx) {
+        if (!window.metricsLoadBusinessDashboard) {
+          return Promise.resolve(loadFromLocalStorage('metricsDashboard'));
+        }
+        if (!uuidLooksValid(ownerParam) || ownerId === userCtx.userId) {
+          return buildCombinedHomeDashboard(userCtx)
+            .catch(function () { return loadFromLocalStorage('metricsDashboard'); });
+        }
+        return window.metricsLoadBusinessDashboard(ownerId)
+          .catch(function () { return loadFromLocalStorage('metricsDashboard'); });
+      }
+
+      function setupAutoRefresh(ownerId, userCtx) {
+        function refreshNow() {
+          loadDashboardForOwner(ownerId, userCtx).then(function (data) {
+            renderDashboardIfChanged(data);
+          });
+        }
+        refreshNow();
+        autoRefreshTimer = setInterval(refreshNow, 6000);
+        window.addEventListener('storage', function (e) {
+          if (!e || e.key !== DISPLAY_REFRESH_SIGNAL_KEY) return;
+          refreshNow();
+        });
       }
 
       Promise.resolve()
@@ -326,21 +368,9 @@
               : 'input.html';
           }
 
-          if (!window.metricsLoadBusinessDashboard) {
-            renderDashboard(loadFromLocalStorage('metricsDashboard'));
-            return null;
-          }
-          if (!uuidLooksValid(ownerParam) || ownerId === userCtx.userId) {
-            return buildCombinedHomeDashboard(userCtx).then(function (data) {
-              renderDashboard(data);
-            }).catch(function () {
-              renderDashboard(loadFromLocalStorage('metricsDashboard'));
-            });
-          }
-          return window.metricsLoadBusinessDashboard(ownerId).then(function (data) {
-            renderDashboard(data);
-          }).catch(function () {
-            renderDashboard(loadFromLocalStorage('metricsDashboard'));
+          return loadDashboardForOwner(ownerId, userCtx).then(function (data) {
+            renderDashboardIfChanged(data);
+            setupAutoRefresh(ownerId, userCtx);
           });
         });
     })();

@@ -192,7 +192,8 @@
         displayAs: 'summary',
         displaySummary: true,
         ranking: {
-          enabled: false,
+          enabled: true,
+          showSimpleAggregate: false,
           displayAsPercent: false,
           showIndividualGoal: false,
           showIndividualGoalProgress: true,

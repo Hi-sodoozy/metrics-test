@@ -18,11 +18,9 @@
     <div class="input-business-header" id="inputBusinessHeader">
       <div class="input-business-pic-wrap">
         <div class="input-business-pic" id="inputBusinessPic"></div>
-        <button type="button" class="input-edit-icon btn-edit-pic" id="btnEditPic" aria-label="Edit display picture">✎</button>
       </div>
       <div class="input-business-name-wrap hero-name-wrap">
         <input type="text" class="input-business-name" id="inputBusinessName" placeholder="Loading your metrics" aria-label="Workspace or business name" readonly />
-        <button type="button" class="input-edit-icon btn-edit-name" id="btnEditName" aria-label="Edit business name">✎</button>
       </div>
       <nav class="boards-toc" id="boardsToc" aria-label="Jump to board" hidden>
         <div class="boards-toc-head-row">
@@ -72,7 +70,10 @@
         <div class="form-block main-display-percent-block">
           <label class="option-check"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /> Display as %</label>
         </div>
-        <div class="metric-actions"><button type="button" class="btn-save">Save</button></div>
+        <div class="metric-actions">
+          <button type="button" class="btn-save">Save</button>
+          <button type="button" class="btn-view-board">View Metrics Board</button>
+        </div>
         <div class="metric-ranking-section">
           <div class="individual-data-heading-row">
             <h4 class="metric-ranking-heading">Individual data</h4>
@@ -99,7 +100,10 @@
             </table>
             <button type="button" class="btn-add-row">Add more rows</button>
           </div>
-          <div class="metric-actions metric-actions-after-ranking"><button type="button" class="btn-save">Save</button></div>
+          <div class="metric-actions metric-actions-after-ranking">
+            <button type="button" class="btn-save">Save</button>
+            <button type="button" class="btn-view-board">View Metrics Board</button>
+          </div>
           </div>
         </div>
         <div class="invited-users-wrap">
@@ -133,14 +137,12 @@
       </div>
     </div>
     <footer class="input-footer">
-      <a href="#" class="footer-link">My Profile</a>
-      <a href="#" class="footer-link">Business Profile</a>
+      <a href="my-profile.html" class="footer-link">My Profile</a>
+      <a href="user-guide.html" class="footer-link">User Guide</a>
       <a href="invite-user.html" class="footer-link">Invite User</a>
-      <a href="auth.html" class="footer-link">Create Account</a>
       <a href="#" class="footer-link" id="linkLogout">Log out</a>
     </footer>
   </main>
-  <input type="file" accept="image/*" id="inputPicFile" hidden aria-hidden="true" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script>
@@ -187,6 +189,7 @@
 
       var businessImageDataUrl = '';
       var INPUT_THEME_KEY = 'metricsInputDisplayTheme';
+      var DISPLAY_REFRESH_SIGNAL_KEY = 'metricsDisplayRefreshSignal';
 
       function maybeMigratePersonalLocalStorage() {
         if (isCollaborator) return;
@@ -600,6 +603,16 @@
         }, 1800);
       }
 
+      function signalDisplayRefresh(reason) {
+        try {
+          localStorage.setItem(DISPLAY_REFRESH_SIGNAL_KEY, JSON.stringify({
+            at: Date.now(),
+            reason: reason || 'save',
+            owner: dashboardOwnerId
+          }));
+        } catch (e) {}
+      }
+
       function canManageInvitesForMetric(metricIndex, metricRow) {
         var row = metricRow || null;
         var oid = getRowOwnerId(row);
@@ -663,8 +676,8 @@
               if (el === titleField) return;
               el.disabled = true;
             });
-            row.querySelectorAll('.metric-actions .btn-save').forEach(function (saveBtn) {
-              saveBtn.disabled = true;
+            row.querySelectorAll('.metric-actions .btn-save, .metric-actions .btn-view-board').forEach(function (actionBtn) {
+              actionBtn.disabled = true;
             });
             var addRow0 = row.querySelector('.metric-ranking-section .btn-add-row');
             if (addRow0) addRow0.disabled = true;
@@ -675,8 +688,8 @@
               if (el === titleField) return;
               el.disabled = false;
             });
-            row.querySelectorAll('.metric-actions .btn-save').forEach(function (saveBtn) {
-              saveBtn.disabled = false;
+            row.querySelectorAll('.metric-actions .btn-save, .metric-actions .btn-view-board').forEach(function (actionBtn) {
+              actionBtn.disabled = false;
             });
             var addRow1 = row.querySelector('.metric-ranking-section .btn-add-row');
             if (addRow1) addRow1.disabled = false;
@@ -692,8 +705,8 @@
             row.querySelectorAll('.ranking-tbody input, .ranking-tbody button').forEach(function (el) {
               el.disabled = true;
             });
-            row.querySelectorAll('.metric-actions .btn-save').forEach(function (saveBtn) {
-              saveBtn.disabled = false;
+            row.querySelectorAll('.metric-actions .btn-save, .metric-actions .btn-view-board').forEach(function (actionBtn) {
+              actionBtn.disabled = false;
             });
             var addRow2 = row.querySelector('.metric-ranking-section .btn-add-row');
             if (addRow2) addRow2.disabled = true;
@@ -719,8 +732,8 @@
               if (el === titleField) return;
               el.disabled = true;
             });
-            row.querySelectorAll('.metric-actions .btn-save').forEach(function (saveBtn) {
-              saveBtn.disabled = true;
+            row.querySelectorAll('.metric-actions .btn-save, .metric-actions .btn-view-board').forEach(function (actionBtn) {
+              actionBtn.disabled = true;
             });
             var addRow3 = row.querySelector('.metric-ranking-section .btn-add-row');
             if (addRow3) addRow3.disabled = true;
@@ -745,8 +758,6 @@
         if (sharedHost) sharedHost.hidden = true;
         var nameEl = document.getElementById('inputBusinessName');
         if (nameEl) nameEl.readOnly = true;
-        var btnPic = document.getElementById('btnEditPic');
-        if (btnPic) btnPic.disabled = !!isCollaborator;
         var linkResults = document.getElementById('linkViewResults');
         if (linkResults) {
           if (isCollaborator) {
@@ -915,32 +926,42 @@
           renderRankingRowsInBlock(row, data);
           touch();
         });
-        row.querySelectorAll('.metric-actions .btn-save').forEach(function (saveBtn) {
-          saveBtn.addEventListener('click', function () {
-            if (isSharedBoardRow(row)) {
-              persistSharedRowNow(row)
-                .then(function () {
+        function performRowSaveAndMaybeView(goToBoard) {
+          if (isSharedBoardRow(row)) {
+            persistSharedRowNow(row)
+              .then(function () {
+                signalDisplayRefresh(goToBoard ? 'view-board' : 'save');
+                if (goToBoard) {
                   var oid = row.getAttribute('data-dashboard-owner') || '';
                   window.location.href = 'index.html?owner=' + encodeURIComponent(oid);
-                })
-                .catch(function (err) {
-                  alert((err && err.message) ? err.message : 'Could not save to the server.');
-                });
-            } else {
-              save();
-              persistRemoteNow()
-                .then(function () {
-                  if (isCollaborator) {
-                    window.location.href = 'index.html?owner=' + encodeURIComponent(dashboardOwnerId);
-                  } else {
-                    window.location.href = 'index.html';
-                  }
-                })
-                .catch(function (err) {
-                  alert((err && err.message) ? err.message : 'Could not save to the server.');
-                });
-            }
-          });
+                }
+              })
+              .catch(function (err) {
+                alert((err && err.message) ? err.message : 'Could not save to the server.');
+              });
+            return;
+          }
+          save();
+          persistRemoteNow()
+            .then(function () {
+              signalDisplayRefresh(goToBoard ? 'view-board' : 'save');
+              if (goToBoard) {
+                if (isCollaborator) {
+                  window.location.href = 'index.html?owner=' + encodeURIComponent(dashboardOwnerId);
+                } else {
+                  window.location.href = 'index.html';
+                }
+              }
+            })
+            .catch(function (err) {
+              alert((err && err.message) ? err.message : 'Could not save to the server.');
+            });
+        }
+        row.querySelectorAll('.metric-actions .btn-save').forEach(function (saveBtn) {
+          saveBtn.addEventListener('click', function () { performRowSaveAndMaybeView(false); });
+        });
+        row.querySelectorAll('.metric-actions .btn-view-board').forEach(function (viewBtn) {
+          viewBtn.addEventListener('click', function () { performRowSaveAndMaybeView(true); });
         });
         var btnRmMetric = row.querySelector('.btn-remove-metric');
         if (btnRmMetric) {
@@ -1900,6 +1921,7 @@
           }));
         } catch (e) {}
         scheduleRemoteSave();
+        signalDisplayRefresh('autosave');
       }
 
       var inputBusinessName = document.getElementById('inputBusinessName');
@@ -1922,39 +1944,6 @@
         inputBusinessName.addEventListener('blur', function () {
           save();
           syncBusinessNameToProfile();
-        });
-      }
-      var btnEditPic = document.getElementById('btnEditPic');
-      var inputPicFile = document.getElementById('inputPicFile');
-      if (btnEditPic && inputPicFile) {
-        btnEditPic.addEventListener('click', function () { inputPicFile.click(); });
-        inputPicFile.addEventListener('change', function () {
-          var file = (this.files || [])[0];
-          if (!file) return;
-          var reader = new FileReader();
-          reader.onload = function () {
-            businessImageDataUrl = reader.result;
-            var pic = document.getElementById('inputBusinessPic');
-            if (pic) {
-              pic.style.backgroundImage = 'url(' + businessImageDataUrl + ')';
-              pic.style.backgroundSize = 'cover';
-            }
-            save();
-          };
-          reader.readAsDataURL(file);
-          this.value = '';
-        });
-      }
-      var btnEditName = document.getElementById('btnEditName');
-      if (btnEditName && inputBusinessName) {
-        btnEditName.addEventListener('click', function () {
-          if (isCollaborator) return;
-          inputBusinessName.readOnly = false;
-          inputBusinessName.focus();
-          inputBusinessName.select();
-        });
-        inputBusinessName.addEventListener('blur', function () {
-          if (!isCollaborator) inputBusinessName.readOnly = true;
         });
       }
 
@@ -1984,6 +1973,7 @@
 
       var carouselPrev = document.getElementById('carouselPrev');
       var carouselNext = document.getElementById('carouselNext');
+      var carouselViewport = document.querySelector('.input-carousel-viewport');
       if (carouselPrev) {
         carouselPrev.addEventListener('click', function () {
           if (carouselPageIndex > 0) {
@@ -2003,6 +1993,33 @@
             updateCarouselNavUI();
           }
         });
+      }
+      if (carouselViewport) {
+        var touchStartX = 0;
+        var touchActive = false;
+        var SWIPE_THRESHOLD = 40;
+        carouselViewport.addEventListener('touchstart', function (e) {
+          if (!e.touches || !e.touches.length) return;
+          touchStartX = e.touches[0].clientX;
+          touchActive = true;
+        }, { passive: true });
+        carouselViewport.addEventListener('touchend', function (e) {
+          if (!touchActive || !e.changedTouches || !e.changedTouches.length) return;
+          var endX = e.changedTouches[0].clientX;
+          var dx = endX - touchStartX;
+          touchActive = false;
+          var tr = document.getElementById('carouselTrack');
+          var pageCount = parseInt(tr && tr.getAttribute('data-page-count') || '1', 10);
+          if (dx < -SWIPE_THRESHOLD && carouselPageIndex < pageCount - 1) {
+            carouselPageIndex++;
+            applyCarouselTransform();
+            updateCarouselNavUI();
+          } else if (dx > SWIPE_THRESHOLD && carouselPageIndex > 0) {
+            carouselPageIndex--;
+            applyCarouselTransform();
+            updateCarouselNavUI();
+          }
+        }, { passive: true });
       }
 
       var btnAddMetricBoard = document.getElementById('btnAddMetricBoard');

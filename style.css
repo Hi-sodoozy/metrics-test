@@ -123,6 +123,12 @@
   flex-shrink: 0;
 }
 
+.result-column-type-ranking {
+  height: 100%;
+  min-height: 0;
+  background: #fff;
+}
+
 .result-column-type-ranking > .result-card {
   flex: 0 1 auto;
 }
@@ -133,20 +139,40 @@
 }
 
 .result-column .ranking-results {
-  flex: 0 1 auto;
+  flex: 1 1 0;
   min-height: 0;
-  overflow: auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .result-column .ranking-results-full {
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 .result-column .ranking-results-full .ranking-list {
-  flex: 1;
+  flex: 0 0 auto;
+}
+
+.result-column-type-ranking .ranking-results .ranking-list {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: clamp(12px, 2vw, 24px);
+  row-gap: 10px;
+  list-style: none;
+  padding-left: 0;
 }
 
 .result-column-metric-title {
@@ -334,12 +360,30 @@
   margin-bottom: 0;
 }
 
+.result-column-type-ranking .ranking-list-item {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: start;
+  justify-items: start;
+  margin-bottom: 0;
+  text-align: left;
+  column-gap: 0;
+}
+
 .ranking-list-item .ranking-name {
   flex: 1 1 120px;
   min-width: 5rem;
   font-weight: 600;
   color: #1a1a1a;
   word-break: break-word;
+}
+
+.result-column-type-ranking .ranking-list-item .ranking-name {
+  flex: none;
+  grid-column: auto;
+  min-width: 0;
+  text-align: left;
 }
 
 .ranking-name-empty {
@@ -352,15 +396,70 @@
   font-size: 0.9em;
 }
 
+.result-column-type-ranking .ranking-mission-slot {
+  flex: none;
+  grid-column: auto;
+  min-width: 0;
+  text-align: left;
+}
+
+.ranking-mission-slot--empty {
+  visibility: hidden;
+  min-height: 1em;
+}
+
 .ranking-list-item .ranking-value {
   flex: 0 0 auto;
   margin-left: 0;
   text-align: right;
 }
 
+.result-column-type-ranking .ranking-list-item .ranking-value {
+  flex: none;
+  grid-column: auto;
+  min-width: 0;
+  text-align: left;
+}
+
 .ranking-individual-goal {
   font-size: 0.9em;
   color: #6b6b6b;
+}
+
+@supports not (grid-template-columns: subgrid) {
+  .result-column-type-ranking .ranking-results .ranking-list {
+    display: block;
+    padding-left: 1.25em;
+    list-style-type: disc;
+  }
+  .result-column-type-ranking .ranking-list-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: clamp(12px, 2vw, 24px);
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .result-column-type-ranking .ranking-results .ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    row-gap: 12px;
+  }
+  .result-column-type-ranking .ranking-list-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-bottom: 0;
+  }
+  .result-column-type-ranking .ranking-mission-slot--empty {
+    display: none;
+  }
+  .result-column-type-ranking .ranking-list-item .ranking-value {
+    text-align: left;
+  }
 }
 
 .input-link {
@@ -778,6 +877,7 @@
   align-items: stretch;
   gap: 12px;
   margin-bottom: 24px;
+  touch-action: pan-y;
 }
 
 .input-carousel-btn {
@@ -1346,11 +1446,30 @@
 
 .metric-actions {
   margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.metric-actions .btn-save {
+.metric-actions .btn-save,
+.metric-actions .btn-view-board {
   width: auto;
   min-height: 44px;
+}
+
+.metric-actions .btn-view-board {
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #4a6fa5;
+  color: #4a6fa5;
+  background: #fff;
+  cursor: pointer;
+}
+
+.metric-actions .btn-view-board:hover {
+  background: #f5f8fc;
 }
 
 .input-table-wrap {
@@ -2002,6 +2121,31 @@
     font-size: 16px;
   }
 
+  .input-carousel-btn {
+    display: none;
+  }
+
+  .input-carousel-viewport {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+  }
+
+  .input-carousel-track {
+    transition: none;
+  }
+
+  .input-carousel-slide {
+    scroll-snap-align: start;
+  }
+
+  .metric-actions .btn-save,
+  .metric-actions .btn-view-board {
+    width: 100%;
+  }
+
   .ranking-results-wrap {
     padding: 0 12px 20px;
   }
@@ -2263,6 +2407,86 @@
   color: #4b5563;
 }
 
+.mv-page-shell {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.mv-page-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.mv-page-title {
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+.mv-page-subtitle {
+  margin: 0 0 20px;
+  color: #9aa3b2;
+}
+
+.mv-form-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.mv-form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.mv-input {
+  width: 100%;
+  border: 1px solid #243b56;
+  border-radius: 8px;
+  background: rgba(10, 16, 28, 0.92);
+  color: #e8eaef;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.mv-profile-pic-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.mv-profile-pic {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  background: rgba(30, 58, 95, 0.35);
+  border: 1px solid #1e3a5f;
+  background-size: cover;
+  background-position: center;
+}
+
+.mv-actions-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mv-guide-block h3 {
+  margin: 0 0 8px;
+  color: #f3f4f6;
+}
+
+.mv-guide-block p,
+.mv-guide-block li {
+  color: #9aa3b2;
+}
+
 /* ----- Input dark/light mode ----- */
 
 .input-page.input-theme-dark {
@@ -2323,6 +2547,16 @@
 
 .input-page.input-theme-dark .theme-text-toggle:hover {
   color: #bae6fd;
+}
+
+.input-page.input-theme-dark .metric-actions .btn-view-board {
+  color: #7dd3fc;
+  border-color: #2a4d73;
+  background: rgba(10, 16, 28, 0.92);
+}
+
+.input-page.input-theme-dark .metric-actions .btn-view-board:hover {
+  background: rgba(16, 28, 48, 0.95);
 }
 
 .input-page.input-theme-dark .toggle-row.individual-data-option {
