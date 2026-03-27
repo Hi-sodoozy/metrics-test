@@ -99,7 +99,7 @@
 
 .input-page .btn-save,
 .input-page .btn-send-metric-invite {
-  box-shadow: 0 8px 22px rgba(74, 111, 165, 0.28);
+  box-shadow: none;
 }
 
 .input-page .metric-permission-badge {
@@ -203,6 +203,56 @@
 .input-page.input-theme-dark .input-business-pic {
   border-color: #1f3657;
   box-shadow: 0 8px 22px rgba(2, 8, 23, 0.6);
+}
+
+.input-page.input-theme-dark .input-table th {
+  background: rgba(12, 22, 40, 0.96);
+  color: #cbd5e1;
+  border-bottom-color: #27466d;
+}
+
+.input-page.input-theme-dark .input-table td {
+  border-bottom-color: #1f3657;
+  color: #e8eaef;
+}
+
+.input-page.input-theme-dark .invited-users-title,
+.input-page.input-theme-dark .invited-add-title {
+  color: #cbd5e1;
+}
+
+.input-page.input-theme-dark .invited-users-empty {
+  color: #94a3b8;
+}
+
+.input-page.input-theme-dark .btn-remove-selected-invites {
+  border-color: #f87171;
+  color: #fecaca;
+  background: rgba(35, 10, 18, 0.7);
+}
+
+.input-page.input-theme-dark .btn-remove-selected-invites:hover:not(:disabled) {
+  background: rgba(60, 17, 28, 0.85);
+}
+
+.input-page.input-theme-dark .btn-add-individual-data {
+  border-color: #2a4d73;
+  color: #7dd3fc;
+  background: rgba(10, 16, 28, 0.92);
+}
+
+.input-page.input-theme-dark .btn-add-individual-data:hover:not(:disabled) {
+  background: rgba(16, 28, 48, 0.95);
+}
+
+.input-page.input-theme-dark .metric-actions .btn-view-board {
+  border-color: #2a4d73;
+  color: #7dd3fc;
+  background: rgba(10, 16, 28, 0.92);
+}
+
+.input-page.input-theme-dark .metric-actions .btn-view-board:hover:not(:disabled) {
+  background: rgba(16, 28, 48, 0.95);
 }
 
 .results-page.results-theme-dark .result-column {
