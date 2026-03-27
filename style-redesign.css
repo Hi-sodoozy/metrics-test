@@ -262,6 +262,22 @@
   color: #e8eaef;
 }
 
+.input-page.input-theme-dark .ranking-table .metric-single-line-input,
+.input-page.input-theme-dark .input-table input[type="text"],
+.input-page.input-theme-dark .input-table input[type="number"],
+.input-page.input-theme-dark .input-table textarea {
+  background: rgba(8, 15, 28, 0.94);
+  color: #e8eaef;
+  border: 1px solid #27466d;
+}
+
+.input-page.input-theme-dark .ranking-table .metric-single-line-input::placeholder,
+.input-page.input-theme-dark .input-table input[type="text"]::placeholder,
+.input-page.input-theme-dark .input-table input[type="number"]::placeholder,
+.input-page.input-theme-dark .input-table textarea::placeholder {
+  color: #94a3b8;
+}
+
 .input-page.input-theme-dark .invited-users-title,
 .input-page.input-theme-dark .invited-add-title {
   color: #cbd5e1;
