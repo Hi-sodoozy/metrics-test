@@ -205,6 +205,52 @@
   box-shadow: 0 8px 22px rgba(2, 8, 23, 0.6);
 }
 
+.input-page.input-theme-dark .boards-toc-hint,
+.input-page.input-theme-dark .input-hint-inline,
+.input-page.input-theme-dark .invited-add-hint {
+  color: #b5c2d7;
+}
+
+.input-page.input-theme-dark .boards-toc-btn {
+  border-color: #2a4d73;
+  background: rgba(10, 16, 28, 0.92);
+  color: #c7dcff;
+}
+
+.input-page.input-theme-dark .boards-toc-btn:hover {
+  border-color: #3b6aa0;
+  background: rgba(16, 28, 48, 0.95);
+}
+
+.input-page.input-theme-dark .boards-toc-btn-active,
+.input-page.input-theme-dark .boards-toc-btn-active:hover {
+  border-color: #60a5fa;
+  background: #1d4f87;
+  color: #ffffff;
+}
+
+.input-page.input-theme-dark .btn-add-metric-board {
+  border-color: #2a4d73;
+  background: rgba(10, 16, 28, 0.92);
+  color: #7dd3fc;
+}
+
+.input-page.input-theme-dark .btn-add-metric-board:hover:not(:disabled) {
+  background: rgba(16, 28, 48, 0.95);
+  border-color: #3b6aa0;
+  color: #bae6fd;
+}
+
+.input-page.input-theme-dark .btn-remove-metric {
+  border-color: #f87171;
+  color: #fecaca;
+  background: rgba(35, 10, 18, 0.7);
+}
+
+.input-page.input-theme-dark .btn-remove-metric:hover:not(:disabled) {
+  background: rgba(60, 17, 28, 0.85);
+}
+
 .input-page.input-theme-dark .input-table th {
   background: rgba(12, 22, 40, 0.96);
   color: #cbd5e1;
