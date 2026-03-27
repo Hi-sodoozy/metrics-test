@@ -1845,6 +1845,8 @@
 
 .invited-users-toolbar {
   margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .btn-remove-selected-invites {
@@ -1865,6 +1867,28 @@
 .btn-remove-selected-invites:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.btn-add-individual-data {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #4a6fa5;
+  color: #4a6fa5;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-add-individual-data:hover:not(:disabled) {
+  background: #eef4fc;
+}
+
+.btn-add-individual-data:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 
 .invited-add-title {

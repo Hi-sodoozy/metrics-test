@@ -116,6 +116,7 @@
                 <th scope="col">Name</th>
                 <th scope="col">Email</th>
                 <th scope="col">Permission</th>
+                <th scope="col" class="th-invite-individual">Individual Data</th>
               </tr>
             </thead>
             <tbody class="invited-users-body"></tbody>
@@ -664,10 +665,32 @@
         var perm = permissionForRow(metricRow);
         var text = permissionLabelShort(perm);
         badge.hidden = false;
-        badge.textContent = 'i ' + text;
+        badge.textContent = text;
         badge.classList.toggle('metric-permission-admin', perm === 'admin');
         badge.classList.toggle('metric-permission-edit', perm === 'edit');
         badge.classList.toggle('metric-permission-read', perm === 'read');
+      }
+
+      function addInviteUserToIndividualData(metricRow, inviteEmail, inviteDisplayName) {
+        var em = normalizeEmailLocal(inviteEmail);
+        if (!em) return false;
+        var rows = getRankingRowsFromBlock(metricRow);
+        var exists = rows.some(function (r) {
+          return normalizeEmailLocal(r.contributorEmail) === em;
+        });
+        if (exists) return false;
+        rows.push({
+          mode: 'data',
+          name: inviteDisplayName || em,
+          goal: '',
+          current: '',
+          individualGoal: '',
+          contributorEmail: em
+        });
+        renderRankingRowsInBlock(metricRow, rows, { skipInviteRefresh: true });
+        if (isSharedBoardRow(metricRow)) scheduleSharedRowSave(metricRow);
+        else save();
+        return true;
       }
 
       function applySummaryModeUiForRow(row) {
@@ -1664,8 +1687,11 @@
         var canManage = canManageInvitesForMetric(metricIndex, metricRow);
         var thCb = metricRow.querySelector('.th-invite-cb');
         if (thCb) thCb.style.display = canManage ? '' : 'none';
+        var thAdd = metricRow.querySelector('.th-invite-individual');
+        if (thAdd) thAdd.style.display = canManage ? '' : 'none';
+        var colSpan = canManage ? 5 : 4;
         if (!window.metricsFetchMetricInvites) {
-          body.innerHTML = '<tr><td colspan="4" class="invited-users-empty">Supabase is not configured.</td></tr>';
+          body.innerHTML = '<tr><td colspan="' + colSpan + '" class="invited-users-empty">Supabase is not configured.</td></tr>';
           updateRemoveInviteButton(metricRow);
           return;
         }
@@ -1682,14 +1708,14 @@
               console.warn('metricsFetchMetricInvites', res.error);
             }
             var detail = errMsg ? (' <span class="invited-users-err-detail">' + escapeHtmlStr(errMsg) + '</span>') : '';
-            body.innerHTML = '<tr><td colspan="4" class="invited-users-empty">Unable to load invites.' + detail + '</td></tr>';
+            body.innerHTML = '<tr><td colspan="' + colSpan + '" class="invited-users-empty">Unable to load invites.' + detail + '</td></tr>';
             updateRemoveInviteButton(metricRow);
             return;
           }
           var list = res.data || [];
           if (!list.length) {
             var trE = document.createElement('tr');
-            trE.innerHTML = '<td colspan="4" class="invited-users-empty">No invited users yet.</td>';
+            trE.innerHTML = '<td colspan="' + colSpan + '" class="invited-users-empty">No invited users yet.</td>';
             body.appendChild(trE);
             updateRemoveInviteButton(metricRow);
             return;
@@ -1707,10 +1733,14 @@
                 '<option value="edit"' + (perm === 'edit' ? ' selected' : '') + '>Editor</option>' +
                 '<option value="admin"' + (perm === 'admin' ? ' selected' : '') + '>Admin</option></select></td>'
               : '<td>' + escapeHtmlStr(permissionLabelText(perm)) + '</td>';
+            var individualCell = canManage
+              ? '<td><button type="button" class="btn-add-individual-data" data-email="' + escapeAttr(em) + '" data-name="' + escapeAttr(dbInviteDisplayName(row)) + '">Add to Individual Data</button></td>'
+              : '';
             tr.innerHTML = cbCell +
               '<td>' + escapeHtmlStr(dbInviteDisplayName(row)) + '</td>' +
               '<td>' + escapeHtmlStr(em) + '</td>' +
-              permCell;
+              permCell +
+              individualCell;
             body.appendChild(tr);
           });
           // Keep invites and individual rows independent:
@@ -1746,7 +1776,7 @@
         }).catch(function (err) {
           console.warn('metricsFetchMetricInvites', err);
           var detail = (err && err.message) ? (' <span class="invited-users-err-detail">' + escapeHtmlStr(String(err.message)) + '</span>') : '';
-          body.innerHTML = '<tr><td colspan="4" class="invited-users-empty">Unable to load invites.' + detail + '</td></tr>';
+          body.innerHTML = '<tr><td colspan="' + colSpan + '" class="invited-users-empty">Unable to load invites.' + detail + '</td></tr>';
           updateRemoveInviteButton(metricRow);
         });
       }
@@ -1812,6 +1842,18 @@
           body.addEventListener('change', function (e) {
             if (e.target && e.target.classList && e.target.classList.contains('invited-user-cb')) {
               updateRemoveInviteButton(metricRow);
+            }
+          });
+          body.addEventListener('click', function (e) {
+            var target = e.target;
+            if (!target || !target.classList || !target.classList.contains('btn-add-individual-data')) return;
+            if (!canManageInvitesForMetric(parseInt(metricRow.getAttribute('data-index') || '0', 10), metricRow)) return;
+            var email = target.getAttribute('data-email') || '';
+            var name = target.getAttribute('data-name') || '';
+            var added = addInviteUserToIndividualData(metricRow, email, name);
+            if (added) {
+              target.textContent = 'Added';
+              target.disabled = true;
             }
           });
           btnRemove.addEventListener('click', function () {
