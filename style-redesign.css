@@ -1,0 +1,244 @@
+/* Reversible redesign layer: remove this file link to revert. */
+
+/* ---------- Shared tech shell ---------- */
+.input-page.metrics-page,
+.results-page.metrics-page {
+  background:
+    radial-gradient(ellipse 120% 85% at 20% -20%, rgba(99, 140, 255, 0.18), transparent 52%),
+    radial-gradient(ellipse 100% 60% at 100% 20%, rgba(56, 189, 248, 0.1), transparent 45%),
+    linear-gradient(180deg, #f2f7ff 0%, #eef3fb 45%, #f4f8ff 100%);
+}
+
+.input-page .app-brand,
+.results-page .app-brand {
+  letter-spacing: -0.02em;
+}
+
+/* ---------- Input page redesign ---------- */
+.input-page .input-main {
+  max-width: 1480px;
+  border-radius: 16px;
+}
+
+.input-page .input-header {
+  padding: 8px 2px 4px;
+}
+
+.input-page .input-business-header {
+  border: 1px solid #d8e5fb;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(10px);
+  padding: 14px 16px;
+}
+
+.input-page .input-business-pic {
+  border: 1px solid #cfe0ff;
+  box-shadow: 0 6px 20px rgba(76, 117, 201, 0.18);
+}
+
+.input-page .boards-toc,
+.input-page .metric-card {
+  border: 1px solid #d7e3f7;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 34px rgba(30, 64, 175, 0.08);
+}
+
+.input-page .metric-card {
+  padding: 22px 24px;
+}
+
+.input-page .metric-title-row {
+  border-bottom: 1px solid #e7eefb;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.input-page .metric-block-title-field {
+  font-size: 1.18rem;
+  font-weight: 700;
+}
+
+.input-page .input-business-name,
+.input-page .metric-block-title-field,
+.input-page .metric-single-line-input,
+.input-page .invite-email-input,
+.input-page .invite-permission-select {
+  border-color: #d6e4fb;
+  border-radius: 10px;
+  background: #fbfdff;
+}
+
+.input-page .input-business-name:focus,
+.input-page .metric-block-title-field:focus,
+.input-page .metric-single-line-input:focus,
+.input-page .invite-email-input:focus,
+.input-page .invite-permission-select:focus {
+  border-color: #8ab2f0;
+  box-shadow: 0 0 0 3px rgba(107, 155, 209, 0.16);
+}
+
+.input-page .show-main-label-text {
+  font-weight: 600;
+}
+
+.input-page .input-carousel-btn {
+  border-radius: 10px;
+  border-color: #d2def4;
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.12);
+}
+
+.input-page .metric-actions .btn-save,
+.input-page .metric-actions .btn-view-board,
+.input-page .btn-send-metric-invite,
+.input-page .btn-add-row {
+  border-radius: 10px;
+}
+
+.input-page .btn-save,
+.input-page .btn-send-metric-invite {
+  box-shadow: 0 8px 22px rgba(74, 111, 165, 0.28);
+}
+
+.input-page .metric-permission-badge {
+  font-weight: 700;
+}
+
+.input-page .invited-users-toolbar {
+  margin-top: 12px;
+}
+
+/* ---------- Results page redesign ---------- */
+.results-page .results-main {
+  background: transparent;
+}
+
+.results-page .results-grid {
+  padding: 8px;
+  gap: 8px;
+}
+
+.results-page .result-column {
+  border: 1px solid #d7e3f7;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 12px 36px rgba(30, 64, 175, 0.12);
+}
+
+.results-page .result-owner-meta {
+  border-bottom: 1px solid #e7eefb;
+  background: rgba(245, 249, 255, 0.85);
+}
+
+.results-page .result-column-metric-title {
+  background: linear-gradient(180deg, #f3f8ff 0%, #eaf2ff 100%);
+  border-bottom: 1px solid #d7e3f7;
+}
+
+.results-page .result-card,
+.results-page .ranking-results {
+  background: transparent;
+}
+
+.results-page .ranking-results {
+  padding-top: 10px;
+}
+
+.results-page .ranking-list-item {
+  border-bottom: 1px solid #edf3ff;
+  padding-bottom: 6px;
+}
+
+.results-page .ranking-list-item:last-child {
+  border-bottom: 0;
+}
+
+.results-page .results-bottom-actions {
+  border: 1px solid #d7e3f7;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  padding: 8px 14px;
+  box-shadow: 0 10px 24px rgba(30, 64, 175, 0.18);
+}
+
+.results-page .results-empty-state {
+  border-radius: 14px;
+  border-color: #d7e3f7;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 28px rgba(30, 64, 175, 0.12);
+}
+
+/* ---------- Dark mode refinements ---------- */
+.input-page.input-theme-dark.metrics-page,
+.results-page.results-theme-dark.metrics-page {
+  background:
+    radial-gradient(ellipse 120% 85% at 20% -20%, rgba(99, 140, 255, 0.35), transparent 55%),
+    radial-gradient(ellipse 100% 60% at 100% 20%, rgba(56, 189, 248, 0.18), transparent 45%),
+    linear-gradient(180deg, #070b10 0%, #0b1220 48%, #070b10 100%);
+}
+
+.input-page.input-theme-dark .input-business-header,
+.input-page.input-theme-dark .boards-toc,
+.input-page.input-theme-dark .metric-card {
+  border-color: #1f3657;
+  background: rgba(11, 18, 32, 0.84);
+  box-shadow: 0 12px 34px rgba(6, 14, 28, 0.52);
+}
+
+.input-page.input-theme-dark .metric-title-row {
+  border-bottom-color: #1f3657;
+}
+
+.input-page.input-theme-dark .input-business-name,
+.input-page.input-theme-dark .metric-block-title-field,
+.input-page.input-theme-dark .metric-single-line-input,
+.input-page.input-theme-dark .invite-email-input,
+.input-page.input-theme-dark .invite-permission-select {
+  border-color: #27466d;
+  background: rgba(8, 15, 28, 0.94);
+}
+
+.input-page.input-theme-dark .input-business-pic {
+  border-color: #1f3657;
+  box-shadow: 0 8px 22px rgba(2, 8, 23, 0.6);
+}
+
+.results-page.results-theme-dark .result-column {
+  border-color: #1f3657;
+  background: rgba(10, 16, 28, 0.85);
+  box-shadow: 0 14px 36px rgba(2, 8, 23, 0.6);
+}
+
+.results-page.results-theme-dark .result-owner-meta {
+  border-bottom-color: #1f3657;
+  background: rgba(8, 15, 28, 0.9);
+}
+
+.results-page.results-theme-dark .result-column-metric-title {
+  border-bottom-color: #1f3657;
+  background: linear-gradient(180deg, rgba(10, 22, 42, 0.98) 0%, rgba(9, 18, 34, 0.98) 100%);
+}
+
+.results-page.results-theme-dark .results-bottom-actions {
+  border-color: #1f3657;
+  background: rgba(10, 16, 28, 0.92);
+  box-shadow: 0 10px 24px rgba(2, 8, 23, 0.55);
+}
+
+/* ---------- Mobile polish ---------- */
+@media (max-width: 640px) {
+  .input-page .input-main {
+    border-radius: 0;
+  }
+
+  .input-page .input-business-header,
+  .input-page .metric-card {
+    border-radius: 12px;
+  }
+
+  .results-page .result-column {
+    border-radius: 12px;
+  }
+}
