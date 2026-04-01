@@ -2,391 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Results</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics View – Welcome</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="style-redesign.css" />
 </head>
-<body class="metrics-page results-page">
-  <main class="results-main">
-    <div class="results-grid" id="resultsGrid"></div>
-    <div class="results-bottom-actions">
-      <a href="input.html" class="input-link" id="linkToInput">Input</a>
-      <button type="button" class="results-theme-toggle" id="resultsThemeToggle" aria-label="Toggle display theme">
-        <span class="results-theme-label" id="resultsThemeLabel">Dark mode</span>
-      </button>
-    </div>
+<body class="metrics-page mv-landing">
+  <div class="mv-landing-bg" aria-hidden="true"></div>
+  <header class="mv-landing-nav mv-landing-nav-right">
+    <a class="mv-landing-nav-link" href="auth/?mode=signin">Sign in</a>
+  </header>
+
+  <main class="mv-landing-main">
+    <section class="mv-landing-hero">
+      <p class="mv-landing-eyebrow">Your clear vision to success</p>
+      <h1 class="mv-landing-title">Welcome to Metrics View</h1>
+      <p class="mv-landing-lead">
+        Set clear targets and track critical metrics while keeping your team laser-focussed on success with a real-time data display.
+      </p>
+      <div class="mv-landing-cta-row">
+        <a class="mv-btn mv-btn-primary" href="auth/?mode=signup">Get started</a>
+        <a class="mv-btn mv-btn-ghost" href="auth/?mode=signin">Sign in</a>
+      </div>
+      <p class="mv-landing-note">Invite individuals within your team to track their contribution to key business metrics, set by leaders in a customisable workspace.</p>
+    </section>
+
+    <section class="mv-landing-features" aria-label="Highlights">
+      <article class="mv-landing-card">
+        <h2 class="mv-landing-card-title">Progress at a glance</h2>
+        <p class="mv-landing-card-text">Display targets, whole business progress, share individual goals and rank performance.</p>
+      </article>
+      <article class="mv-landing-card">
+        <h2 class="mv-landing-card-title">Edit, Set, View</h2>
+        <p class="mv-landing-card-text">Select team members across your business to set goals, edit progress and view momentum.</p>
+      </article>
+      <article class="mv-landing-card">
+        <h2 class="mv-landing-card-title">Public or private. You decide.</h2>
+        <p class="mv-landing-card-text">Choose which information you show around your office on a simple, brand-aligned display.</p>
+      </article>
+    </section>
+
+    <section class="mv-landing-strip">
+      <p class="mv-landing-strip-text">
+        Only available to businesses striving for success.
+      </p>
+    </section>
   </main>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
+
+  <footer class="mv-landing-footer">
+    <span class="mv-landing-footer-brand">Developed by Iain Duguid.</span>
+    <span class="mv-landing-footer-meta">Metrics View is a helpful tool to track and display business metrics. Please do not rely on Metrics View as your only data collection point and do not store sensitive data on this platform.</span>
+  </footer>
+
   <script>
     (function () {
-      var params = new URLSearchParams(window.location.search);
-      var ownerParam = (params.get('owner') || '').trim();
-
-      function uuidLooksValid(s) {
-        return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s || '');
-      }
-
-      function escapeHtml(s) {
-        var div = document.createElement('div');
-        div.textContent = s == null ? '' : s;
-        return div.innerHTML;
-      }
-
-      function renderDashboard(data) {
-        var grid = document.getElementById('resultsGrid');
-        if (!grid) return;
-
-        var metrics = (data.metrics && data.metrics.length) ? data.metrics.slice(0, 10) : [];
-        var displayed = [];
-        for (var i = 0; i < metrics.length; i++) {
-          var m = metrics[i];
-          if (!m || !m.showOnMainScreen) continue;
-          if (displayed.length >= 4) break;
-          var displaySummary = m.displaySummary !== false;
-          var rank = m.ranking || {};
-          var sip = rank.showIndividualGoalProgress;
-          var showIndListValues =
-            sip !== false &&
-            sip !== 0 &&
-            sip !== '0' &&
-            String(sip).toLowerCase() !== 'false';
-          var rankByPerf = rank.rankPerformance !== false;
-          var rows = (rank.rows && rank.rows.length) ? rank.rows.slice() : [];
-          rows = rows.filter(function (r) {
-            if (!r) return false;
-            return !!(
-              String(r.name || '').trim() ||
-              String(r.goal != null ? r.goal : '').trim() ||
-              String(r.current != null ? r.current : '').trim() ||
-              String(r.individualGoal != null ? r.individualGoal : '').trim()
-            );
-          });
-          var useRankingLayout = m.displayAs === 'ranking';
-          if (useRankingLayout) {
-            var legacyEnabled = !!rank.enabled;
-            var showSimpleAgg = rank.showSimpleAggregate != null ? !!rank.showSimpleAggregate : legacyEnabled;
-            var showMainTotalsCard = displaySummary && rows.length > 0 && (showSimpleAgg || showIndListValues);
-            var totalGoal = 0, totalCurrent = 0, achieved = false, valuesText = '';
-            if (showMainTotalsCard) {
-              for (var t = 0; t < rows.length; t++) {
-                var rg = rows[t];
-                var g = parseFloat(rg.goal, 10) || 0;
-                var indG = rg.individualGoal != null ? parseFloat(rg.individualGoal, 10) : NaN;
-                if (!isNaN(indG) && indG > 0) g = indG;
-                totalGoal += g;
-                totalCurrent += parseFloat(rg.current, 10) || 0;
-              }
-              var displayAsPctAgg = !!(rank.displayAsPercent);
-              achieved = totalGoal > 0 && totalCurrent >= totalGoal;
-              valuesText = (displayAsPctAgg && totalGoal > 0) ? ('<span class="current">' + Math.round((totalCurrent / totalGoal) * 100) + '%</span>') : ('<span class="current">' + escapeHtml(String(totalCurrent)) + '</span> / <span class="goal">' + escapeHtml(String(totalGoal)) + '</span>');
-            }
-            displayed.push({
-              type: 'ranking',
-              heading: m.heading || 'Summary',
-              valuesHtml: valuesText,
-              achieved: achieved,
-              displaySummary: displaySummary,
-              showMainTotalsCard: showMainTotalsCard,
-              showSimpleAggregate: showSimpleAgg,
-              showIndividualGoalProgress: showIndListValues,
-              rankByPerformance: rankByPerf,
-              ranking: rank,
-              rows: rows,
-              sourceBusinessName: m.sourceBusinessName || data.businessName || '',
-              sourceBusinessImage: m.sourceBusinessImage || data.businessImage || ''
-            });
-          } else {
-            var cur = parseFloat(m.current, 10) || 0;
-            var goal = parseFloat(m.goal, 10) || 0;
-            var achieved = goal > 0 && cur >= goal;
-            var valuesText;
-            if (m.displayAsPercent && goal > 0) {
-              valuesText = '<span class="current">' + escapeHtml(String(Math.round((cur / goal) * 100))) + '%</span>';
-            } else {
-              valuesText = '<span class="current">' + escapeHtml(String(m.current)) + '</span> / <span class="goal">' + escapeHtml(String(m.goal)) + '</span>';
-            }
-            displayed.push({
-              type: 'summary',
-              heading: m.heading || 'Metric',
-              valuesHtml: valuesText,
-              achieved: achieved,
-              sourceBusinessName: m.sourceBusinessName || data.businessName || '',
-              sourceBusinessImage: m.sourceBusinessImage || data.businessImage || ''
-            });
-          }
+      try {
+        var raw = localStorage.getItem('metricsUserContext');
+        var ctx = raw ? JSON.parse(raw) : null;
+        if (ctx && ctx.email) {
+          window.location.href = 'input/';
         }
-
-        grid.innerHTML = '';
-        grid.classList.remove('count-1', 'count-2', 'count-3', 'count-4');
-
-        if (displayed.length === 0) {
-          grid.classList.add('empty');
-          var emptyWrap = document.createElement('div');
-          emptyWrap.className = 'results-empty-state';
-          var emptyMsg = document.createElement('p');
-          emptyMsg.className = 'results-empty-message';
-          emptyMsg.textContent = 'You are not measuring anything. An invitation might be on its way (check your email) or get in touch with someone in your team. Otherwise, add a metric to get started.';
-          var addBtn = document.createElement('a');
-          addBtn.className = 'results-empty-add-btn';
-          addBtn.textContent = 'Add Metric';
-          addBtn.href = (uuidLooksValid(ownerParam) && ownerParam) ? ('input.html?owner=' + encodeURIComponent(ownerParam)) : 'input.html';
-          emptyWrap.appendChild(emptyMsg);
-          emptyWrap.appendChild(addBtn);
-          grid.appendChild(emptyWrap);
-          return;
-        }
-
-        grid.classList.remove('empty');
-        grid.classList.add('count-' + displayed.length);
-
-        for (var j = 0; j < displayed.length; j++) {
-          var item = displayed[j];
-          var col = document.createElement('div');
-          col.className = 'result-column result-column-type-' + item.type;
-          var ownerMeta = document.createElement('div');
-          ownerMeta.className = 'result-owner-meta';
-          ownerMeta.innerHTML =
-            '<span class="result-owner-pic"' + (item.sourceBusinessImage ? (' style="background-image:url(' + item.sourceBusinessImage + ')"') : '') + '></span>' +
-            '<span class="result-owner-name">' + escapeHtml(item.sourceBusinessName || 'Board') + '</span>';
-          col.appendChild(ownerMeta);
-          var metricTitleBar = document.createElement('div');
-          metricTitleBar.className = 'result-column-metric-title';
-          metricTitleBar.textContent = item.heading || (item.type === 'summary' ? 'Metric' : 'Summary');
-          col.appendChild(metricTitleBar);
-
-          if (item.type === 'summary') {
-            var card = document.createElement('div');
-            card.className = 'result-card result-card-numbers-only' + (item.achieved ? ' achieved' : '');
-            card.innerHTML =
-              '<div class="result-card-inner">' +
-              '<p class="result-values">' + item.valuesHtml + '</p>' +
-              '</div>';
-            col.appendChild(card);
-          } else {
-            if (item.showMainTotalsCard) {
-              var card2 = document.createElement('div');
-              card2.className = 'result-card result-card-summary result-card-numbers-only' + (item.achieved ? ' achieved' : '');
-              card2.innerHTML =
-                '<div class="result-card-inner">' +
-                '<p class="result-values">' + item.valuesHtml + '</p>' +
-                '</div>';
-              col.appendChild(card2);
-            }
-            if (item.rows && item.rows.length > 0 && item.showIndividualGoalProgress) {
-              var withPct = item.rows.map(function (r) {
-                var cur = parseFloat(r.current, 10) || 0;
-                var goal = parseFloat(r.goal, 10) || 0;
-                var indGoal = r.individualGoal != null ? parseFloat(r.individualGoal, 10) : NaN;
-                if (!isNaN(indGoal) && indGoal > 0) goal = indGoal;
-                return { name: r.name || '', goal: r.goal, current: r.current, individualGoal: r.individualGoal, pct: goal > 0 ? (cur / goal) * 100 : 0 };
-              });
-              if (item.rankByPerformance !== false) {
-                withPct.sort(function (a, b) { return b.pct - a.pct; });
-              }
-              var displayAsPct = !!(item.ranking && item.ranking.displayAsPercent);
-              var list = document.createElement('div');
-              var hasAggregate = !!item.showMainTotalsCard;
-              list.className = 'ranking-results' + (hasAggregate ? '' : ' ranking-results-full');
-              var ul = document.createElement('ul');
-              ul.className = 'ranking-list';
-              for (var k = 0; k < withPct.length; k++) {
-                var it = withPct[k];
-                var rawName = it.name != null ? String(it.name).trim() : '';
-                var nameHtml = rawName ? escapeHtml(rawName) : '<span class="ranking-name-empty">—</span>';
-                var indGoalPart = (it.individualGoal != null && String(it.individualGoal).trim()) ? ('<span class="ranking-individual-goal">' + escapeHtml(String(it.individualGoal)) + '</span>') : '';
-                var valText = displayAsPct ? (Math.round(it.pct) + '%') : (escapeHtml(String(it.current)) + ' / ' + escapeHtml(String(it.goal)));
-                var mid = indGoalPart
-                  ? ('<span class="ranking-mission-slot">' + indGoalPart + '</span>')
-                  : ('<span class="ranking-mission-slot ranking-mission-slot--empty" aria-hidden="true"></span>');
-                var li = document.createElement('li');
-                li.className = 'ranking-list-item';
-                li.innerHTML =
-                  '<span class="ranking-name">' + nameHtml + '</span>' +
-                  mid +
-                  '<span class="ranking-value">' + valText + '</span>';
-                ul.appendChild(li);
-              }
-              list.appendChild(ul);
-              col.appendChild(list);
-            }
-          }
-          grid.appendChild(col);
-        }
-      }
-
-      function loadFromLocalStorage(key) {
-        var raw;
-        try { raw = localStorage.getItem(key); } catch (e) { raw = null; }
-        var data = { businessName: '', businessImage: '', metrics: [] };
-        if (raw) {
-          try {
-            var parsed = JSON.parse(raw);
-            data.businessName = (parsed.businessName != null) ? String(parsed.businessName) : '';
-            data.businessImage = (parsed.businessImage != null) ? String(parsed.businessImage) : '';
-            data.metrics = (parsed && parsed.metrics) ? parsed.metrics.slice(0, 4) : (Array.isArray(parsed) ? parsed.slice(0, 4) : []);
-          } catch (e) {}
-        }
-        return data;
-      }
-
-      function cloneMetricWithSource(metric, businessName, businessImage) {
-        var out = JSON.parse(JSON.stringify(metric || {}));
-        out.sourceBusinessName = businessName || '';
-        out.sourceBusinessImage = businessImage || '';
-        return out;
-      }
-
-      function buildCombinedHomeDashboard(userCtx) {
-        return window.metricsLoadBusinessDashboard(userCtx.userId).then(function (homeDash) {
-          var combined = {
-            businessName: homeDash.businessName || '',
-            businessImage: homeDash.businessImage || '',
-            metrics: []
-          };
-          var ownMetrics = Array.isArray(homeDash.metrics) ? homeDash.metrics : [];
-          var ownTagged = ownMetrics.map(function (m) {
-            return cloneMetricWithSource(m, combined.businessName, combined.businessImage);
-          });
-          if (!window.metricsFetchInvitesForEmail) {
-            combined.metrics = ownTagged;
-            return combined;
-          }
-          return window.metricsFetchInvitesForEmail(userCtx.email).then(function (res) {
-            var list = (res && res.data) ? res.data : [];
-            var slotInvites = list.filter(function (r) {
-              return r && r.metric_index != null && r.metric_index >= 0 && r.metric_index <= 9 && r.status !== 'revoked';
-            });
-            if (!slotInvites.length) {
-              combined.metrics = ownTagged;
-              return combined;
-            }
-            var owners = {};
-            slotInvites.forEach(function (r) { owners[r.owner_user_id] = true; });
-            var ownerIds = Object.keys(owners);
-            return Promise.all(ownerIds.map(function (oid) {
-              return window.metricsLoadBusinessDashboard(oid);
-            })).then(function (dashboards) {
-              var byOwner = {};
-              ownerIds.forEach(function (oid, idx) {
-                byOwner[oid] = dashboards[idx];
-              });
-              var invitedMetrics = [];
-              slotInvites.forEach(function (inv) {
-                var dash = byOwner[inv.owner_user_id];
-                var metric = dash && dash.metrics ? dash.metrics[inv.metric_index] : null;
-                if (!metric) return;
-                invitedMetrics.push(cloneMetricWithSource(
-                  metric,
-                  (dash && dash.businessName) || inv.business_name || '',
-                  (dash && dash.businessImage) || ''
-                ));
-              });
-              combined.metrics = invitedMetrics.concat(ownTagged);
-              return combined;
-            });
-          }).catch(function () {
-            combined.metrics = ownTagged;
-            return combined;
-          });
-        });
-      }
-
-      var RESULTS_THEME_KEY = 'metricsResultsDisplayTheme';
-      var INPUT_THEME_KEY = 'metricsInputDisplayTheme';
-      var DISPLAY_REFRESH_SIGNAL_KEY = 'metricsDisplayRefreshSignal';
-      var lastRenderedHash = '';
-      var autoRefreshTimer = null;
-
-      function stableHash(obj) {
-        try { return JSON.stringify(obj || {}); } catch (e) { return ''; }
-      }
-
-      function renderDashboardIfChanged(data) {
-        var h = stableHash(data);
-        if (h && h === lastRenderedHash) return;
-        lastRenderedHash = h;
-        renderDashboard(data || {});
-      }
-      function applyResultsTheme(theme) {
-        var t = theme === 'dark' ? 'dark' : 'light';
-        document.body.classList.toggle('results-theme-dark', t === 'dark');
-        document.body.classList.toggle('results-theme-light', t !== 'dark');
-        try { localStorage.setItem(RESULTS_THEME_KEY, t); } catch (e) {}
-        var toggle = document.getElementById('resultsThemeToggle');
-        if (toggle) {
-          var label = document.getElementById('resultsThemeLabel');
-          if (label) label.textContent = t === 'dark' ? 'Light mode' : 'Dark mode';
-          toggle.setAttribute('aria-label', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-        }
-      }
-      function initResultsTheme() {
-        var stored = 'light';
-        try {
-          stored = localStorage.getItem(RESULTS_THEME_KEY) || localStorage.getItem(INPUT_THEME_KEY) || 'light';
-        } catch (e) {}
-        applyResultsTheme(stored);
-      }
-
-      function loadDashboardForOwner(ownerId, userCtx) {
-        if (!window.metricsLoadBusinessDashboard) {
-          return Promise.resolve(loadFromLocalStorage('metricsDashboard'));
-        }
-        if (!uuidLooksValid(ownerParam) || ownerId === userCtx.userId) {
-          return buildCombinedHomeDashboard(userCtx)
-            .catch(function () { return loadFromLocalStorage('metricsDashboard'); });
-        }
-        return window.metricsLoadBusinessDashboard(ownerId)
-          .catch(function () { return loadFromLocalStorage('metricsDashboard'); });
-      }
-
-      function setupAutoRefresh(ownerId, userCtx) {
-        function refreshNow() {
-          loadDashboardForOwner(ownerId, userCtx).then(function (data) {
-            renderDashboardIfChanged(data);
-          });
-        }
-        refreshNow();
-        autoRefreshTimer = setInterval(refreshNow, 6000);
-        window.addEventListener('storage', function (e) {
-          if (!e || e.key !== DISPLAY_REFRESH_SIGNAL_KEY) return;
-          refreshNow();
-        });
-      }
-
-      Promise.resolve()
-        .then(function () {
-          return window.metricsSyncContextFromSession ? window.metricsSyncContextFromSession() : null;
-        })
-        .then(function () {
-          var toggle = document.getElementById('resultsThemeToggle');
-          if (toggle) {
-            toggle.addEventListener('click', function () {
-              var isDark = document.body.classList.contains('results-theme-dark');
-              applyResultsTheme(isDark ? 'light' : 'dark');
-            });
-          }
-          initResultsTheme();
-          var userCtx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
-          if (!userCtx || !userCtx.email) {
-            window.location.href = 'welcome.html';
-            return null;
-          }
-
-          var linkInput = document.getElementById('linkToInput');
-          var ownerId = uuidLooksValid(ownerParam) ? ownerParam : userCtx.userId;
-          if (linkInput) {
-            linkInput.href = uuidLooksValid(ownerParam) && ownerParam !== userCtx.userId
-              ? ('input.html?owner=' + encodeURIComponent(ownerId))
-              : 'input.html';
-          }
-
-          return loadDashboardForOwner(ownerId, userCtx).then(function (data) {
-            renderDashboardIfChanged(data);
-            setupAutoRefresh(ownerId, userCtx);
-          });
-        });
+      } catch (e) {}
     })();
   </script>
 </body>

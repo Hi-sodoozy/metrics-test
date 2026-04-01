@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics View – Sign in</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .auth-main { max-width: 560px; margin: 0 auto; padding: 24px 20px 48px; }
+    .auth-card { padding: 28px 24px; border-radius: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); }
+    .auth-card h1 { margin:0 0 8px; font-size:1.45rem; font-weight:700; color:#f3f4f6; }
+    .auth-card p.lead { margin:0 0 20px; font-size:14px; color:#9aa3b2; }
+    .auth-switch { display:flex; gap:8px; margin-bottom:20px; }
+    .auth-switch a { flex:1; min-height:42px; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; border:1px solid rgba(255,255,255,0.12); border-radius:8px; color:#a8b0c0; font-weight:600; background:rgba(255,255,255,0.03); }
+    .auth-switch a.active { border-color:rgba(125,211,252,0.5); color:#e8eaef; background:rgba(125,211,252,0.12); }
+    .auth-field { margin-bottom:14px; }
+    .auth-field label { display:block; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.03em; color:#9aa3b2; margin-bottom:6px; }
+    .auth-field input { width:100%; padding:10px 12px; border:1px solid rgba(255,255,255,0.15); border-radius:8px; font:inherit; box-sizing:border-box; background:rgba(15,20,25,0.75); color:#e8eaef; }
+    .auth-field input:focus { outline:none; border-color:#60a5fa; box-shadow:0 0 0 2px rgba(96,165,250,0.2); }
+    .auth-field-hint { font-size:12px; color:#7f8a99; margin:6px 0 0; }
+    .password-wrap { position:relative; }
+    .password-toggle { position:absolute; right:8px; top:50%; transform:translateY(-50%); border:none; background:none; color:#7dd3fc; cursor:pointer; font-size:12px; font-weight:600; }
+    .forgot-link { margin-top:6px; border:none; background:none; color:#7dd3fc; font-size:12px; padding:0; cursor:pointer; text-decoration:underline; }
+    .forgot-link:hover { color:#bae6fd; }
+    .auth-submit { width:100%; margin-top:8px; padding:12px; font:inherit; font-weight:700; color:#0a0c10; background:linear-gradient(135deg,#7dd3fc 0%,#60a5fa 100%); border:none; border-radius:10px; cursor:pointer; }
+    .auth-submit:hover { filter:brightness(1.05); }
+    .auth-submit:disabled { opacity:0.6; cursor:not-allowed; }
+    .auth-message { margin-top:14px; padding:12px; border-radius:8px; font-size:14px; line-height:1.4; }
+    .auth-message.info { background:rgba(125,211,252,0.14); color:#dbeafe; border:1px solid rgba(125,211,252,0.25); }
+    .auth-message.error { background:rgba(248,113,113,0.14); color:#fecaca; border:1px solid rgba(248,113,113,0.3); }
+    .auth-back { display:inline-block; margin-top:20px; font-size:14px; color:#7dd3fc; text-decoration:none; }
+    .auth-back:hover { text-decoration:underline; }
+  </style>
+</head>
+<body class="metrics-page mv-landing auth-landing">
+  <div class="mv-landing-bg" aria-hidden="true"></div>
+  <header class="mv-landing-nav mv-landing-nav-right">
+    <a class="mv-landing-nav-link" href="../">Home</a>
+  </header>
+  <main class="mv-landing-main auth-main">
+    <div class="auth-card mv-landing-card">
+      <h1 id="authTitle">Sign in</h1>
+      <p class="lead" id="authLead">Access your Metrics View workspace.</p>
+
+      <div class="auth-switch">
+        <a id="switchSignIn" href="#">Sign in</a>
+        <a id="switchSignUp" href="#">Sign up</a>
+      </div>
+
+      <form id="authForm" novalidate>
+        <div class="auth-field" id="fieldBusinessName" hidden>
+          <label for="businessName">Workspace or business name</label>
+          <input id="businessName" type="text" placeholder="Optional — add anytime later" autocomplete="organization" />
+          <p class="auth-field-hint">Optional. Shown on your boards and invites.</p>
+        </div>
+        <div class="auth-field">
+          <label for="authEmail">Email</label>
+          <input id="authEmail" type="email" autocomplete="email" required />
+        </div>
+        <div class="auth-field">
+          <label for="authPassword">Password</label>
+          <div class="password-wrap">
+            <input id="authPassword" type="password" autocomplete="current-password" required minlength="6" />
+            <button type="button" class="password-toggle" data-target="authPassword">Reveal</button>
+          </div>
+          <button type="button" class="forgot-link" id="forgotPasswordBtn">Forgot password?</button>
+        </div>
+        <div class="auth-field" id="fieldPasswordConfirm" hidden>
+          <label for="authPasswordConfirm">Confirm password</label>
+          <div class="password-wrap">
+            <input id="authPasswordConfirm" type="password" autocomplete="new-password" />
+            <button type="button" class="password-toggle" data-target="authPasswordConfirm">Reveal</button>
+          </div>
+        </div>
+        <button type="submit" class="auth-submit" id="authSubmitBtn">Continue</button>
+      </form>
+      <div id="authMessage" hidden></div>
+    </div>
+    <a class="auth-back" href="../">← Back</a>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../supabase-config.js"></script>
+  <script>
+    (function () {
+      var client = window.metricsSupabase;
+      var qs = new URLSearchParams(window.location.search);
+      var mode = qs.get('mode') === 'signup' ? 'signup' : 'signin';
+
+      var authTitle = document.getElementById('authTitle');
+      var authLead = document.getElementById('authLead');
+      var switchSignIn = document.getElementById('switchSignIn');
+      var switchSignUp = document.getElementById('switchSignUp');
+      var fieldBusinessName = document.getElementById('fieldBusinessName');
+      var fieldPasswordConfirm = document.getElementById('fieldPasswordConfirm');
+      var forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+      var authSubmitBtn = document.getElementById('authSubmitBtn');
+      var authMessage = document.getElementById('authMessage');
+
+      switchSignIn.href = '?mode=signin';
+      switchSignUp.href = '?mode=signup';
+
+      function showMessage(text, kind) {
+        authMessage.hidden = !text;
+        authMessage.className = 'auth-message ' + (kind || 'info');
+        authMessage.textContent = text || '';
+      }
+
+      function routeAfterAuth(ctx) {
+        window.location.href = window.metricsAppUrl('input/');
+      }
+
+      function applyMode() {
+        var isSignUp = mode === 'signup';
+        authTitle.textContent = isSignUp ? 'Create your account' : 'Sign in';
+        authLead.textContent = isSignUp
+          ? 'One account for your boards, invites, and collaborators.'
+          : 'Welcome back. Continue to your boards.';
+        fieldBusinessName.hidden = !isSignUp;
+        fieldPasswordConfirm.hidden = !isSignUp;
+        if (forgotPasswordBtn) forgotPasswordBtn.hidden = isSignUp;
+        authSubmitBtn.textContent = isSignUp ? 'Create account' : 'Sign in';
+        switchSignIn.classList.toggle('active', !isSignUp);
+        switchSignUp.classList.toggle('active', isSignUp);
+      }
+
+      document.querySelectorAll('.password-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var target = document.getElementById(btn.getAttribute('data-target'));
+          if (!target) return;
+          var next = target.type === 'password' ? 'text' : 'password';
+          target.type = next;
+          btn.textContent = next === 'password' ? 'Reveal' : 'Hide';
+        });
+      });
+
+      document.querySelectorAll('.forgot-link').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          showMessage('');
+          if (!client) {
+            showMessage('Supabase is not configured. Check browser console.', 'error');
+            return;
+          }
+          var email = (document.getElementById('authEmail').value || '').trim();
+          if (!email) {
+            showMessage('Enter your email first, then click "Forgot password?".', 'error');
+            return;
+          }
+          try {
+            var resetRedirect = window.metricsAppUrl('reset-password/');
+            var resetRes = await client.auth.resetPasswordForEmail(email, { redirectTo: resetRedirect });
+            if (resetRes && resetRes.error) throw resetRes.error;
+            showMessage('Password reset email sent. Check your inbox.', 'info');
+          } catch (err) {
+            showMessage((err && err.message) ? err.message : 'Unable to send reset email.', 'error');
+          }
+        });
+      });
+
+      document.getElementById('authForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        showMessage('');
+        if (!client) {
+          showMessage('Supabase is not configured. Check browser console.', 'error');
+          return;
+        }
+        var email = (document.getElementById('authEmail').value || '').trim();
+        var password = document.getElementById('authPassword').value;
+        var confirm = document.getElementById('authPasswordConfirm').value;
+        var businessName = (document.getElementById('businessName').value || '').trim();
+        if (!email || !password) {
+          showMessage('Please complete email and password.', 'error');
+          return;
+        }
+        if (mode === 'signup') {
+          if (password !== confirm) {
+            showMessage('Passwords do not match.', 'error');
+            return;
+          }
+        }
+        authSubmitBtn.disabled = true;
+        try {
+          if (mode === 'signin') {
+            var signInRes = await client.auth.signInWithPassword({ email: email, password: password });
+            if (signInRes.error) throw signInRes.error;
+            var ctx = (window.metricsSetUserContext && signInRes.data.user)
+              ? (window.metricsNormalizeContextFromUser
+                ? window.metricsNormalizeContextFromUser(signInRes.data.user)
+                : null)
+              : null;
+            if (window.metricsSetUserContext) window.metricsSetUserContext(ctx);
+            routeAfterAuth(ctx);
+            return;
+          }
+          var redirectTo = window.metricsAppUrl('auth/?mode=signin');
+          var signUpRes = await client.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+              emailRedirectTo: redirectTo,
+              data: {
+                account_type: 'user',
+                business_name: businessName
+              }
+            }
+          });
+          if (signUpRes.error) throw signUpRes.error;
+          if (signUpRes.data.user && !signUpRes.data.session) {
+            showMessage('Check your email to confirm your account, then sign in.', 'info');
+            return;
+          }
+          var ctx2 = {
+            userId: signUpRes.data.user.id,
+            email: signUpRes.data.user.email || '',
+            accountType: 'user',
+            businessName: businessName
+          };
+          if (window.metricsSetUserContext) window.metricsSetUserContext(ctx2);
+          routeAfterAuth(ctx2);
+        } catch (err) {
+          showMessage((err && err.message) ? err.message : String(err), 'error');
+        } finally {
+          authSubmitBtn.disabled = false;
+        }
+      });
+
+      applyMode();
+    })();
+  </script>
+</body>
+</html>

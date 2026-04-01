@@ -1,10 +1,13 @@
 /**
- * Supabase client for the Metrics app (metrics folder).
+ * Supabase client for the Metrics View app (clean URLs, no .html).
  *
- * Dashboard checklist (Authentication → URL Configuration):
- * - Site URL: https://metrics-test-one.vercel.app
- *   (or your exact deploy URL, including /metrics if the app lives in a subpath)
- * - Additional redirect URLs: same origin + /metrics/auth.html (and http://localhost:* for local dev)
+ * Authentication → URL configuration (Supabase dashboard):
+ * - Site URL: https://metricsview.com.au/
+ * - Additional redirect URLs: https://metricsview.com.au/auth/ ,
+ *   https://metricsview.com.au/reset-password/ , http://localhost:* (for local dev)
+ *
+ * If this app is deployed in a subpath, set window.METRICS_APP_BASE_PATH before this
+ * script runs (e.g. "subdir") so metricsAppUrl() builds correct absolute links.
  *
  * The anon key is safe to expose in the browser; protect data with Row Level Security (RLS).
  */
@@ -12,6 +15,15 @@
   var SUPABASE_URL = 'https://atmghlkrmdbrfyondmly.supabase.co';
   var SUPABASE_ANON_KEY =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0bWdobGtybWRicmZ5b25kbWx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1NTI3NzEsImV4cCI6MjA4NzEyODc3MX0.RihXzcxLxMCbkx5l5IcAXAwpEguT9zkHEznyI-Nb32U';
+
+  window.METRICS_APP_BASE_PATH = typeof window.METRICS_APP_BASE_PATH === 'string' ? window.METRICS_APP_BASE_PATH : '';
+  window.metricsAppUrl = function (path) {
+    var base = String(window.METRICS_APP_BASE_PATH || '').trim().replace(/^\/+|\/+$/g, '');
+    var segment = String(path == null ? '' : path).replace(/^\/+/, '');
+    var prefix = window.location.origin + (base ? '/' + base : '');
+    if (!segment) return prefix + '/';
+    return prefix + '/' + segment;
+  };
 
   window.METRICS_SUPABASE_URL = SUPABASE_URL;
   var USER_CTX_KEY = 'metricsUserContext';
@@ -345,7 +357,9 @@
   }
 
   window.metricsLogout = function (redirectTo) {
-    var dest = redirectTo || 'welcome.html';
+    var dest = redirectTo;
+    if (!dest && typeof window.metricsAppUrl === 'function') dest = window.metricsAppUrl('');
+    if (!dest) dest = '/';
     function finish() {
       try {
         if (window.metricsSetUserContext) window.metricsSetUserContext(null);

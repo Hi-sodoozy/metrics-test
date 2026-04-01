@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics View – My Profile</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body class="metrics-page mv-landing">
+  <div class="mv-landing-bg" aria-hidden="true"></div>
+  <header class="mv-landing-nav">
+    <a class="mv-landing-nav-link" href="../input/">Back to Metrics Centre</a>
+    <a class="mv-landing-nav-link" href="../user-guide/">User Guide</a>
+  </header>
+  <main class="mv-page-shell">
+    <section class="mv-page-card">
+      <h1 class="mv-page-title">My Profile</h1>
+      <p class="mv-page-subtitle">Update your profile details for Metrics View.</p>
+      <div class="mv-form-grid">
+        <label class="mv-form-label" for="profileBusinessName">Business name</label>
+        <input id="profileBusinessName" class="mv-input" type="text" placeholder="Business name" />
+
+        <label class="mv-form-label" for="profileFirstName">First name</label>
+        <input id="profileFirstName" class="mv-input" type="text" placeholder="First name" />
+
+        <label class="mv-form-label" for="profileLastName">Last name</label>
+        <input id="profileLastName" class="mv-input" type="text" placeholder="Last name" />
+
+        <label class="mv-form-label" for="profileEmail">Email address</label>
+        <input id="profileEmail" class="mv-input" type="email" placeholder="Email address" />
+
+        <div>
+          <div class="mv-form-label">Display picture</div>
+          <div class="mv-profile-pic-row">
+            <div id="profilePicPreview" class="mv-profile-pic" aria-hidden="true"></div>
+            <button id="profilePicChoose" class="mv-btn mv-btn-ghost" type="button">Choose image</button>
+          </div>
+        </div>
+      </div>
+      <div class="mv-actions-row" style="margin-top:16px;">
+        <button id="profileSaveBtn" class="mv-btn mv-btn-primary" type="button">Save profile</button>
+        <a class="mv-btn mv-btn-ghost" href="../input/">Back to Metrics Centre</a>
+      </div>
+      <p id="profileStatus" class="mv-landing-note" aria-live="polite" style="margin-top:12px;"></p>
+    </section>
+  </main>
+  <input type="file" accept="image/*" id="profilePicFile" hidden />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../supabase-config.js"></script>
+  <script>
+    (function () {
+      var KEY_BUSINESS = 'metricsDashboard';
+      var ctx = null;
+      var selectedBusinessImage = '';
+
+      function setStatus(msg, isError) {
+        var el = document.getElementById('profileStatus');
+        if (!el) return;
+        el.textContent = msg || '';
+        el.style.color = isError ? '#fda4af' : '#9aa3b2';
+      }
+
+      function applyPic(url) {
+        var box = document.getElementById('profilePicPreview');
+        if (!box) return;
+        box.style.backgroundImage = url ? ('url(' + url + ')') : '';
+      }
+
+      function loadLocalDashboard() {
+        try {
+          var raw = localStorage.getItem(KEY_BUSINESS);
+          if (!raw) return null;
+          return JSON.parse(raw);
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function saveLocalDashboardPatch(name, image) {
+        var local = loadLocalDashboard() || { businessName: '', businessImage: '', metrics: [] };
+        local.businessName = name || '';
+        local.businessImage = image || '';
+        try { localStorage.setItem(KEY_BUSINESS, JSON.stringify(local)); } catch (e) {}
+      }
+
+      function loadProfile() {
+        return Promise.resolve()
+          .then(function () { return window.metricsSyncContextFromSession ? window.metricsSyncContextFromSession() : null; })
+          .then(function () {
+            ctx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
+            if (!ctx || !ctx.email) {
+              window.location.href = window.metricsAppUrl('');
+              return;
+            }
+            document.getElementById('profileBusinessName').value = ctx.businessName || '';
+            document.getElementById('profileFirstName').value = ctx.firstName || '';
+            document.getElementById('profileLastName').value = ctx.lastName || '';
+            document.getElementById('profileEmail').value = ctx.email || '';
+            if (window.metricsLoadBusinessDashboard) {
+              return window.metricsLoadBusinessDashboard(ctx.userId).then(function (dash) {
+                if (!document.getElementById('profileBusinessName').value && dash && dash.businessName) {
+                  document.getElementById('profileBusinessName').value = dash.businessName;
+                }
+                selectedBusinessImage = (dash && dash.businessImage) ? String(dash.businessImage) : '';
+                applyPic(selectedBusinessImage);
+              }).catch(function () {});
+            }
+          });
+      }
+
+      function saveProfile() {
+        if (!ctx || !window.metricsSupabase) return;
+        var businessName = (document.getElementById('profileBusinessName').value || '').trim();
+        var firstName = (document.getElementById('profileFirstName').value || '').trim();
+        var lastName = (document.getElementById('profileLastName').value || '').trim();
+        var email = (document.getElementById('profileEmail').value || '').trim();
+        setStatus('Saving profile...');
+
+        var updateMeta = window.metricsSupabase.auth.updateUser({
+          email: email || undefined,
+          data: {
+            business_name: businessName,
+            first_name: firstName,
+            last_name: lastName
+          }
+        });
+
+        return updateMeta
+          .then(function (res) {
+            if (res && res.error) throw res.error;
+            if (window.metricsSetUserContext) {
+              window.metricsSetUserContext({
+                userId: ctx.userId,
+                email: email || ctx.email || '',
+                accountType: 'user',
+                businessName: businessName,
+                firstName: firstName,
+                lastName: lastName
+              });
+            }
+            if (!window.metricsLoadBusinessDashboard || !window.metricsSaveBusinessDashboard) return null;
+            return window.metricsLoadBusinessDashboard(ctx.userId).then(function (dash) {
+              return window.metricsSaveBusinessDashboard(
+                ctx.userId,
+                {
+                  businessName: businessName,
+                  businessImage: selectedBusinessImage || '',
+                  metrics: (dash && dash.metrics) ? dash.metrics : []
+                },
+                null,
+                { includeProfile: true }
+              );
+            });
+          })
+          .then(function () {
+            saveLocalDashboardPatch(businessName, selectedBusinessImage || '');
+            try {
+              localStorage.setItem('metricsDisplayRefreshSignal', JSON.stringify({ at: Date.now(), reason: 'profile-save', owner: ctx.userId }));
+            } catch (e) {}
+            setStatus('Profile saved.');
+          })
+          .catch(function (err) {
+            setStatus((err && err.message) ? err.message : 'Could not save profile.', true);
+          });
+      }
+
+      document.getElementById('profilePicChoose').addEventListener('click', function () {
+        var fi = document.getElementById('profilePicFile');
+        if (fi) fi.click();
+      });
+      document.getElementById('profilePicFile').addEventListener('change', function () {
+        var file = (this.files || [])[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          selectedBusinessImage = String(reader.result || '');
+          applyPic(selectedBusinessImage);
+        };
+        reader.readAsDataURL(file);
+        this.value = '';
+      });
+      document.getElementById('profileSaveBtn').addEventListener('click', saveProfile);
+
+      loadProfile();
+    })();
+  </script>
+</body>
+</html>
