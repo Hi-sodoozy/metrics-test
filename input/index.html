@@ -93,6 +93,7 @@
             <label class="toggle-row individual-data-option"><input type="checkbox" class="ranking-opt-rank-performance" checked aria-label="Rank by performance" /> Rank Performance</label>
             <label class="toggle-row individual-data-option"><input type="checkbox" class="ranking-opt-mission" aria-label="Show mission column" /> Show Individual's Mission</label>
           </div>
+          <div class="individual-data-empty-placeholder" hidden>Enter data below to show information on the display screen</div>
           <div class="ranking-table-wrap" hidden>
             <table class="input-table ranking-table" aria-label="Individual data">
               <thead>
@@ -149,6 +150,9 @@
       <a href="../user-guide/" class="footer-link">User Guide</a>
       <a href="../invite-user/" class="footer-link">Invite User</a>
       <a href="#" class="footer-link" id="linkLogout">Log out</a>
+      <div class="footer-site-link-wrap">
+        <a class="footer-site-link" href="https://metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+      </div>
     </footer>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -713,6 +717,33 @@
             el.disabled = true;
           });
         }
+        updateIndividualDataEmptyPlaceholder(row);
+      }
+
+      function updateIndividualDataEmptyPlaceholder(metricRow) {
+        var placeholder = metricRow ? metricRow.querySelector('.individual-data-empty-placeholder') : null;
+        if (!placeholder) return;
+
+        var picked = metricRow.querySelector('input[type="radio"][name^="displayAs_"]:checked');
+        var isRanking = picked && picked.value === 'ranking';
+        var wrap = metricRow.querySelector('.metric-ranking-section .ranking-table-wrap');
+
+        if (!isRanking || !wrap || wrap.hidden) {
+          placeholder.hidden = true;
+          return;
+        }
+
+        var rowsData = getRankingRowsFromBlock(metricRow);
+        var hasData = rowsData.some(function (r) {
+          return (
+            String(r.name || '').trim() ||
+            String(r.goal || '').trim() ||
+            String(r.current || '').trim() ||
+            String(r.individualGoal || '').trim()
+          );
+        });
+
+        placeholder.hidden = hasData;
       }
 
       function applyRowAccessLocks() {
@@ -969,6 +1000,7 @@
           var s = row.querySelector('.ranking-opt-simple');
           var ip = row.querySelector('.ranking-opt-individual-progress');
           wrap.hidden = !((s && s.checked) || (ip && ip.checked));
+          updateIndividualDataEmptyPlaceholder(row);
         }
         row.querySelector('.ranking-opt-simple').addEventListener('change', function () {
           syncRankingTableWrap();
@@ -1242,12 +1274,134 @@
         }
       }
 
+      function setupBoardReorderDnD() {
+        // Only allow reordering the user's own (home) dashboard boards.
+        if (!isHomeDashboard || isCollaborator) return;
+
+        var track = document.getElementById('carouselTrack');
+        if (!track) return;
+
+        // Rebuild drag bindings each time we re-render the carousel.
+        track.querySelectorAll('.input-carousel-slide').forEach(function (slide) {
+          var form = slide.querySelector('.input-row.metric-form');
+          if (!form) return;
+
+          if (isSharedBoardRow(form)) {
+            slide.setAttribute('draggable', 'false');
+            slide.style.cursor = '';
+            slide.classList.remove('mv-board-dragging', 'mv-board-dnd-over');
+            slide.removeAttribute('data-mv-board-dnd-wired');
+            return;
+          }
+
+          if (slide.getAttribute('data-mv-board-dnd-wired') === '1') return;
+          slide.setAttribute('data-mv-board-dnd-wired', '1');
+
+          slide.setAttribute('draggable', 'true');
+          slide.style.cursor = 'grab';
+
+          slide.addEventListener('dragstart', function (e) {
+            var slotStr = form.getAttribute('data-index') || '';
+            var sourceSlot = parseInt(slotStr, 10);
+            if (isNaN(sourceSlot)) return;
+            if (e && e.dataTransfer) {
+              e.dataTransfer.setData('text/plain', String(sourceSlot));
+              e.dataTransfer.effectAllowed = 'move';
+            }
+            slide.classList.add('mv-board-dragging');
+          });
+
+          slide.addEventListener('dragend', function () {
+            slide.classList.remove('mv-board-dragging', 'mv-board-dnd-over');
+          });
+
+          slide.addEventListener('dragover', function (e) {
+            if (!e) return;
+            // Allow drop.
+            e.preventDefault();
+            slide.classList.add('mv-board-dnd-over');
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+          });
+
+          slide.addEventListener('dragleave', function () {
+            slide.classList.remove('mv-board-dnd-over');
+          });
+
+          slide.addEventListener('drop', function (e) {
+            if (!e) return;
+            e.preventDefault();
+            slide.classList.remove('mv-board-dnd-over');
+
+            var sourceSlotStr = (e.dataTransfer && e.dataTransfer.getData('text/plain')) ? e.dataTransfer.getData('text/plain') : '';
+            var sourceSlot = parseInt(sourceSlotStr, 10);
+            var targetSlotStr = form.getAttribute('data-index') || '';
+            var targetSlot = parseInt(targetSlotStr, 10);
+            if (isNaN(sourceSlot) || isNaN(targetSlot) || sourceSlot === targetSlot) return;
+
+            // Compute current personal slot order from DOM.
+            var slides = Array.prototype.slice.call(track.querySelectorAll('.input-carousel-slide'));
+            var personalSlots = [];
+            var sharedCount = 0;
+            var seenPersonal = false;
+
+            slides.forEach(function (s) {
+              var f = s.querySelector('.input-row.metric-form');
+              if (!f) return;
+              var shared = isSharedBoardRow(f);
+              if (shared && !seenPersonal) {
+                sharedCount++;
+                return;
+              }
+              if (shared) return;
+              seenPersonal = true;
+              var ix = parseInt(f.getAttribute('data-index') || '0', 10);
+              if (!isNaN(ix)) personalSlots.push(ix);
+            });
+
+            var sourcePos = personalSlots.indexOf(sourceSlot);
+            var targetPos = personalSlots.indexOf(targetSlot);
+            if (sourcePos < 0 || targetPos < 0) return;
+
+            var nextSlots = personalSlots.slice();
+            var moved = nextSlots.splice(sourcePos, 1)[0];
+            nextSlots.splice(targetPos, 0, moved);
+
+            var payloadBiz = collectDashboardFromDom();
+            var metricsByIndex = payloadBiz.metrics || [];
+
+            var nextMetrics = nextSlots.map(function (ix) {
+              return metricsByIndex[ix] || emptyMetricSlot();
+            });
+
+            // Update ordering in local storage first (so re-render reflects it).
+            try {
+              localStorage.setItem(activeKey(), JSON.stringify({
+                businessName: payloadBiz.businessName || '',
+                businessImage: payloadBiz.businessImage || '',
+                metrics: nextMetrics
+              }));
+            } catch (err) {}
+
+            businessImageDataUrl = payloadBiz.businessImage || '';
+            carouselPageIndex = sharedCount + targetPos;
+
+            renderMainInputCarousel(nextMetrics);
+            syncTitleRowFromTextareasCarousel();
+            updateAllSummaryInputsState();
+            applyRowAccessLocks();
+            refreshBoardToc();
+            scheduleRemoteSave();
+          });
+        });
+      }
+
       function renderMainInputCarousel(personalMetricsArray) {
         if (isHomeDashboard) {
           renderIndividualCombinedCarousel(individualSlotInviteList, individualSharedDashboardCache, personalMetricsArray);
         } else {
           renderPersonalMetricsCarousel(personalMetricsArray);
         }
+        setupBoardReorderDnD();
       }
 
       function renderIndividualCombinedCarousel(slotInvites, cache, personalMetricsArray) {
@@ -1946,6 +2100,7 @@
         }
         if (!opts || !opts.skipInviteRefresh) refreshInvitedUsersSection(metricRow);
         bindRankingInputsInBlock(metricRow);
+        updateIndividualDataEmptyPlaceholder(metricRow);
       }
 
       function bindRankingInputsInBlock(metricRow) {
@@ -1953,6 +2108,7 @@
           metricRow._rankingTouchHandler = function () {
             if (isSharedBoardRow(metricRow)) scheduleSharedRowSave(metricRow);
             else save();
+            updateIndividualDataEmptyPlaceholder(metricRow);
           };
         }
         var onCh = metricRow._rankingTouchHandler;

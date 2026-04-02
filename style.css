@@ -963,6 +963,20 @@
   will-change: transform;
 }
 
+/* Board drag-and-drop (home dashboard) */
+.mv-board-dragging {
+  opacity: 0.65;
+}
+
+.mv-board-dnd-over {
+  outline: 2px dashed rgba(96, 165, 250, 0.95);
+  outline-offset: 8px;
+}
+
+.input-page.input-theme-dark .mv-board-dnd-over {
+  outline-color: rgba(125, 211, 252, 0.95);
+}
+
 .input-carousel-slide {
   box-sizing: border-box;
   display: grid;
@@ -1020,6 +1034,47 @@
 }
 
 .footer-link:hover { text-decoration: underline; }
+
+.footer-site-link-wrap {
+  flex: 1 0 100%;
+  text-align: center;
+}
+
+.footer-site-link {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #7dd3fc;
+  text-decoration: none;
+}
+
+.footer-site-link:hover {
+  text-decoration: underline;
+}
+
+/* Simple centred footer used on non-display pages */
+.mv-site-footer {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e4e8;
+  text-align: center;
+}
+
+.mv-site-footer-link {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #7dd3fc;
+  text-decoration: none;
+}
+
+.mv-site-footer-link:hover {
+  text-decoration: underline;
+}
+
+.input-page.input-theme-dark .mv-site-footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
 
 .input-header {
   display: flex;
@@ -1500,6 +1555,25 @@
   font-size: 13px;
   font-weight: 600;
   color: #3d6bb0;
+}
+
+/* When Individuals is selected but no individual rows have any entered data */
+.individual-data-empty-placeholder {
+  margin-top: 10px;
+  padding: 14px 12px;
+  border-radius: 10px;
+  border: 1px dashed rgba(74, 111, 165, 0.55);
+  background: rgba(125, 211, 252, 0.06);
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #6b7280;
+}
+
+.input-page.input-theme-dark .individual-data-empty-placeholder {
+  background: rgba(16, 28, 48, 0.7);
+  border-color: rgba(30, 58, 95, 0.85);
+  color: #9aa3b2;
 }
 
 .metric-ranking-section-muted .individual-data-muted-wrap {
