@@ -1099,31 +1099,74 @@
 }
 
 .input-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) auto minmax(220px, 520px) minmax(120px, 1fr);
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 12px;
-  flex-wrap: wrap;
-  gap: 14px;
+  gap: 12px;
 }
 
 .input-header .app-brand {
-  margin-right: 0;
+  justify-self: start;
 }
 
 .input-header .input-business-name-wrap {
-  flex: 1 1 280px;
-  min-width: 260px;
+  min-width: 220px;
+  width: 100%;
+  justify-content: center;
 }
 
 .input-header .input-business-name {
-  text-align: left;
-  padding-left: 0;
+  text-align: center;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: clamp(1.5rem, 2.4vw, 2.05rem);
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  pointer-events: none;
 }
 
 .input-header .input-business-pic {
   width: 54px;
   height: 54px;
+}
+
+.input-header .input-header-actions {
+  justify-self: end;
+}
+
+.input-page.input-theme-dark .input-header .input-business-name {
+  color: #e8eaef;
+}
+
+@media (max-width: 900px) {
+  .input-header {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "brand actions"
+      "identity identity";
+  }
+  .input-header .app-brand {
+    grid-area: brand;
+  }
+  .input-header .input-header-actions {
+    grid-area: actions;
+  }
+  .input-header .input-business-pic-wrap {
+    grid-area: identity;
+    justify-self: center;
+  }
+  .input-header .input-business-name-wrap {
+    grid-area: identity;
+    justify-self: center;
+    margin-left: 62px;
+    width: auto;
+    min-width: 0;
+  }
 }
 
 .input-header-actions {
