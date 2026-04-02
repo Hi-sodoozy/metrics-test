@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics View – Corporate Profile</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body class="metrics-page mv-landing">
+  <div class="mv-landing-bg" aria-hidden="true"></div>
+  <header class="mv-landing-nav">
+    <a class="mv-landing-nav-link" href="../input/">Back to Metrics Centre</a>
+    <a class="mv-landing-nav-link" href="../user-guide/">User Guide</a>
+  </header>
+  <main class="mv-page-shell">
+    <section class="mv-page-card">
+      <h1 class="mv-page-title">Corporate Profile</h1>
+      <p class="mv-page-subtitle">Update your business identity for Metrics View.</p>
+
+      <div class="mv-form-grid">
+        <label class="mv-form-label" for="corporateBusinessName">Business name</label>
+        <input id="corporateBusinessName" class="mv-input" type="text" placeholder="Business name" />
+
+        <div>
+          <div class="mv-form-label">Display picture</div>
+          <div class="mv-profile-pic-row">
+            <div id="corporatePicPreview" class="mv-profile-pic" aria-hidden="true"></div>
+            <button id="corporatePicChoose" class="mv-btn mv-btn-ghost" type="button">Choose image</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mv-actions-row" style="margin-top:16px;">
+        <button id="corporateSaveBtn" class="mv-btn mv-btn-primary" type="button">Save profile</button>
+        <a class="mv-btn mv-btn-ghost" href="../input/">Back to Metrics Centre</a>
+      </div>
+      <p id="corporateStatus" class="mv-landing-note" aria-live="polite" style="margin-top:12px;"></p>
+    </section>
+  </main>
+
+  <input type="file" accept="image/*" id="corporatePicFile" hidden />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../supabase-config.js"></script>
+  <script>
+    (function () {
+      var KEY_BUSINESS = 'metricsDashboard';
+      var ctx = null;
+      var selectedBusinessImage = '';
+
+      function setStatus(msg, isError) {
+        var el = document.getElementById('corporateStatus');
+        if (!el) return;
+        el.textContent = msg || '';
+        el.style.color = isError ? '#fda4af' : '#9aa3b2';
+      }
+
+      function applyPic(url) {
+        var box = document.getElementById('corporatePicPreview');
+        if (!box) return;
+        box.style.backgroundImage = url ? ('url(' + url + ')') : '';
+      }
+
+      function loadLocalDashboard() {
+        try {
+          var raw = localStorage.getItem(KEY_BUSINESS);
+          if (!raw) return null;
+          return JSON.parse(raw);
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function saveLocalDashboardPatch(name, image) {
+        var local = loadLocalDashboard() || { businessName: '', businessImage: '', metrics: [] };
+        local.businessName = name || '';
+        local.businessImage = image || '';
+        try { localStorage.setItem(KEY_BUSINESS, JSON.stringify(local)); } catch (e) {}
+      }
+
+      function loadProfile() {
+        return Promise.resolve()
+          .then(function () {
+            return window.metricsSyncContextFromSession ? window.metricsSyncContextFromSession() : null;
+          })
+          .then(function () {
+            ctx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
+            if (!ctx || !ctx.email) {
+              window.location.href = window.metricsAppUrl('');
+              return;
+            }
+            document.getElementById('corporateBusinessName').value = ctx.businessName || '';
+
+            if (window.metricsLoadBusinessDashboard) {
+              return window.metricsLoadBusinessDashboard(ctx.userId).then(function (dash) {
+                var bn = (dash && dash.businessName) ? String(dash.businessName) : '';
+                var bi = (dash && dash.businessImage) ? String(dash.businessImage) : '';
+                if (bn) document.getElementById('corporateBusinessName').value = bn;
+                selectedBusinessImage = bi;
+                applyPic(selectedBusinessImage);
+              }).catch(function () {});
+            }
+          });
+      }
+
+      function saveCorporateProfile() {
+        if (!ctx || !window.metricsSupabase) return;
+
+        var businessName = (document.getElementById('corporateBusinessName').value || '').trim();
+        setStatus('Saving profile...');
+
+        // Keep auth user_metadata.business_name in sync so other pages show the new name immediately.
+        var updateMeta = window.metricsSupabase.auth.updateUser({
+          data: {
+            business_name: businessName
+          }
+        });
+
+        return updateMeta
+          .then(function (res) {
+            if (res && res.error) throw res.error;
+            if (window.metricsSetUserContext) {
+              window.metricsSetUserContext({
+                userId: ctx.userId,
+                email: ctx.email || '',
+                accountType: 'user',
+                businessName: businessName,
+                firstName: ctx.firstName || '',
+                lastName: ctx.lastName || ''
+              });
+            }
+
+            if (!window.metricsLoadBusinessDashboard || !window.metricsSaveBusinessDashboard) return null;
+
+            return window.metricsLoadBusinessDashboard(ctx.userId).then(function (dash) {
+              return window.metricsSaveBusinessDashboard(
+                ctx.userId,
+                {
+                  businessName: businessName,
+                  businessImage: selectedBusinessImage || '',
+                  metrics: (dash && dash.metrics) ? dash.metrics : []
+                },
+                null,
+                { includeProfile: true }
+              );
+            });
+          })
+          .then(function () {
+            saveLocalDashboardPatch(businessName, selectedBusinessImage || '');
+            try {
+              localStorage.setItem('metricsDisplayRefreshSignal', JSON.stringify({ at: Date.now(), reason: 'corporate-profile-save', owner: ctx.userId }));
+            } catch (e) {}
+            setStatus('Profile saved.');
+          })
+          .catch(function (err) {
+            setStatus((err && err.message) ? err.message : 'Could not save profile.', true);
+          });
+      }
+
+      document.getElementById('corporatePicChoose').addEventListener('click', function () {
+        var fi = document.getElementById('corporatePicFile');
+        if (fi) fi.click();
+      });
+
+      document.getElementById('corporatePicFile').addEventListener('change', function () {
+        var file = (this.files || [])[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          selectedBusinessImage = String(reader.result || '');
+          applyPic(selectedBusinessImage);
+        };
+        reader.readAsDataURL(file);
+        this.value = '';
+      });
+
+      document.getElementById('corporateSaveBtn').addEventListener('click', saveCorporateProfile);
+
+      loadProfile();
+    })();
+  </script>
+
+  <footer class="mv-site-footer">
+    <a class="mv-site-footer-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+    <a class="mv-corporate-dot-link" href="../corporate-profile/" aria-label="Corporate profile" title="Corporate profile">•</a>
+  </footer>
+</body>
+</html>
+
