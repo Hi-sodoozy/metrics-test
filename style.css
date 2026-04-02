@@ -1090,6 +1090,12 @@
   text-decoration: none;
 }
 
+.mv-site-footer-link::after {
+  content: " \2022";
+  margin-left: 8px;
+  opacity: 0.45;
+}
+
 .mv-site-footer-link:hover {
   text-decoration: underline;
 }
@@ -1131,8 +1137,12 @@
 }
 
 .input-header .input-business-pic {
-  width: 54px;
-  height: 54px;
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(96, 165, 250, 0.38);
+  box-shadow:
+    0 0 0 3px rgba(96, 165, 250, 0.12),
+    0 8px 20px rgba(30, 64, 175, 0.16);
 }
 
 .input-header .input-header-actions {
@@ -1141,6 +1151,13 @@
 
 .input-page.input-theme-dark .input-header .input-business-name {
   color: #e8eaef;
+}
+
+.input-page.input-theme-dark .input-header .input-business-pic {
+  border-color: rgba(125, 211, 252, 0.45);
+  box-shadow:
+    0 0 0 3px rgba(125, 211, 252, 0.14),
+    0 10px 22px rgba(2, 8, 23, 0.55);
 }
 
 @media (max-width: 900px) {

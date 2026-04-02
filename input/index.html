@@ -19,7 +19,7 @@
       </div>
       <div class="input-header-actions">
         <button type="button" class="theme-text-toggle" id="themeTextToggle">Dark mode</button>
-        <a href="../display/" class="back-link back-link-prominent" id="linkViewResults">View Metrics Display</a>
+        <a href="../display/" class="back-link back-link-prominent" id="linkViewResults">View Display</a>
       </div>
     </header>
     <div class="input-business-header" id="inputBusinessHeader">
@@ -48,7 +48,7 @@
           <span class="metric-business-badge" hidden></span>
           <span class="metric-permission-badge" hidden title="Your permission for this metric" aria-label="Metric permission"></span>
         </div>
-        <label class="option-check option-show-main"><input type="checkbox" name="showOnMainScreen" aria-label="Metrics board visibility" /><span class="show-main-label-text">Add to Metrics Board</span></label>
+        <label class="option-check option-show-main"><input type="checkbox" name="showOnMainScreen" aria-label="Metrics display visibility" /><span class="show-main-label-text">Add to Display</span></label>
         <input type="hidden" name="heading" value="" />
         <div class="form-block display-as-block">
           <div class="display-as-heading-row">
@@ -74,13 +74,13 @@
         </div>
         <div class="metric-actions">
           <button type="button" class="btn-save">Save</button>
-          <button type="button" class="btn-view-board">View Metrics Display</button>
+          <button type="button" class="btn-view-board">View Display</button>
         </div>
         <div class="metric-ranking-section">
           <div class="individual-data-heading-row">
             <h4 class="metric-ranking-heading">Individual data</h4>
             <div class="individual-data-summary-hint" hidden>
-              <p class="individual-data-summary-note">The Metrics Board is displaying the summary view.</p>
+              <p class="individual-data-summary-note">The Display is currently showing the summary view.</p>
               <label class="option-check individual-switch-to-individual-label"><input type="checkbox" class="cb-switch-to-individual" aria-label="Switch to Individual Data view" /><span> Switch to Individual Data view</span></label>
             </div>
             <p class="individual-data-active-note" hidden>Displaying Individual Data</p>
@@ -105,7 +105,7 @@
           </div>
           <div class="metric-actions metric-actions-after-ranking">
             <button type="button" class="btn-save">Save</button>
-            <button type="button" class="btn-view-board">View Metrics Display</button>
+            <button type="button" class="btn-view-board">View Display</button>
           </div>
           </div>
         </div>
@@ -879,7 +879,7 @@
         var cb = metricRow.querySelector('input[name="showOnMainScreen"]');
         var span = metricRow.querySelector('.show-main-label-text');
         if (!cb || !span) return;
-        span.textContent = cb.checked ? 'Remove from Metrics Board' : 'Add to Metrics Board';
+        span.textContent = cb.checked ? 'Remove from Display' : 'Add to Display';
       }
 
       function loadMetricFormFromData(row, m) {
