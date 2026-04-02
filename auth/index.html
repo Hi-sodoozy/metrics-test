@@ -114,7 +114,7 @@
         var isSignUp = mode === 'signup';
         authTitle.textContent = isSignUp ? 'Create your account' : 'Sign in';
         authLead.textContent = isSignUp
-          ? 'One account for your boards, invites, and collaborators.'
+          ? 'Choose your own workspace or business name—even if it is just for you. Invited collaborators keep access to shared boards separately.'
           : 'Welcome back. Continue to your boards.';
         fieldBusinessName.hidden = !isSignUp;
         fieldPasswordConfirm.hidden = !isSignUp;
@@ -192,7 +192,7 @@
             routeAfterAuth(ctx);
             return;
           }
-          var redirectTo = window.metricsAppUrl('auth/?mode=signin');
+          var redirectTo = window.metricsAppUrl('auth/?mode=signup');
           var signUpRes = await client.auth.signUp({
             email: email,
             password: password,
@@ -206,7 +206,7 @@
           });
           if (signUpRes.error) throw signUpRes.error;
           if (signUpRes.data.user && !signUpRes.data.session) {
-            showMessage('Check your email to confirm your account, then sign in.', 'info');
+            showMessage('Check your email to finish signing up to Metrics View. After you confirm, you can sign in here.', 'info');
             return;
           }
           var ctx2 = {
@@ -224,7 +224,27 @@
         }
       });
 
-      applyMode();
+      function init() {
+        if (!client || !client.auth || typeof client.auth.getSession !== 'function') {
+          applyMode();
+          return;
+        }
+        client.auth.getSession().then(function (res) {
+          var session = res && res.data && res.data.session;
+          if (session && session.user) {
+            var ctx = window.metricsNormalizeContextFromUser
+              ? window.metricsNormalizeContextFromUser(session.user)
+              : null;
+            if (window.metricsSetUserContext) window.metricsSetUserContext(ctx);
+            routeAfterAuth(ctx);
+            return;
+          }
+          applyMode();
+        }).catch(function () {
+          applyMode();
+        });
+      }
+      init();
     })();
   </script>
 </body>

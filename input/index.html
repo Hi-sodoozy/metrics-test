@@ -1800,7 +1800,7 @@
               businessName = (metricRow.getAttribute('data-business-name') || '').trim();
             }
             var rowOwnerId = getRowOwnerId(metricRow);
-            var redirectTo = window.metricsAppUrl('auth/');
+            var redirectTo = window.metricsAppUrl('auth/?mode=signup');
             var email = fieldValue(emailEl);
             if (!email) {
               alert('Please enter an email address.');

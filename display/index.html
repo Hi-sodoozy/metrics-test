@@ -147,9 +147,12 @@
           col.className = 'result-column result-column-type-' + item.type;
           var ownerMeta = document.createElement('div');
           ownerMeta.className = 'result-owner-meta';
-          ownerMeta.innerHTML =
-            '<span class="result-owner-pic"' + (item.sourceBusinessImage ? (' style="background-image:url(' + item.sourceBusinessImage + ')"') : '') + '></span>' +
-            '<span class="result-owner-name">' + escapeHtml(item.sourceBusinessName || 'Board') + '</span>';
+          ownerMeta.innerHTML = '<span class="result-owner-pic"></span><span class="result-owner-name">' + escapeHtml(item.sourceBusinessName || 'Board') + '</span>';
+          var picEl = ownerMeta.querySelector('.result-owner-pic');
+          if (picEl && item.sourceBusinessImage) {
+            var imgUrl = String(item.sourceBusinessImage);
+            picEl.style.backgroundImage = 'url("' + imgUrl.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '")';
+          }
           col.appendChild(ownerMeta);
           var metricTitleBar = document.createElement('div');
           metricTitleBar.className = 'result-column-metric-title';

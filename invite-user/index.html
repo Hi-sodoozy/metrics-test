@@ -115,7 +115,7 @@
           return;
         }
         btn.disabled = true;
-        var redirectTo = window.metricsAppUrl('auth/');
+        var redirectTo = window.metricsAppUrl('auth/?mode=signup');
         window.metricsSendInvite(email, businessName, redirectTo)
           .then(function (res) {
             if (res && res.error) throw res.error;
@@ -135,7 +135,7 @@
           })
           .then(function (dbRes) {
             if (dbRes && dbRes.error) throw dbRes.error;
-            showMessage('Invitation sent. They will receive an email with a link to sign in or create an account.', 'info');
+            showMessage('Invitation sent. They will receive an email with a link to sign up to Metrics View.', 'info');
           })
           .catch(function (err) {
             showMessage((err && err.message) ? err.message : 'Unable to send invite email.', 'error');

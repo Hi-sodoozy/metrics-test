@@ -553,7 +553,8 @@
 
 .results-theme-dark .result-owner-pic {
   border: 1px solid #1e3a5f;
-  background: rgba(30, 58, 95, 0.35);
+  /* background-color only — shorthand `background` would override inline background-image */
+  background-color: rgba(30, 58, 95, 0.35);
 }
 
 .results-theme-dark .results-grid {

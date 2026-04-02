@@ -3,7 +3,8 @@
  *
  * Authentication → URL configuration (Supabase dashboard):
  * - Site URL: https://metricsview.com.au/
- * - Additional redirect URLs: https://metricsview.com.au/auth/ ,
+ * - Additional redirect URLs: https://metricsview.com.au/auth/ and
+ *   https://metricsview.com.au/auth/?mode=signup (invites + email confirm),
  *   https://metricsview.com.au/reset-password/ , http://localhost:* (for local dev)
  *
  * If this app is deployed in a subpath, set window.METRICS_APP_BASE_PATH before this
@@ -97,9 +98,9 @@
         options: {
           shouldCreateUser: true,
           emailRedirectTo: redirectTo,
+          // Omit business_name so new users are not given the inviter's workspace in auth metadata.
           data: {
             invite_type: 'collaboration',
-            business_name: businessName || '',
           },
         },
       });
