@@ -11,18 +11,18 @@
   <main class="input-main">
     <header class="input-header">
       <span class="app-brand" aria-label="Metrics View">Metrics View</span>
-      <div class="input-header-actions">
-        <button type="button" class="theme-text-toggle" id="themeTextToggle">Dark mode</button>
-        <a href="../display/" class="back-link back-link-prominent" id="linkViewResults">View Metrics Display</a>
-      </div>
-    </header>
-    <div class="input-business-header" id="inputBusinessHeader">
       <div class="input-business-pic-wrap">
         <div class="input-business-pic" id="inputBusinessPic"></div>
       </div>
       <div class="input-business-name-wrap hero-name-wrap">
         <input type="text" class="input-business-name" id="inputBusinessName" placeholder="Loading your metrics" aria-label="Workspace or business name" readonly />
       </div>
+      <div class="input-header-actions">
+        <button type="button" class="theme-text-toggle" id="themeTextToggle">Dark mode</button>
+        <a href="../display/" class="back-link back-link-prominent" id="linkViewResults">View Metrics Display</a>
+      </div>
+    </header>
+    <div class="input-business-header" id="inputBusinessHeader">
       <nav class="boards-toc" id="boardsToc" aria-label="Jump to board" hidden>
         <div class="boards-toc-head-row">
           <h3 class="boards-toc-title" id="boardsTocTitle">Boards</h3>
@@ -151,7 +151,7 @@
       <a href="../invite-user/" class="footer-link">Invite User</a>
       <a href="#" class="footer-link" id="linkLogout">Log out</a>
       <div class="footer-site-link-wrap">
-        <a class="footer-site-link" href="https://metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+        <a class="footer-site-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
       </div>
     </footer>
   </main>
@@ -849,8 +849,8 @@
 
       function updateChromeForMode() {
         var bizHeader = document.getElementById('inputBusinessHeader');
-        var picWrap = bizHeader && bizHeader.querySelector('.input-business-pic-wrap');
-        var nameWrap = bizHeader && bizHeader.querySelector('.input-business-name-wrap');
+        var picWrap = document.querySelector('.input-business-pic-wrap');
+        var nameWrap = document.querySelector('.input-business-name-wrap');
         if (bizHeader) bizHeader.hidden = false;
         if (picWrap) picWrap.hidden = false;
         if (nameWrap) nameWrap.hidden = false;
@@ -1182,13 +1182,20 @@
         nav.hidden = false;
         list.innerHTML = '';
 
-        function appendEntry(label, onActivate) {
+        function appendEntry(label, onActivate, dragMeta) {
           var li = document.createElement('li');
           li.className = 'boards-toc-item';
           var btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'boards-toc-btn';
           btn.textContent = label;
+          if (dragMeta && dragMeta.canDrag && dragMeta.boardSlot != null) {
+            btn.setAttribute('draggable', 'true');
+            btn.setAttribute('data-board-slot', String(dragMeta.boardSlot));
+            btn.classList.add('boards-toc-btn-draggable');
+            btn.innerHTML = '<span class="boards-toc-drag-handle" aria-hidden="true">⋮⋮</span><span class="boards-toc-btn-label">' + escapeHtmlStr(label) + '</span>';
+            btn.setAttribute('aria-label', 'Drag to reorder board: ' + label);
+          }
           btn.addEventListener('click', function () {
             onActivate();
           });
@@ -1204,15 +1211,18 @@
               label = (badge.textContent || '').trim() + ' — ' + label;
             }
           }
+          var boardSlot = parseInt(form.getAttribute('data-index') || '-1', 10);
+          var canDrag = isHomeDashboard && !isCollaborator && !isSharedBoardRow(form) && boardSlot >= 0;
           appendEntry(label, function () {
             carouselPageIndex = slideIdx;
             applyCarouselTransform();
             updateCarouselNavUI();
             var carEl = document.getElementById('inputCarousel');
             if (carEl) carEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          });
+          }, { canDrag: canDrag, boardSlot: boardSlot });
         });
 
+        setupBoardTocReorderDnD();
         updateBoardTocActive();
       }
 
@@ -1272,6 +1282,98 @@
         if (hint) {
           hint.textContent = metricCount + ' of ' + MAX_METRICS + ' boards. Up to ' + MAX_ON_RESULTS_SCREEN + ' can appear on the display screen at once.';
         }
+      }
+
+      function reorderPersonalBoards(sourceSlot, targetSlot) {
+        if (sourceSlot === targetSlot) return;
+        var payloadBiz = collectDashboardFromDom();
+        var metricsByIndex = payloadBiz.metrics || [];
+        var track = document.getElementById('carouselTrack');
+        var slides = Array.prototype.slice.call(track ? track.querySelectorAll('.input-carousel-slide') : []);
+        var personalSlots = [];
+        var sharedCount = 0;
+        var seenPersonal = false;
+
+        slides.forEach(function (s) {
+          var f = s.querySelector('.input-row.metric-form');
+          if (!f) return;
+          var shared = isSharedBoardRow(f);
+          if (shared && !seenPersonal) {
+            sharedCount++;
+            return;
+          }
+          if (shared) return;
+          seenPersonal = true;
+          var ix = parseInt(f.getAttribute('data-index') || '0', 10);
+          if (!isNaN(ix)) personalSlots.push(ix);
+        });
+
+        var sourcePos = personalSlots.indexOf(sourceSlot);
+        var targetPos = personalSlots.indexOf(targetSlot);
+        if (sourcePos < 0 || targetPos < 0) return;
+
+        var nextSlots = personalSlots.slice();
+        var moved = nextSlots.splice(sourcePos, 1)[0];
+        nextSlots.splice(targetPos, 0, moved);
+        var nextMetrics = nextSlots.map(function (ix) {
+          return metricsByIndex[ix] || emptyMetricSlot();
+        });
+        try {
+          localStorage.setItem(activeKey(), JSON.stringify({
+            businessName: payloadBiz.businessName || '',
+            businessImage: payloadBiz.businessImage || '',
+            metrics: nextMetrics
+          }));
+        } catch (err) {}
+
+        businessImageDataUrl = payloadBiz.businessImage || '';
+        carouselPageIndex = sharedCount + targetPos;
+        renderMainInputCarousel(nextMetrics);
+        syncTitleRowFromTextareasCarousel();
+        updateAllSummaryInputsState();
+        applyRowAccessLocks();
+        refreshBoardToc();
+        scheduleRemoteSave();
+      }
+
+      function setupBoardTocReorderDnD() {
+        if (!isHomeDashboard || isCollaborator) return;
+        var list = document.getElementById('boardsTocList');
+        if (!list) return;
+        list.querySelectorAll('.boards-toc-btn-draggable').forEach(function (btn) {
+          if (btn.getAttribute('data-board-dnd-wired') === '1') return;
+          btn.setAttribute('data-board-dnd-wired', '1');
+
+          btn.addEventListener('dragstart', function (e) {
+            var slot = btn.getAttribute('data-board-slot') || '';
+            if (e && e.dataTransfer) {
+              e.dataTransfer.setData('text/plain', slot);
+              e.dataTransfer.effectAllowed = 'move';
+            }
+            btn.classList.add('mv-board-dragging');
+          });
+          btn.addEventListener('dragend', function () {
+            btn.classList.remove('mv-board-dragging', 'mv-board-dnd-over');
+          });
+          btn.addEventListener('dragover', function (e) {
+            if (!e) return;
+            e.preventDefault();
+            btn.classList.add('mv-board-dnd-over');
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+          });
+          btn.addEventListener('dragleave', function () {
+            btn.classList.remove('mv-board-dnd-over');
+          });
+          btn.addEventListener('drop', function (e) {
+            if (!e) return;
+            e.preventDefault();
+            btn.classList.remove('mv-board-dnd-over');
+            var sourceSlot = parseInt((e.dataTransfer && e.dataTransfer.getData('text/plain')) ? e.dataTransfer.getData('text/plain') : '', 10);
+            var targetSlot = parseInt(btn.getAttribute('data-board-slot') || '', 10);
+            if (isNaN(sourceSlot) || isNaN(targetSlot)) return;
+            reorderPersonalBoards(sourceSlot, targetSlot);
+          });
+        });
       }
 
       function setupBoardReorderDnD() {
@@ -1338,59 +1440,7 @@
             var targetSlot = parseInt(targetSlotStr, 10);
             if (isNaN(sourceSlot) || isNaN(targetSlot) || sourceSlot === targetSlot) return;
 
-            // Compute current personal slot order from DOM.
-            var slides = Array.prototype.slice.call(track.querySelectorAll('.input-carousel-slide'));
-            var personalSlots = [];
-            var sharedCount = 0;
-            var seenPersonal = false;
-
-            slides.forEach(function (s) {
-              var f = s.querySelector('.input-row.metric-form');
-              if (!f) return;
-              var shared = isSharedBoardRow(f);
-              if (shared && !seenPersonal) {
-                sharedCount++;
-                return;
-              }
-              if (shared) return;
-              seenPersonal = true;
-              var ix = parseInt(f.getAttribute('data-index') || '0', 10);
-              if (!isNaN(ix)) personalSlots.push(ix);
-            });
-
-            var sourcePos = personalSlots.indexOf(sourceSlot);
-            var targetPos = personalSlots.indexOf(targetSlot);
-            if (sourcePos < 0 || targetPos < 0) return;
-
-            var nextSlots = personalSlots.slice();
-            var moved = nextSlots.splice(sourcePos, 1)[0];
-            nextSlots.splice(targetPos, 0, moved);
-
-            var payloadBiz = collectDashboardFromDom();
-            var metricsByIndex = payloadBiz.metrics || [];
-
-            var nextMetrics = nextSlots.map(function (ix) {
-              return metricsByIndex[ix] || emptyMetricSlot();
-            });
-
-            // Update ordering in local storage first (so re-render reflects it).
-            try {
-              localStorage.setItem(activeKey(), JSON.stringify({
-                businessName: payloadBiz.businessName || '',
-                businessImage: payloadBiz.businessImage || '',
-                metrics: nextMetrics
-              }));
-            } catch (err) {}
-
-            businessImageDataUrl = payloadBiz.businessImage || '';
-            carouselPageIndex = sharedCount + targetPos;
-
-            renderMainInputCarousel(nextMetrics);
-            syncTitleRowFromTextareasCarousel();
-            updateAllSummaryInputsState();
-            applyRowAccessLocks();
-            refreshBoardToc();
-            scheduleRemoteSave();
+            reorderPersonalBoards(sourceSlot, targetSlot);
           });
         });
       }

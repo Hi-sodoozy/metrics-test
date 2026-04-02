@@ -9,7 +9,7 @@
 <body class="metrics-page mv-landing">
   <div class="mv-landing-bg" aria-hidden="true"></div>
   <header class="mv-landing-nav mv-landing-nav-right">
-    <a class="mv-landing-nav-link" href="auth/?mode=signin">Sign in</a>
+    <a class="mv-landing-nav-link" href="auth/?mode=signin" id="topAuthLink">Sign in</a>
   </header>
 
   <main class="mv-landing-main">
@@ -53,16 +53,20 @@
     <span class="mv-landing-footer-meta">Metrics View is a helpful tool to track and display business metrics. Please do not rely on Metrics View as your only data collection point and do not store sensitive data on this platform.</span>
   </footer>
   <div class="mv-site-footer">
-    <a class="mv-site-footer-link" href="https://metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+    <a class="mv-site-footer-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
   </div>
 
   <script>
     (function () {
+      var topAuthLink = document.getElementById('topAuthLink');
       try {
         var raw = localStorage.getItem('metricsUserContext');
         var ctx = raw ? JSON.parse(raw) : null;
         if (ctx && ctx.email) {
-          window.location.href = 'input/';
+          if (topAuthLink) {
+            topAuthLink.textContent = 'To Metrics Centre';
+            topAuthLink.href = 'input/';
+          }
         }
       } catch (e) {}
     })();

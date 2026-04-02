@@ -653,12 +653,9 @@
 }
 
 .input-business-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  display: block;
   margin-bottom: 24px;
-  padding: 16px 0;
-  flex-wrap: wrap;
+  padding: 0;
 }
 
 .input-business-header .boards-toc {
@@ -882,7 +879,9 @@
 }
 
 .boards-toc-btn {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   max-width: 100%;
   padding: 8px 14px;
   border: 1px solid #c5d0e0;
@@ -895,6 +894,29 @@
   text-align: left;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.boards-toc-btn-draggable {
+  cursor: grab;
+}
+
+.boards-toc-btn-draggable:active {
+  cursor: grabbing;
+}
+
+.boards-toc-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  opacity: 0.8;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.boards-toc-btn-label {
+  min-width: 0;
 }
 
 .boards-toc-btn:hover {
@@ -1080,13 +1102,28 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px;
 }
 
 .input-header .app-brand {
-  margin-right: auto;
+  margin-right: 0;
+}
+
+.input-header .input-business-name-wrap {
+  flex: 1 1 280px;
+  min-width: 260px;
+}
+
+.input-header .input-business-name {
+  text-align: left;
+  padding-left: 0;
+}
+
+.input-header .input-business-pic {
+  width: 54px;
+  height: 54px;
 }
 
 .input-header-actions {
