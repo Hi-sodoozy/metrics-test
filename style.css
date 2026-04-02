@@ -1093,7 +1093,14 @@
 .mv-site-footer-link::after {
   content: " \2022";
   margin-left: 8px;
-  opacity: 0.45;
+  opacity: 0.65;
+  color: currentColor;
+}
+
+.input-page.input-theme-dark .mv-site-footer-link::after,
+.mv-landing .mv-site-footer-link::after {
+  opacity: 0.9;
+  color: #cbd5e1;
 }
 
 .mv-site-footer-link:hover {
