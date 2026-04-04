@@ -23,7 +23,7 @@
       </nav>
     </aside>
     <div class="mv-corporate-panels">
-      <section class="mv-corporate-panel" id="panel-branding" aria-labelledby="corp-branding-h">
+      <section class="mv-corporate-panel mv-page-card" id="panel-branding" aria-labelledby="corp-branding-h">
         <h2 id="corp-branding-h" class="mv-page-title">Company branding</h2>
         <p class="mv-page-subtitle">Company name, display picture, and display screen accent colour.</p>
         <div class="mv-form-grid">
@@ -48,9 +48,9 @@
         <p id="corporateBrandingStatus" class="mv-landing-note" aria-live="polite" style="margin-top:12px;"></p>
       </section>
 
-      <section class="mv-corporate-panel" id="panel-people" hidden aria-labelledby="corp-people-h">
+      <section class="mv-corporate-panel mv-page-card" id="panel-people" hidden aria-labelledby="corp-people-h">
         <h2 id="corp-people-h" class="mv-page-title">Collaborators &amp; permissions</h2>
-        <p class="mv-page-subtitle">Invite staff to Metrics View, review board access, and manage permissions. Names are sorted by surname.</p>
+        <p class="mv-page-subtitle">Invite staff to Metrics View, remove people, and set permissions. The table is sorted by surname (A–Z). Click a person to see each board they can access, their role on that board, and actions.</p>
         <div class="mv-corp-invite-box">
           <h3 class="mv-corp-subh">Invite staff</h3>
           <div class="mv-corp-invite-grid">
@@ -61,6 +61,7 @@
           <p id="corpInviteStatus" class="mv-landing-note" aria-live="polite"></p>
         </div>
         <div class="mv-corp-table-wrap">
+          <p class="mv-corp-table-hint">Click a row to open board access and permission controls.</p>
           <table class="mv-corp-table" aria-label="Collaborators">
             <thead>
               <tr><th>Name</th><th>Email</th><th>Boards</th></tr>
@@ -69,16 +70,17 @@
           </table>
         </div>
         <div id="corpPersonDetail" class="mv-corp-detail" hidden>
-          <h3 class="mv-corp-subh" id="corpDetailTitle">Board access</h3>
+          <h3 class="mv-corp-subh" id="corpDetailTitle">Board access &amp; permissions</h3>
+          <p class="mv-corp-detail-lead" id="corpDetailLead" hidden></p>
           <ul id="corpBoardList" class="mv-corp-board-list"></ul>
           <button type="button" id="corpRemoveFromCompanyBtn" class="mv-btn mv-btn-ghost mv-btn-danger-text">Remove from company account</button>
         </div>
         <p id="corpPeopleStatus" class="mv-landing-note" aria-live="polite" style="margin-top:12px;"></p>
       </section>
 
-      <section class="mv-corporate-panel" id="panel-billing" hidden aria-labelledby="corp-billing-h">
+      <section class="mv-corporate-panel mv-page-card" id="panel-billing" hidden aria-labelledby="corp-billing-h">
         <h2 id="corp-billing-h" class="mv-page-title">Billing</h2>
-        <p class="mv-page-subtitle">Plan details will be finalised when public pricing is released. All current accounts are on Column&nbsp;3.</p>
+        <p class="mv-page-subtitle">Contact details for billing correspondence. Plan column reflects your subscription tier; all current accounts default to Column&nbsp;3 until pricing is published.</p>
         <div class="mv-form-grid">
           <label class="mv-form-label" for="billingContactName">Contact name</label>
           <input id="billingContactName" class="mv-input" type="text" />
@@ -86,6 +88,8 @@
           <input id="billingContactEmail" class="mv-input" type="email" />
           <div class="mv-form-label">Plan</div>
           <div id="billingPlanDisplay" class="mv-billing-plan-display"></div>
+          <div class="mv-form-label">Next payment due</div>
+          <div class="mv-billing-next-due" aria-live="polite">TBC</div>
         </div>
         <div class="mv-actions-row" style="margin-top:16px;">
           <button id="billingSaveBtn" class="mv-btn mv-btn-primary" type="button">Save billing details</button>
@@ -145,6 +149,15 @@
         var b = (row.last_name || '').trim();
         if (a && b) return a + ' ' + b;
         return a || b || row.email || '';
+      }
+
+      function displayNameFromParts(firstName, lastName, email) {
+        var a = (firstName || '').trim();
+        var b = (lastName || '').trim();
+        if (a && b) return a + ' ' + b;
+        if (b) return b;
+        if (a) return a;
+        return email || '';
       }
 
       function switchSection(id) {
@@ -220,14 +233,11 @@
         var extra = '';
         if (n === 1 || n === 2) {
           extra =
-            ' <a class="mv-billing-update-link" href="../pricing/">Update plan</a>';
+            '<p class="mv-billing-plan-line" style="margin-top:10px;"><a class="mv-billing-update-link" href="../pricing/">Update plan</a></p>';
         }
         el.innerHTML =
-          '<p class="mv-billing-plan-line"><strong>' +
-          name +
-          '</strong> — Next payment due: <strong>TBC</strong>' +
-          extra +
-          '</p>';
+          '<p class="mv-billing-plan-line"><strong>' + name + '</strong></p>' +
+          extra;
       }
 
       function saveBranding() {
@@ -329,28 +339,50 @@
           var em = normalizeEmail(r.email);
           if (!em || em === normalizeEmail(ctx.email)) return;
           if (!map[em]) {
-            map[em] = { email: em, name: displayNameFromRow(r), boards: [] };
+            map[em] = { email: em, first_name: '', last_name: '', boards: [] };
           }
+          var g = map[em];
+          var rfn = (r.first_name || '').trim();
+          var rln = (r.last_name || '').trim();
+          if (rfn && (!g.first_name || rfn.length > g.first_name.length)) g.first_name = rfn;
+          if (rln && (!g.last_name || rln.length > g.last_name.length)) g.last_name = rln;
           var mi = r.metric_index;
-          if (mi == null || mi < 0) return;
-          map[em].boards.push({
-            metric_index: mi,
-            permission: r.permission || 'edit'
-          });
+          if (mi == null || mi < -1 || mi > 9) return;
+          var perm = r.permission || 'edit';
+          var i;
+          var found = false;
+          for (i = 0; i < g.boards.length; i++) {
+            if (g.boards[i].metric_index === mi) {
+              g.boards[i].permission = perm;
+              found = true;
+              break;
+            }
+          }
+          if (!found) {
+            g.boards.push({ metric_index: mi, permission: perm });
+          }
         });
         return Object.keys(map)
           .map(function (k) {
-            return map[k];
+            var g = map[k];
+            g.name = displayNameFromParts(g.first_name, g.last_name, g.email);
+            return g;
           })
           .sort(function (a, b) {
-            var sa = sortKeyForInviteRow({ first_name: a.name, last_name: '', email: a.email });
-            var sb = sortKeyForInviteRow({ first_name: b.name, last_name: '', email: b.email });
-            if (sa !== sb) return sa.localeCompare(sb);
+            var la = (a.last_name || '').trim().toLowerCase();
+            var lb = (b.last_name || '').trim().toLowerCase();
+            if (la !== lb) return la.localeCompare(lb);
+            var fa = (a.first_name || '').trim().toLowerCase();
+            var fb = (b.first_name || '').trim().toLowerCase();
+            if (fa !== fb) return fa.localeCompare(fb);
             return a.email.localeCompare(b.email);
           });
       }
 
       function metricTitleForIndex(ix) {
+        if (ix === -1) {
+          return 'Workspace (organisation invite — not yet on a metric board)';
+        }
         var m =
           ownerDash && ownerDash.metrics && ownerDash.metrics[ix] ? ownerDash.metrics[ix] : null;
         var h = m && m.heading ? String(m.heading).trim() : '';
@@ -411,9 +443,25 @@
         var panel = document.getElementById('corpPersonDetail');
         var list = document.getElementById('corpBoardList');
         var title = document.getElementById('corpDetailTitle');
+        var lead = document.getElementById('corpDetailLead');
         if (!panel || !list) return;
         panel.hidden = false;
-        title.textContent = 'Access for ' + (g.name || g.email);
+        title.textContent = (g.name || g.email) + ' — boards & permissions';
+        if (lead) {
+          var onlyWorkspace =
+            g.boards.length &&
+            g.boards.every(function (b) {
+              return b.metric_index === -1;
+            });
+          if (onlyWorkspace) {
+            lead.hidden = false;
+            lead.textContent =
+              'This person is invited to your organisation but is not assigned to a metric board yet. When you add them on a board from Metrics Centre, their access will appear here too.';
+          } else {
+            lead.hidden = true;
+            lead.textContent = '';
+          }
+        }
         list.innerHTML = '';
         g.boards.forEach(function (b) {
           var li = document.createElement('li');
@@ -421,8 +469,12 @@
           var ix = b.metric_index;
           var perm = b.permission === 'read' ? 'read' : b.permission === 'admin' ? 'admin' : 'edit';
           li.innerHTML =
-            '<div class="mv-corp-board-head"><span class="mv-corp-board-title">' +
+            '<div class="mv-corp-board-head">' +
+            '<span class="mv-corp-board-title">' +
             escapeHtml(metricTitleForIndex(ix)) +
+            '</span>' +
+            '<span class="mv-corp-board-perm-pill" title="Current permission">' +
+            escapeHtml(permissionLabel(perm)) +
             '</span></div>';
           var tools = document.createElement('div');
           tools.className = 'mv-corp-board-tools';

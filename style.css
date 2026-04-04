@@ -3097,6 +3097,32 @@
   margin: 0 auto;
   padding: 24px 20px 48px;
   align-items: flex-start;
+  position: relative;
+  z-index: 1;
+}
+
+.mv-corporate-panel.mv-page-card {
+  margin-bottom: 0;
+}
+
+@media (max-width: 800px) {
+  .mv-corporate-shell {
+    flex-direction: column;
+  }
+  .mv-corporate-nav {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: none;
+    position: static;
+  }
+  .mv-corporate-nav-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .mv-corporate-nav-btn {
+    flex: 1 1 auto;
+    min-width: 140px;
+  }
 }
 
 .mv-corporate-nav {
@@ -3206,6 +3232,20 @@
   }
 }
 
+.mv-corp-table-hint {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.mv-corp-detail-lead {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #9aa3b2;
+  line-height: 1.45;
+}
+
 .mv-corp-table-wrap {
   overflow-x: auto;
   margin-bottom: 16px;
@@ -3268,6 +3308,34 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.mv-corp-board-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  margin-bottom: 8px;
+}
+
+.mv-corp-board-title {
+  flex: 1 1 200px;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.mv-corp-board-perm-pill {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, 0.35);
+  color: #e0f2fe;
+  background: rgba(125, 211, 252, 0.12);
+}
+
 .mv-corp-board-tools {
   display: flex;
   flex-wrap: wrap;
@@ -3300,6 +3368,12 @@
 .mv-billing-update-link {
   color: #7dd3fc;
   margin-left: 8px;
+}
+
+.mv-billing-next-due {
+  font-size: 14px;
+  font-weight: 600;
+  color: #cbd5e1;
 }
 
 .results-main {
