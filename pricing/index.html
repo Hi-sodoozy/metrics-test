@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics View – Pricing</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .mv-pricing-main { max-width: 1100px; margin: 0 auto; padding: 28px 20px 56px; }
+    .mv-pricing-title { margin: 0 0 8px; font-size: 1.6rem; font-weight: 800; color: #0f172a; }
+    .mv-pricing-note { margin: 0 0 28px; font-size: 14px; color: #64748b; max-width: 52ch; }
+    .mv-pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+    @media (max-width: 900px) {
+      .mv-pricing-grid { grid-template-columns: 1fr; }
+    }
+    .mv-pricing-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 22px 20px 24px;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+    }
+    .mv-pricing-card h2 { margin: 0 0 14px; font-size: 1.1rem; font-weight: 800; color: #0f172a; }
+    .mv-pricing-card ul { margin: 0 0 18px; padding-left: 1.2em; color: #334155; font-size: 14px; line-height: 1.55; flex: 1; }
+    .mv-pricing-card li { margin-bottom: 6px; }
+    .mv-pricing-price { font-size: 14px; color: #475569; margin-bottom: 12px; line-height: 1.45; }
+    .mv-pricing-trial { font-size: 13px; font-weight: 600; color: #0f766e; margin-bottom: 8px; }
+    .mv-pricing-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      text-decoration: none;
+      background: linear-gradient(135deg, #7dd3fc 0%, #60a5fa 100%);
+      color: #0a0c10;
+      border: none;
+      cursor: pointer;
+    }
+    .mv-pricing-cta:hover { filter: brightness(1.06); }
+    .metrics-page.mv-landing .mv-pricing-title { color: #f3f4f6; }
+    .metrics-page.mv-landing .mv-pricing-note { color: #9aa3b2; }
+    .metrics-page.mv-landing .mv-pricing-card {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.12);
+    }
+    .metrics-page.mv-landing .mv-pricing-card h2 { color: #e8eaef; }
+    .metrics-page.mv-landing .mv-pricing-card ul { color: #cbd5e1; }
+    .metrics-page.mv-landing .mv-pricing-price { color: #94a3b8; }
+    .metrics-page.mv-landing .mv-pricing-trial { color: #5eead4; }
+  </style>
+</head>
+<body class="metrics-page mv-landing">
+  <div class="mv-landing-bg" aria-hidden="true"></div>
+  <header class="mv-landing-nav">
+    <a class="mv-landing-nav-link" href="../">Home</a>
+    <a class="mv-landing-nav-link" href="../input/">Metrics Centre</a>
+  </header>
+  <main class="mv-pricing-main mv-page-shell">
+    <h1 class="mv-pricing-title">Pricing</h1>
+    <p class="mv-pricing-note">This page is not linked in the main navigation. Plans and prices will be published when billing goes live.</p>
+    <div class="mv-pricing-grid">
+      <section class="mv-pricing-card" aria-labelledby="plan1">
+        <h2 id="plan1">Column 1</h2>
+        <ul>
+          <li>Track 1 metric</li>
+          <li>2 collaborators (including 1× admin)</li>
+          <li>Branding options (name, display picture)</li>
+        </ul>
+        <p class="mv-pricing-trial">30 day free trial, then X per month or Y per year</p>
+        <a class="mv-pricing-cta" href="../auth/?mode=signup">Get started</a>
+      </section>
+      <section class="mv-pricing-card" aria-labelledby="plan2">
+        <h2 id="plan2">Column 2</h2>
+        <ul>
+          <li>Track up to 4 metrics</li>
+          <li>10 collaborators (including 1× admin)</li>
+          <li>10 viewers</li>
+          <li>Branding options (name, display picture)</li>
+        </ul>
+        <p class="mv-pricing-price">X per month or Y per year</p>
+        <a class="mv-pricing-cta" href="../auth/?mode=signup">Get started</a>
+      </section>
+      <section class="mv-pricing-card" aria-labelledby="plan3">
+        <h2 id="plan3">Column 3</h2>
+        <ul>
+          <li>Track up to 10 metrics</li>
+          <li>Unlimited collaborators</li>
+          <li>Unlimited viewers</li>
+          <li>Customisable branding (name, display picture, colour scheme)</li>
+        </ul>
+        <p class="mv-pricing-price">X per month or Y per year</p>
+        <a class="mv-pricing-cta" href="../auth/?mode=signup">Get started</a>
+      </section>
+    </div>
+  </main>
+  <footer class="mv-site-footer">
+    <div class="mv-site-footer-top">
+      <a class="mv-site-footer-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+      <span class="mv-footer-dot-links">
+        <a class="mv-corporate-dot-link" href="../corporate-profile/" aria-label="Corporate profile" title="Corporate profile">•</a>
+        <a class="mv-pricing-dot-link" href="./" aria-label="Pricing" title="Pricing">•</a>
+      </span>
+    </div>
+    <section class="mv-footer-support" aria-label="Support">
+      <h3 class="mv-footer-support-title">Support</h3>
+      <form class="mv-footer-support-form" id="mvSupportForm" novalidate>
+        <div class="mv-support-grid">
+          <label class="mv-support-label">Name <span class="mv-req" aria-hidden="true">*</span><input name="mvSupportName" type="text" required class="mv-input mv-support-input" autocomplete="name" /></label>
+          <label class="mv-support-label">Email <span class="mv-req" aria-hidden="true">*</span><input name="mvSupportEmail" type="email" required class="mv-input mv-support-input" autocomplete="email" /></label>
+          <label class="mv-support-label">Company<input name="mvSupportCompany" type="text" class="mv-input mv-support-input" autocomplete="organization" /></label>
+          <label class="mv-support-label">Topic
+            <select name="mvSupportType" class="mv-input mv-support-input">
+              <option value="Support">Support</option>
+              <option value="Feedback">Feedback</option>
+              <option value="Enquiry">Enquiry</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          <label class="mv-support-label mv-support-msg-label">Message<textarea name="mvSupportMessage" class="mv-input mv-support-textarea" rows="3"></textarea></label>
+        </div>
+        <button type="submit" class="mv-btn mv-btn-primary mv-support-submit">Send</button>
+      </form>
+    </section>
+  </footer>
+  <script src="../metrics-footer.js"></script>
+</body>
+</html>

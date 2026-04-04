@@ -11,11 +11,13 @@
   <main class="input-main">
     <header class="input-header">
       <span class="app-brand" aria-label="Metrics View">Metrics View</span>
-      <div class="input-business-pic-wrap">
-        <div class="input-business-pic" id="inputBusinessPic"></div>
-      </div>
-      <div class="input-business-name-wrap hero-name-wrap">
-        <input type="text" class="input-business-name" id="inputBusinessName" placeholder="Loading your metrics" aria-label="Workspace or business name" readonly />
+      <div class="input-header-identity">
+        <div class="input-business-pic-wrap">
+          <div class="input-business-pic" id="inputBusinessPic"></div>
+        </div>
+        <div class="input-business-name-wrap hero-name-wrap">
+          <input type="text" class="input-business-name" id="inputBusinessName" placeholder="Loading your metrics" aria-label="Workspace or business name" readonly />
+        </div>
       </div>
       <div class="input-header-actions">
         <button type="button" class="theme-text-toggle" id="themeTextToggle">Dark mode</button>
@@ -68,6 +70,7 @@
             <input type="number" name="goal" class="metric-single-line-input metric-number-input" placeholder="0" inputmode="decimal" step="any" autocomplete="off" aria-label="Goal (numeric)" />
             <input type="number" name="current" class="metric-single-line-input metric-number-input" placeholder="0" inputmode="decimal" step="any" autocomplete="off" aria-label="Current (numeric)" />
           </div>
+          <div class="summary-data-empty-placeholder" hidden>Enter Goal and Current below to show information on the display screen</div>
         </div>
         <div class="form-block main-display-percent-block">
           <label class="option-check"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /> Display as %</label>
@@ -110,7 +113,7 @@
           </div>
         </div>
         <div class="invited-users-wrap">
-          <h5 class="invited-users-title">Invited users <span class="invited-users-subtitle">All users that can view this metric board</span></h5>
+          <h5 class="invited-users-title">Invited users <span class="invited-users-subtitle">All users that can view this metric board. Only board admins can add or remove people.</span></h5>
           <table class="input-table invited-users-table" aria-label="Invited users">
             <thead>
               <tr>
@@ -151,12 +154,39 @@
       <a href="../invite-user/" class="footer-link">Invite User</a>
       <a href="#" class="footer-link" id="linkLogout">Log out</a>
       <div class="footer-site-link-wrap">
-        <a class="footer-site-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+        <div class="mv-site-footer-top">
+          <a class="footer-site-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+          <span class="mv-footer-dot-links">
+            <a class="mv-corporate-dot-link" href="../corporate-profile/" aria-label="Corporate profile" title="Corporate profile">•</a>
+            <a class="mv-pricing-dot-link" href="../pricing/" aria-label="Pricing" title="Pricing">•</a>
+          </span>
+        </div>
+        <section class="mv-footer-support" aria-label="Support">
+          <h3 class="mv-footer-support-title">Support</h3>
+          <form class="mv-footer-support-form" id="mvSupportForm" novalidate>
+            <div class="mv-support-grid">
+              <label class="mv-support-label">Name <span class="mv-req" aria-hidden="true">*</span><input name="mvSupportName" type="text" required class="mv-input mv-support-input" autocomplete="name" /></label>
+              <label class="mv-support-label">Email <span class="mv-req" aria-hidden="true">*</span><input name="mvSupportEmail" type="email" required class="mv-input mv-support-input" autocomplete="email" /></label>
+              <label class="mv-support-label">Company<input name="mvSupportCompany" type="text" class="mv-input mv-support-input" autocomplete="organization" /></label>
+              <label class="mv-support-label">Topic
+                <select name="mvSupportType" class="mv-input mv-support-input">
+                  <option value="Support">Support</option>
+                  <option value="Feedback">Feedback</option>
+                  <option value="Enquiry">Enquiry</option>
+                  <option value="Other">Other</option>
+                </select>
+              </label>
+              <label class="mv-support-label mv-support-msg-label">Message<textarea name="mvSupportMessage" class="mv-input mv-support-textarea" rows="3"></textarea></label>
+            </div>
+            <button type="submit" class="mv-btn mv-btn-primary mv-support-submit">Send</button>
+          </form>
+        </section>
       </div>
     </footer>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../supabase-config.js"></script>
+  <script src="../metrics-footer.js"></script>
   <script>
     (function () {
       var params = new URLSearchParams(window.location.search);
@@ -718,6 +748,7 @@
           });
         }
         updateIndividualDataEmptyPlaceholder(row);
+        updateSummaryEmptyPlaceholder(row);
       }
 
       function updateIndividualDataEmptyPlaceholder(metricRow) {
@@ -744,6 +775,18 @@
         });
 
         placeholder.hidden = hasData;
+      }
+
+      function updateSummaryEmptyPlaceholder(metricRow) {
+        var ph = metricRow ? metricRow.querySelector('.summary-data-empty-placeholder') : null;
+        if (!ph) return;
+        var picked = metricRow.querySelector('input[type="radio"][name^="displayAs_"]:checked');
+        var isSummary = !picked || picked.value === 'summary';
+        var goalEl = metricRow.querySelector('.goal-current-block input[name="goal"]');
+        var curEl = metricRow.querySelector('.goal-current-block input[name="current"]');
+        var g = goalEl && String(goalEl.value != null ? goalEl.value : '').trim();
+        var c = curEl && String(curEl.value != null ? curEl.value : '').trim();
+        ph.hidden = !isSummary || (g !== '' && c !== '');
       }
 
       function applyRowAccessLocks() {
@@ -1036,7 +1079,7 @@
                 signalDisplayRefresh(goToBoard ? 'view-board' : 'save');
                 if (goToBoard) {
                   var oid = row.getAttribute('data-dashboard-owner') || '';
-                  window.location.href = window.metricsAppUrl('display/?owner=' + encodeURIComponent(oid));
+                  window.location.href = window.metricsAppUrl('display/?owner=' + encodeURIComponent(oid);
                 }
               })
               .catch(function (err) {
@@ -1050,7 +1093,7 @@
               signalDisplayRefresh(goToBoard ? 'view-board' : 'save');
               if (goToBoard) {
                 if (isCollaborator) {
-                  window.location.href = window.metricsAppUrl('display/?owner=' + encodeURIComponent(dashboardOwnerId));
+                  window.location.href = window.metricsAppUrl('display/?owner=' + encodeURIComponent(dashboardOwnerId);
                 } else {
                   window.location.href = window.metricsAppUrl('display/');
                 }
@@ -1101,6 +1144,19 @@
             applyRowAccessLocks();
           });
         });
+        var gIn = row.querySelector('.goal-current-block input[name="goal"]');
+        var cIn = row.querySelector('.goal-current-block input[name="current"]');
+        function touchSummaryPh() {
+          updateSummaryEmptyPlaceholder(row);
+        }
+        if (gIn) {
+          gIn.addEventListener('input', touchSummaryPh);
+          gIn.addEventListener('change', touchSummaryPh);
+        }
+        if (cIn) {
+          cIn.addEventListener('input', touchSummaryPh);
+          cIn.addEventListener('change', touchSummaryPh);
+        }
         var switchInd = row.querySelector('.cb-switch-to-individual');
         if (switchInd) {
           switchInd.addEventListener('change', function () {
@@ -1189,9 +1245,9 @@
           btn.type = 'button';
           btn.className = 'boards-toc-btn';
           btn.textContent = label;
-          if (dragMeta && dragMeta.canDrag && dragMeta.boardSlot != null) {
+          if (dragMeta && dragMeta.canDrag && dragMeta.dndKey) {
             btn.setAttribute('draggable', 'true');
-            btn.setAttribute('data-board-slot', String(dragMeta.boardSlot));
+            btn.setAttribute('data-dnd-key', dragMeta.dndKey);
             btn.classList.add('boards-toc-btn-draggable');
             btn.innerHTML = '<span class="boards-toc-drag-handle" aria-hidden="true">⋮⋮</span><span class="boards-toc-btn-label">' + escapeHtmlStr(label) + '</span>';
             btn.setAttribute('aria-label', 'Drag to reorder board: ' + label);
@@ -1211,15 +1267,30 @@
               label = (badge.textContent || '').trim() + ' — ' + label;
             }
           }
-          var boardSlot = parseInt(form.getAttribute('data-index') || '-1', 10);
-          var canDrag = isHomeDashboard && !isCollaborator && !isSharedBoardRow(form) && boardSlot >= 0;
+          var dndKey = '';
+          if (isSharedBoardRow(form)) {
+            dndKey = 's:' + form.getAttribute('data-dashboard-owner') + ':' + form.getAttribute('data-index');
+          } else {
+            dndKey = 'p:' + form.getAttribute('data-index');
+          }
+          var canDragToc = false;
+          if (isHomeDashboard && window.metricsCombineSlideOrder && !isCollaborator) {
+            if (isSharedBoardRow(form)) {
+              var oOwner = form.getAttribute('data-dashboard-owner');
+              var mIx = parseInt(form.getAttribute('data-index') || '0', 10);
+              var edits = collaborEditByOwner[oOwner] || [];
+              canDragToc = edits.indexOf(mIx) >= 0;
+            } else {
+              canDragToc = true;
+            }
+          }
           appendEntry(label, function () {
             carouselPageIndex = slideIdx;
             applyCarouselTransform();
             updateCarouselNavUI();
             var carEl = document.getElementById('inputCarousel');
             if (carEl) carEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }, { canDrag: canDrag, boardSlot: boardSlot });
+          }, { canDrag: canDragToc, dndKey: dndKey });
         });
 
         setupBoardTocReorderDnD();
@@ -1284,8 +1355,38 @@
         }
       }
 
+      function reorderCombinedSlidesByKey(fromKey, toKey) {
+        if (!fromKey || !toKey || fromKey === toKey) return;
+        if (!window.metricsCombineSlideOrder || !userCtx || !userCtx.userId) return;
+        var payloadBiz = collectDashboardFromDom();
+        var personal = payloadBiz.metrics || [];
+        if (personal.length === 0) personal.push(emptyMetricSlot());
+        var order = window.metricsCombineSlideOrder.loadMerged(
+          userCtx.userId,
+          individualSlotInviteList,
+          personal.length
+        );
+        var i = order.indexOf(fromKey);
+        var j = order.indexOf(toKey);
+        if (i < 0 || j < 0) return;
+        var tmp = order[i];
+        order[i] = order[j];
+        order[j] = tmp;
+        window.metricsCombineSlideOrder.saveOrder(userCtx.userId, order);
+        renderMainInputCarousel(personal);
+        syncTitleRowFromTextareasCarousel();
+        updateAllSummaryInputsState();
+        applyRowAccessLocks();
+        refreshBoardToc();
+        scheduleRemoteSave();
+      }
+
       function reorderPersonalBoards(sourceSlot, targetSlot) {
         if (sourceSlot === targetSlot) return;
+        if (isHomeDashboard && window.metricsCombineSlideOrder && userCtx && userCtx.userId) {
+          reorderCombinedSlidesByKey('p:' + sourceSlot, 'p:' + targetSlot);
+          return;
+        }
         var payloadBiz = collectDashboardFromDom();
         var metricsByIndex = payloadBiz.metrics || [];
         var track = document.getElementById('carouselTrack');
@@ -1337,7 +1438,7 @@
       }
 
       function setupBoardTocReorderDnD() {
-        if (!isHomeDashboard || isCollaborator) return;
+        if (!isHomeDashboard || isCollaborator || !window.metricsCombineSlideOrder) return;
         var list = document.getElementById('boardsTocList');
         if (!list) return;
         list.querySelectorAll('.boards-toc-btn-draggable').forEach(function (btn) {
@@ -1345,9 +1446,9 @@
           btn.setAttribute('data-board-dnd-wired', '1');
 
           btn.addEventListener('dragstart', function (e) {
-            var slot = btn.getAttribute('data-board-slot') || '';
+            var key = btn.getAttribute('data-dnd-key') || '';
             if (e && e.dataTransfer) {
-              e.dataTransfer.setData('text/plain', slot);
+              e.dataTransfer.setData('text/plain', key);
               e.dataTransfer.effectAllowed = 'move';
             }
             btn.classList.add('mv-board-dragging');
@@ -1368,10 +1469,10 @@
             if (!e) return;
             e.preventDefault();
             btn.classList.remove('mv-board-dnd-over');
-            var sourceSlot = parseInt((e.dataTransfer && e.dataTransfer.getData('text/plain')) ? e.dataTransfer.getData('text/plain') : '', 10);
-            var targetSlot = parseInt(btn.getAttribute('data-board-slot') || '', 10);
-            if (isNaN(sourceSlot) || isNaN(targetSlot)) return;
-            reorderPersonalBoards(sourceSlot, targetSlot);
+            var sourceKey = (e.dataTransfer && e.dataTransfer.getData('text/plain')) ? e.dataTransfer.getData('text/plain') : '';
+            var targetKey = btn.getAttribute('data-dnd-key') || '';
+            if (!sourceKey || !targetKey) return;
+            reorderCombinedSlidesByKey(sourceKey, targetKey);
           });
         });
       }
@@ -1473,13 +1574,32 @@
         if (personal.length === 0) personal.push(emptyMetricSlot());
         if (personal.length > MAX_METRICS) personal = personal.slice(0, MAX_METRICS);
 
-        var slides = [];
-        invites.forEach(function (inv) {
-          slides.push({ kind: 'shared', inv: inv });
-        });
-        personal.forEach(function (m, pi) {
-          slides.push({ kind: 'personal', personalIndex: pi, data: m });
-        });
+        var slides;
+        if (isHomeDashboard && window.metricsCombineSlideOrder && userCtx && userCtx.userId) {
+          var mapShared = {};
+          invites.forEach(function (inv) {
+            if (inv.metric_index == null || inv.metric_index < 0) return;
+            mapShared['s:' + inv.owner_user_id + ':' + inv.metric_index] = { kind: 'shared', inv: inv };
+          });
+          var mapPersonal = {};
+          personal.forEach(function (d, i) {
+            mapPersonal['p:' + i] = { kind: 'personal', personalIndex: i, data: d };
+          });
+          var orderKeys = window.metricsCombineSlideOrder.loadMerged(userCtx.userId, invites, personal.length);
+          slides = [];
+          orderKeys.forEach(function (k) {
+            if (mapShared[k]) slides.push(mapShared[k]);
+            else if (mapPersonal[k]) slides.push(mapPersonal[k]);
+          });
+        } else {
+          slides = [];
+          invites.forEach(function (inv) {
+            slides.push({ kind: 'shared', inv: inv });
+          });
+          personal.forEach(function (m, pi) {
+            slides.push({ kind: 'personal', personalIndex: pi, data: m });
+          });
+        }
 
         var n = slides.length;
         var spv = slidesPerViewForInput();
@@ -1876,11 +1996,11 @@
         var body = metricRow.querySelector('.invited-users-body');
         var btnRemove = metricRow.querySelector('.btn-remove-selected-invites');
         if (!body || !btnRemove) return;
-        var n = body.querySelectorAll('.invited-user-cb:checked').length;
+        var sel = body.querySelector('tr.invited-user-row-selected');
         var metricIndex = parseInt(metricRow.getAttribute('data-index') || '0', 10);
         var canManage = canManageInvitesForMetric(metricIndex, metricRow);
-        btnRemove.disabled = n === 0 || !canManage;
-        btnRemove.textContent = n <= 1 ? 'Remove user' : 'Remove users';
+        btnRemove.disabled = !sel || !canManage;
+        btnRemove.textContent = 'Remove user';
       }
 
       function refreshInvitedUsersSection(metricRow) {
@@ -1891,10 +2011,10 @@
         wrap.hidden = false;
         var canManage = canManageInvitesForMetric(metricIndex, metricRow);
         var thCb = metricRow.querySelector('.th-invite-cb');
-        if (thCb) thCb.style.display = canManage ? '' : 'none';
+        if (thCb) thCb.style.display = 'none';
         var thAdd = metricRow.querySelector('.th-invite-individual');
         if (thAdd) thAdd.style.display = canManage ? '' : 'none';
-        var colSpan = canManage ? 5 : 4;
+        var colSpan = canManage ? 4 : 3;
         if (!window.metricsFetchMetricInvites) {
           body.innerHTML = '<tr><td colspan="' + colSpan + '" class="invited-users-empty">Supabase is not configured.</td></tr>';
           updateRemoveInviteButton(metricRow);
@@ -1929,9 +2049,10 @@
             var tr = document.createElement('tr');
             var em = row.email || '';
             var perm = row.permission === 'read' ? 'read' : row.permission === 'admin' ? 'admin' : 'edit';
-            var cbCell = canManage
-              ? '<td><input type="checkbox" class="invited-user-cb" data-email="' + escapeAttr(em) + '" aria-label="Select ' + escapeAttr(em) + '" /></td>'
-              : '<td></td>';
+            if (canManage) {
+              tr.classList.add('invited-user-selectable');
+              tr.setAttribute('data-invite-email', em);
+            }
             var permCell = canManage
               ? '<td><select class="invited-perm-select invite-permission-select" data-email="' + escapeAttr(em) + '" aria-label="Permission">' +
                 '<option value="read"' + (perm === 'read' ? ' selected' : '') + '>Viewer</option>' +
@@ -1941,7 +2062,7 @@
             var individualCell = canManage
               ? '<td><button type="button" class="btn-add-individual-data" data-email="' + escapeAttr(em) + '" data-name="' + escapeAttr(dbInviteDisplayName(row)) + '">Add to Individual Data</button></td>'
               : '';
-            tr.innerHTML = cbCell +
+            tr.innerHTML =
               '<td>' + escapeHtmlStr(dbInviteDisplayName(row)) + '</td>' +
               '<td>' + escapeHtmlStr(em) + '</td>' +
               permCell +
@@ -2004,7 +2125,7 @@
               businessName = (metricRow.getAttribute('data-business-name') || '').trim();
             }
             var rowOwnerId = getRowOwnerId(metricRow);
-            var redirectTo = window.metricsAppUrl('auth/?mode=signup');
+            var redirectTo = window.metricsAbsoluteAppUrl('auth/?mode=signup');
             var email = fieldValue(emailEl);
             if (!email) {
               alert('Please enter an email address.');
@@ -2044,51 +2165,51 @@
           });
         }
         if (btnRemove && body) {
-          body.addEventListener('change', function (e) {
-            if (e.target && e.target.classList && e.target.classList.contains('invited-user-cb')) {
-              updateRemoveInviteButton(metricRow);
-            }
-          });
           body.addEventListener('click', function (e) {
             var target = e.target;
-            if (!target || !target.classList || !target.classList.contains('btn-add-individual-data')) return;
-            if (!canManageInvitesForMetric(parseInt(metricRow.getAttribute('data-index') || '0', 10), metricRow)) return;
-            var email = target.getAttribute('data-email') || '';
-            var name = target.getAttribute('data-name') || '';
-            var added = addInviteUserToIndividualData(metricRow, email, name);
-            if (added) {
-              target.textContent = 'Added';
-              target.disabled = true;
+            if (target && target.classList && target.classList.contains('btn-add-individual-data')) {
+              if (!canManageInvitesForMetric(parseInt(metricRow.getAttribute('data-index') || '0', 10), metricRow)) return;
+              var email = target.getAttribute('data-email') || '';
+              var name = target.getAttribute('data-name') || '';
+              var added = addInviteUserToIndividualData(metricRow, email, name);
+              if (added) {
+                target.textContent = 'Added';
+                target.disabled = true;
+              }
+              return;
             }
+            var tr = target && target.closest ? target.closest('tr.invited-user-selectable') : null;
+            if (!tr || !body.contains(tr)) return;
+            if (target.closest('select') || target.closest('button')) return;
+            body.querySelectorAll('tr.invited-user-row-selected').forEach(function (x) {
+              x.classList.remove('invited-user-row-selected');
+            });
+            tr.classList.add('invited-user-row-selected');
+            updateRemoveInviteButton(metricRow);
           });
           btnRemove.addEventListener('click', function () {
             var metricIndex = parseInt(metricRow.getAttribute('data-index') || '0', 10);
             if (!canManageInvitesForMetric(metricIndex, metricRow)) return;
-            var checked = body.querySelectorAll('.invited-user-cb:checked');
-            if (!checked.length) return;
-            var n = checked.length;
-            var msg = n === 1 ? 'Remove this user from this metric?' : 'Remove these ' + n + ' users from this metric?';
-            if (!window.confirm(msg)) return;
-            var removedSelf = false;
-            Array.prototype.forEach.call(checked, function (cb) {
-              if (normalizeEmailLocal(cb.getAttribute('data-email')) === normalizeEmailLocal(userCtx.email)) {
-                removedSelf = true;
-              }
-            });
+            var selRow = body.querySelector('tr.invited-user-row-selected');
+            if (!selRow) return;
+            var rmEmail = selRow.getAttribute('data-invite-email') || '';
+            if (!rmEmail) return;
+            if (!window.confirm('Are you sure? This cannot be undone.')) return;
+            var removedSelf = normalizeEmailLocal(rmEmail) === normalizeEmailLocal(userCtx.email);
             btnRemove.disabled = true;
             var rowOwnerForDel = getRowOwnerId(metricRow);
-            var tasks = Array.prototype.map.call(checked, function (cb) {
-              return window.metricsDeleteMetricInvite({
+            var tasks = [
+              window.metricsDeleteMetricInvite({
                 ownerUserId: rowOwnerForDel,
                 metricIndex: metricIndex,
-                email: cb.getAttribute('data-email')
-              });
-            });
+                email: rmEmail
+              })
+            ];
             Promise.all(tasks)
               .then(function () {
                 save();
                 if (isCollaborator && removedSelf) {
-                  window.location.href = window.metricsAppUrl('input/') + window.location.search;
+                  window.location.href = window.metricsAppUrl('input/');
                   return;
                 }
                 refreshInvitedUsersSection(metricRow);
@@ -2203,6 +2324,7 @@
         if (goalInput) goalInput.placeholder = isRanking ? 'Using Individual data. Select Summary view to edit this field' : 'Goal';
         if (currentInput) currentInput.placeholder = isRanking ? 'Using Individual data. Select Summary view to edit this field' : 'Current';
         if (goalBlock) goalBlock.classList.toggle('goal-current-block-muted', isRanking);
+        updateSummaryEmptyPlaceholder(row);
       }
 
       function updateAllSummaryInputsState() {
@@ -2371,7 +2493,7 @@
         .catch(function (err) {
           if (isCollaborator) {
             alert((err && err.message) ? err.message : 'Unable to load this dashboard.');
-            window.location.href = window.metricsAppUrl('input/') + window.location.search;
+            window.location.href = window.metricsAppUrl('input/');
             return;
           }
           updateChromeForMode();

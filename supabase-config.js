@@ -1,14 +1,11 @@
 /**
- * Supabase client for the Metrics View app (clean URLs, no .html).
+ * Supabase client for the Metrics app (metrics folder).
  *
- * Authentication → URL configuration (Supabase dashboard):
- * - Site URL: https://metricsview.com.au/
- * - Additional redirect URLs: https://metricsview.com.au/auth/ and
- *   https://metricsview.com.au/auth/?mode=signup (invites + email confirm),
- *   https://metricsview.com.au/reset-password/ , http://localhost:* (for local dev)
- *
- * If this app is deployed in a subpath, set window.METRICS_APP_BASE_PATH before this
- * script runs (e.g. "subdir") so metricsAppUrl() builds correct absolute links.
+ * Dashboard checklist (Authentication → URL Configuration):
+ * - Site URL: https://metrics-test-one.vercel.app
+ *   (or your exact deploy URL, including /metrics if the app lives in a subpath)
+ * - Additional redirect URLs: same origin + /metrics/auth.html?mode=signup (invites + email confirm),
+ *   and http://localhost:* for local dev
  *
  * The anon key is safe to expose in the browser; protect data with Row Level Security (RLS).
  */
@@ -16,15 +13,6 @@
   var SUPABASE_URL = 'https://atmghlkrmdbrfyondmly.supabase.co';
   var SUPABASE_ANON_KEY =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0bWdobGtybWRicmZ5b25kbWx5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1NTI3NzEsImV4cCI6MjA4NzEyODc3MX0.RihXzcxLxMCbkx5l5IcAXAwpEguT9zkHEznyI-Nb32U';
-
-  window.METRICS_APP_BASE_PATH = typeof window.METRICS_APP_BASE_PATH === 'string' ? window.METRICS_APP_BASE_PATH : '';
-  window.metricsAppUrl = function (path) {
-    var base = String(window.METRICS_APP_BASE_PATH || '').trim().replace(/^\/+|\/+$/g, '');
-    var segment = String(path == null ? '' : path).replace(/^\/+/, '');
-    var prefix = window.location.origin + (base ? '/' + base : '');
-    if (!segment) return prefix + '/';
-    return prefix + '/' + segment;
-  };
 
   window.METRICS_SUPABASE_URL = SUPABASE_URL;
   var USER_CTX_KEY = 'metricsUserContext';
@@ -225,9 +213,19 @@
       for (var i = 0; i < 10; i++) {
         metrics.push(byIndex[i] ? JSON.parse(JSON.stringify(byIndex[i])) : defaultMetricPayload());
       }
+      var pc = profileRow && profileRow.plan_column != null ? parseInt(profileRow.plan_column, 10) : 3;
+      if (isNaN(pc) || pc < 1 || pc > 3) pc = 3;
       return {
         businessName: (profileRow && profileRow.business_name) ? String(profileRow.business_name) : '',
         businessImage: (profileRow && profileRow.business_image) ? String(profileRow.business_image) : '',
+        displayBoardColor: (profileRow && profileRow.display_board_color) ? String(profileRow.display_board_color) : '',
+        billingContactName: (profileRow && profileRow.billing_contact_name)
+          ? String(profileRow.billing_contact_name)
+          : '',
+        billingContactEmail: (profileRow && profileRow.billing_contact_email)
+          ? String(profileRow.billing_contact_email)
+          : '',
+        planColumn: pc,
         metrics: metrics
       };
     }
@@ -239,7 +237,13 @@
       }
       var client = window.metricsSupabase;
       return Promise.all([
-        client.from('business_profiles').select('business_name,business_image').eq('owner_user_id', ownerUserId).maybeSingle(),
+        client
+          .from('business_profiles')
+          .select(
+            'business_name,business_image,display_board_color,billing_contact_name,billing_contact_email,plan_column'
+          )
+          .eq('owner_user_id', ownerUserId)
+          .maybeSingle(),
         client.from('business_metric_slots').select('metric_index,payload').eq('owner_user_id', ownerUserId)
       ]).then(function (results) {
         var prof = results[0];
@@ -267,12 +271,60 @@
       var metrics = (dashboardData && dashboardData.metrics) ? dashboardData.metrics : [];
       var name = dashboardData && dashboardData.businessName != null ? String(dashboardData.businessName) : '';
       var img = dashboardData && dashboardData.businessImage != null ? String(dashboardData.businessImage) : '';
+      function buildProfileRow(existingRow) {
+        var ex = existingRow || {};
+        var dbcOut;
+        if (dashboardData && Object.prototype.hasOwnProperty.call(dashboardData, 'displayBoardColor')) {
+          dbcOut =
+            dashboardData.displayBoardColor != null && String(dashboardData.displayBoardColor).trim()
+              ? String(dashboardData.displayBoardColor).trim()
+              : null;
+        } else {
+          dbcOut = ex.display_board_color != null ? String(ex.display_board_color) : null;
+        }
+        var billNameOut;
+        if (dashboardData && Object.prototype.hasOwnProperty.call(dashboardData, 'billingContactName')) {
+          billNameOut =
+            dashboardData.billingContactName != null ? String(dashboardData.billingContactName) : null;
+        } else {
+          billNameOut = ex.billing_contact_name != null ? String(ex.billing_contact_name) : null;
+        }
+        var billEmailOut;
+        if (dashboardData && Object.prototype.hasOwnProperty.call(dashboardData, 'billingContactEmail')) {
+          billEmailOut =
+            dashboardData.billingContactEmail != null ? String(dashboardData.billingContactEmail) : null;
+        } else {
+          billEmailOut = ex.billing_contact_email != null ? String(ex.billing_contact_email) : null;
+        }
+        var planColOut;
+        if (dashboardData && Object.prototype.hasOwnProperty.call(dashboardData, 'planColumn')) {
+          planColOut = parseInt(dashboardData.planColumn, 10);
+        } else {
+          planColOut = ex.plan_column != null ? parseInt(ex.plan_column, 10) : 3;
+        }
+        if (isNaN(planColOut) || planColOut < 1 || planColOut > 3) planColOut = 3;
+        return {
+          owner_user_id: ownerUserId,
+          business_name: name,
+          business_image: img,
+          display_board_color: dbcOut,
+          billing_contact_name: billNameOut,
+          billing_contact_email: billEmailOut,
+          plan_column: planColOut
+        };
+      }
+
       var profilePromise = includeProfile
-        ? client.from('business_profiles').upsert({
-            owner_user_id: ownerUserId,
-            business_name: name,
-            business_image: img
-          }, { onConflict: 'owner_user_id' })
+        ? client
+            .from('business_profiles')
+            .select('display_board_color,billing_contact_name,billing_contact_email,plan_column')
+            .eq('owner_user_id', ownerUserId)
+            .maybeSingle()
+            .then(function (pres) {
+              if (pres && pres.error) throw pres.error;
+              var existing = pres && pres.data ? pres.data : {};
+              return client.from('business_profiles').upsert(buildProfileRow(existing), { onConflict: 'owner_user_id' });
+            })
         : Promise.resolve({ data: null, error: null });
       var indices = allowedMetricIndexes;
       if (!indices || !indices.length) {
@@ -337,6 +389,98 @@
         });
     };
 
+    window.metricsCombineSlideOrder = {
+      storageKey: function (uid) {
+        return 'metricsInputSlideOrder:' + uid;
+      },
+      defaultKeysFromInvites: function (slotInvites, personalCount) {
+        var invites = (slotInvites || []).slice().filter(function (r) {
+          return (
+            r &&
+            r.metric_index != null &&
+            r.metric_index >= 0 &&
+            r.metric_index <= 9 &&
+            r.status !== 'revoked'
+          );
+        });
+        invites.sort(function (a, b) {
+          var an = String(a.business_name || '').localeCompare(String(b.business_name || ''));
+          if (an !== 0) return an;
+          return (a.metric_index || 0) - (b.metric_index || 0);
+        });
+        var keys = invites.map(function (inv) {
+          return 's:' + inv.owner_user_id + ':' + inv.metric_index;
+        });
+        var i;
+        for (i = 0; i < personalCount; i++) keys.push('p:' + i);
+        return keys;
+      },
+      mergeKeys: function (defaultKeys, savedKeys) {
+        var seen = {};
+        var out = [];
+        (savedKeys || []).forEach(function (k) {
+          if (typeof k !== 'string') return;
+          if (defaultKeys.indexOf(k) >= 0 && !seen[k]) {
+            out.push(k);
+            seen[k] = true;
+          }
+        });
+        defaultKeys.forEach(function (k) {
+          if (!seen[k]) {
+            out.push(k);
+            seen[k] = true;
+          }
+        });
+        return out;
+      },
+      loadMerged: function (userId, slotInvites, personalCount) {
+        var def = this.defaultKeysFromInvites(slotInvites, personalCount);
+        var raw = '';
+        try {
+          raw = localStorage.getItem(this.storageKey(userId)) || '';
+        } catch (e) {}
+        var saved = [];
+        try {
+          saved = raw ? JSON.parse(raw) : [];
+        } catch (e2) {
+          saved = [];
+        }
+        if (!Array.isArray(saved)) saved = [];
+        return this.mergeKeys(def, saved);
+      },
+      saveOrder: function (userId, keys) {
+        try {
+          localStorage.setItem(this.storageKey(userId), JSON.stringify(keys || []));
+        } catch (e) {}
+      }
+    };
+
+    window.metricsFetchAllMetricInvitesForOwner = function (ownerUserId) {
+      if (!window.metricsSupabase) {
+        return Promise.reject(new Error('Supabase is not initialized.'));
+      }
+      return window.metricsSupabase
+        .from('metric_invites')
+        .select('first_name,last_name,email,metric_index,permission,status,created_at')
+        .eq('owner_user_id', ownerUserId)
+        .order('created_at', { ascending: true });
+    };
+
+    window.metricsDeleteAllInvitesForOwnerEmail = function (ownerUserId, email) {
+      if (!window.metricsSupabase) {
+        return Promise.reject(new Error('Supabase is not initialized.'));
+      }
+      var em = normalizeInviteEmail(email);
+      if (!em) {
+        return Promise.reject(new Error('Email is required.'));
+      }
+      return window.metricsSupabase
+        .from('metric_invites')
+        .delete()
+        .eq('owner_user_id', ownerUserId)
+        .eq('email', em);
+    };
+
     window.metricsFetchInvitesForOwnerAndEmail = function (ownerUserId, email) {
       if (!window.metricsSupabase) {
         return Promise.reject(new Error('Supabase is not initialized.'));
@@ -355,12 +499,33 @@
           return { data: filtered, error: null };
         });
     };
+
+    window.metricsAppUrl = function (relPath) {
+      var r = relPath != null ? String(relPath) : '';
+      var path = window.location && window.location.pathname ? window.location.pathname : '/';
+      var parts = path.split('/').filter(function (x) {
+        return x && x !== 'index.html';
+      });
+      var depth = parts.length;
+      if (depth <= 0) return './' + r;
+      var prefix = '';
+      var i;
+      for (i = 0; i < depth; i++) prefix += '../';
+      return prefix + r;
+    };
+
+    window.metricsAbsoluteAppUrl = function (relPath) {
+      var rel = window.metricsAppUrl(relPath);
+      try {
+        return new URL(rel, window.location.href).href;
+      } catch (e) {
+        return rel;
+      }
+    };
   }
 
   window.metricsLogout = function (redirectTo) {
-    var dest = redirectTo;
-    if (!dest && typeof window.metricsAppUrl === 'function') dest = window.metricsAppUrl('');
-    if (!dest) dest = '/';
+    var dest = redirectTo || 'welcome.html';
     function finish() {
       try {
         if (window.metricsSetUserContext) window.metricsSetUserContext(null);

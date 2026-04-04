@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Metrics View – Corporate Profile</title>
+  <title>Metrics View – Corporate Admin</title>
   <link rel="stylesheet" href="../style.css" />
 </head>
 <body class="metrics-page mv-landing">
@@ -12,30 +12,87 @@
     <a class="mv-landing-nav-link" href="../input/">Back to Metrics Centre</a>
     <a class="mv-landing-nav-link" href="../user-guide/">User Guide</a>
   </header>
-  <main class="mv-page-shell">
-    <section class="mv-page-card">
-      <h1 class="mv-page-title">Corporate Profile</h1>
-      <p class="mv-page-subtitle">Update your business identity for Metrics View.</p>
-
-      <div class="mv-form-grid">
-        <label class="mv-form-label" for="corporateBusinessName">Business name</label>
-        <input id="corporateBusinessName" class="mv-input" type="text" placeholder="Business name" />
-
-        <div>
-          <div class="mv-form-label">Display picture</div>
-          <div class="mv-profile-pic-row">
-            <div id="corporatePicPreview" class="mv-profile-pic" aria-hidden="true"></div>
-            <button id="corporatePicChoose" class="mv-btn mv-btn-ghost" type="button">Choose image</button>
+  <main class="mv-corporate-shell">
+    <aside class="mv-corporate-nav" aria-label="Corporate admin sections">
+      <h1 class="mv-corporate-nav-title">Corporate Admin</h1>
+      <p class="mv-corporate-nav-sub">Manage branding, people, and billing for your organisation in Metrics View.</p>
+      <nav class="mv-corporate-nav-list">
+        <button type="button" class="mv-corporate-nav-btn mv-corporate-nav-btn-active" data-section="branding">Company branding</button>
+        <button type="button" class="mv-corporate-nav-btn" data-section="people">Collaborators &amp; permissions</button>
+        <button type="button" class="mv-corporate-nav-btn" data-section="billing">Billing</button>
+      </nav>
+    </aside>
+    <div class="mv-corporate-panels">
+      <section class="mv-corporate-panel" id="panel-branding" aria-labelledby="corp-branding-h">
+        <h2 id="corp-branding-h" class="mv-page-title">Company branding</h2>
+        <p class="mv-page-subtitle">Company name, display picture, and display screen accent colour.</p>
+        <div class="mv-form-grid">
+          <label class="mv-form-label" for="corporateBusinessName">Company name</label>
+          <input id="corporateBusinessName" class="mv-input" type="text" placeholder="Company name" />
+          <div>
+            <div class="mv-form-label">Display picture</div>
+            <div class="mv-profile-pic-row">
+              <div id="corporatePicPreview" class="mv-profile-pic" aria-hidden="true"></div>
+              <button id="corporatePicChoose" class="mv-btn mv-btn-ghost" type="button">Choose image</button>
+            </div>
+          </div>
+          <label class="mv-form-label" for="corporateDisplayColor">Display board colour</label>
+          <div class="mv-color-row">
+            <input id="corporateDisplayColor" class="mv-input mv-color-text" type="text" placeholder="#3366cc" maxlength="32" spellcheck="false" />
+            <input id="corporateDisplayColorPick" type="color" class="mv-color-picker" value="#4a6fa5" aria-label="Pick display colour" />
           </div>
         </div>
-      </div>
+        <div class="mv-actions-row" style="margin-top:16px;">
+          <button id="corporateSaveBrandingBtn" class="mv-btn mv-btn-primary" type="button">Save branding</button>
+        </div>
+        <p id="corporateBrandingStatus" class="mv-landing-note" aria-live="polite" style="margin-top:12px;"></p>
+      </section>
 
-      <div class="mv-actions-row" style="margin-top:16px;">
-        <button id="corporateSaveBtn" class="mv-btn mv-btn-primary" type="button">Save profile</button>
-        <a class="mv-btn mv-btn-ghost" href="../input/">Back to Metrics Centre</a>
-      </div>
-      <p id="corporateStatus" class="mv-landing-note" aria-live="polite" style="margin-top:12px;"></p>
-    </section>
+      <section class="mv-corporate-panel" id="panel-people" hidden aria-labelledby="corp-people-h">
+        <h2 id="corp-people-h" class="mv-page-title">Collaborators &amp; permissions</h2>
+        <p class="mv-page-subtitle">Invite staff to Metrics View, review board access, and manage permissions. Names are sorted by surname.</p>
+        <div class="mv-corp-invite-box">
+          <h3 class="mv-corp-subh">Invite staff</h3>
+          <div class="mv-corp-invite-grid">
+            <input id="corpInviteName" class="mv-input" type="text" placeholder="Name" aria-label="Invitee name" />
+            <input id="corpInviteEmail" class="mv-input" type="email" placeholder="Email" aria-label="Invitee email" />
+            <button type="button" id="corpInviteSendBtn" class="mv-btn mv-btn-primary">Send invite</button>
+          </div>
+          <p id="corpInviteStatus" class="mv-landing-note" aria-live="polite"></p>
+        </div>
+        <div class="mv-corp-table-wrap">
+          <table class="mv-corp-table" aria-label="Collaborators">
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Boards</th></tr>
+            </thead>
+            <tbody id="corpPeopleBody"></tbody>
+          </table>
+        </div>
+        <div id="corpPersonDetail" class="mv-corp-detail" hidden>
+          <h3 class="mv-corp-subh" id="corpDetailTitle">Board access</h3>
+          <ul id="corpBoardList" class="mv-corp-board-list"></ul>
+          <button type="button" id="corpRemoveFromCompanyBtn" class="mv-btn mv-btn-ghost mv-btn-danger-text">Remove from company account</button>
+        </div>
+        <p id="corpPeopleStatus" class="mv-landing-note" aria-live="polite" style="margin-top:12px;"></p>
+      </section>
+
+      <section class="mv-corporate-panel" id="panel-billing" hidden aria-labelledby="corp-billing-h">
+        <h2 id="corp-billing-h" class="mv-page-title">Billing</h2>
+        <p class="mv-page-subtitle">Plan details will be finalised when public pricing is released. All current accounts are on Column&nbsp;3.</p>
+        <div class="mv-form-grid">
+          <label class="mv-form-label" for="billingContactName">Contact name</label>
+          <input id="billingContactName" class="mv-input" type="text" />
+          <label class="mv-form-label" for="billingContactEmail">Contact email</label>
+          <input id="billingContactEmail" class="mv-input" type="email" />
+          <div class="mv-form-label">Plan</div>
+          <div id="billingPlanDisplay" class="mv-billing-plan-display"></div>
+        </div>
+        <div class="mv-actions-row" style="margin-top:16px;">
+          <button id="billingSaveBtn" class="mv-btn mv-btn-primary" type="button">Save billing details</button>
+        </div>
+        <p id="billingStatus" class="mv-landing-note" aria-live="polite" style="margin-top:12px;"></p>
+      </section>
+    </div>
   </main>
 
   <input type="file" accept="image/*" id="corporatePicFile" hidden />
@@ -46,9 +103,12 @@
       var KEY_BUSINESS = 'metricsDashboard';
       var ctx = null;
       var selectedBusinessImage = '';
+      var ownerDash = null;
+      var allInvitesCache = [];
+      var selectedPersonEmail = '';
 
-      function setStatus(msg, isError) {
-        var el = document.getElementById('corporateStatus');
+      function setText(id, msg, isError) {
+        var el = document.getElementById(id);
         if (!el) return;
         el.textContent = msg || '';
         el.style.color = isError ? '#fda4af' : '#9aa3b2';
@@ -57,25 +117,66 @@
       function applyPic(url) {
         var box = document.getElementById('corporatePicPreview');
         if (!box) return;
-        box.style.backgroundImage = url ? ('url(' + url + ')') : '';
+        box.style.backgroundImage = url ? 'url(' + url + ')' : '';
       }
 
-      function loadLocalDashboard() {
-        try {
-          var raw = localStorage.getItem(KEY_BUSINESS);
-          if (!raw) return null;
-          return JSON.parse(raw);
-        } catch (e) {
-          return null;
+      function normalizeEmail(em) {
+        return String(em || '')
+          .trim()
+          .toLowerCase();
+      }
+
+      function permissionLabel(p) {
+        if (p === 'read') return 'Viewer';
+        if (p === 'admin') return 'Admin';
+        return 'Editor';
+      }
+
+      function sortKeyForInviteRow(row) {
+        var ln = (row.last_name || '').trim().toLowerCase();
+        if (ln) return ln;
+        var fn = (row.first_name || '').trim();
+        var parts = fn.split(/\s+/).filter(Boolean);
+        return (parts.length ? parts[parts.length - 1] : '').toLowerCase();
+      }
+
+      function displayNameFromRow(row) {
+        var a = (row.first_name || '').trim();
+        var b = (row.last_name || '').trim();
+        if (a && b) return a + ' ' + b;
+        return a || b || row.email || '';
+      }
+
+      function switchSection(id) {
+        document.querySelectorAll('.mv-corporate-nav-btn').forEach(function (b) {
+          b.classList.toggle('mv-corporate-nav-btn-active', b.getAttribute('data-section') === id);
+        });
+        document.getElementById('panel-branding').hidden = id !== 'branding';
+        document.getElementById('panel-people').hidden = id !== 'people';
+        document.getElementById('panel-billing').hidden = id !== 'billing';
+      }
+
+      document.querySelectorAll('.mv-corporate-nav-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          switchSection(btn.getAttribute('data-section') || 'branding');
+        });
+      });
+
+      function syncColorPickers() {
+        var t = document.getElementById('corporateDisplayColor');
+        var p = document.getElementById('corporateDisplayColorPick');
+        if (!t || !p) return;
+        var v = (t.value || '').trim();
+        if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+          p.value = v;
         }
       }
 
-      function saveLocalDashboardPatch(name, image) {
-        var local = loadLocalDashboard() || { businessName: '', businessImage: '', metrics: [] };
-        local.businessName = name || '';
-        local.businessImage = image || '';
-        try { localStorage.setItem(KEY_BUSINESS, JSON.stringify(local)); } catch (e) {}
-      }
+      document.getElementById('corporateDisplayColor').addEventListener('input', syncColorPickers);
+      document.getElementById('corporateDisplayColorPick').addEventListener('input', function () {
+        var t = document.getElementById('corporateDisplayColor');
+        if (t) t.value = this.value;
+      });
 
       function loadProfile() {
         return Promise.resolve()
@@ -89,33 +190,53 @@
               return;
             }
             document.getElementById('corporateBusinessName').value = ctx.businessName || '';
-
-            if (window.metricsLoadBusinessDashboard) {
-              return window.metricsLoadBusinessDashboard(ctx.userId).then(function (dash) {
-                var bn = (dash && dash.businessName) ? String(dash.businessName) : '';
-                var bi = (dash && dash.businessImage) ? String(dash.businessImage) : '';
-                if (bn) document.getElementById('corporateBusinessName').value = bn;
-                selectedBusinessImage = bi;
-                applyPic(selectedBusinessImage);
-              }).catch(function () {});
-            }
+            if (!window.metricsLoadBusinessDashboard) return null;
+            return window.metricsLoadBusinessDashboard(ctx.userId).then(function (dash) {
+              ownerDash = dash;
+              var bn = (dash && dash.businessName) ? String(dash.businessName) : '';
+              var bi = (dash && dash.businessImage) ? String(dash.businessImage) : '';
+              var col = (dash && dash.displayBoardColor) ? String(dash.displayBoardColor).trim() : '';
+              if (bn) document.getElementById('corporateBusinessName').value = bn;
+              selectedBusinessImage = bi;
+              applyPic(selectedBusinessImage);
+              var ct = document.getElementById('corporateDisplayColor');
+              if (ct) ct.value = col || '';
+              syncColorPickers();
+              document.getElementById('billingContactName').value =
+                (dash && dash.billingContactName) ? String(dash.billingContactName) : '';
+              document.getElementById('billingContactEmail').value =
+                (dash && dash.billingContactEmail) ? String(dash.billingContactEmail) : '';
+              renderBillingPlan((dash && dash.planColumn) ? dash.planColumn : 3);
+            });
           });
       }
 
-      function saveCorporateProfile() {
+      function renderBillingPlan(planCol) {
+        var el = document.getElementById('billingPlanDisplay');
+        if (!el) return;
+        var n = parseInt(planCol, 10);
+        if (isNaN(n) || n < 1 || n > 3) n = 3;
+        var name = 'Column ' + n;
+        var extra = '';
+        if (n === 1 || n === 2) {
+          extra =
+            ' <a class="mv-billing-update-link" href="../pricing/">Update plan</a>';
+        }
+        el.innerHTML =
+          '<p class="mv-billing-plan-line"><strong>' +
+          name +
+          '</strong> — Next payment due: <strong>TBC</strong>' +
+          extra +
+          '</p>';
+      }
+
+      function saveBranding() {
         if (!ctx || !window.metricsSupabase) return;
-
         var businessName = (document.getElementById('corporateBusinessName').value || '').trim();
-        setStatus('Saving profile...');
-
-        // Keep auth user_metadata.business_name in sync so other pages show the new name immediately.
-        var updateMeta = window.metricsSupabase.auth.updateUser({
-          data: {
-            business_name: businessName
-          }
-        });
-
-        return updateMeta
+        var displayColor = (document.getElementById('corporateDisplayColor').value || '').trim();
+        setText('corporateBrandingStatus', 'Saving…');
+        return window.metricsSupabase.auth
+          .updateUser({ data: { business_name: businessName } })
           .then(function (res) {
             if (res && res.error) throw res.error;
             if (window.metricsSetUserContext) {
@@ -128,15 +249,14 @@
                 lastName: ctx.lastName || ''
               });
             }
-
-            if (!window.metricsLoadBusinessDashboard || !window.metricsSaveBusinessDashboard) return null;
-
             return window.metricsLoadBusinessDashboard(ctx.userId).then(function (dash) {
+              ownerDash = dash;
               return window.metricsSaveBusinessDashboard(
                 ctx.userId,
                 {
                   businessName: businessName,
                   businessImage: selectedBusinessImage || '',
+                  displayBoardColor: displayColor,
                   metrics: (dash && dash.metrics) ? dash.metrics : []
                 },
                 null,
@@ -145,22 +265,273 @@
             });
           })
           .then(function () {
-            saveLocalDashboardPatch(businessName, selectedBusinessImage || '');
             try {
-              localStorage.setItem('metricsDisplayRefreshSignal', JSON.stringify({ at: Date.now(), reason: 'corporate-profile-save', owner: ctx.userId }));
+              localStorage.setItem(
+                KEY_BUSINESS,
+                JSON.stringify({
+                  businessName: businessName,
+                  businessImage: selectedBusinessImage || '',
+                  metrics: (ownerDash && ownerDash.metrics) ? ownerDash.metrics : []
+                })
+              );
             } catch (e) {}
-            setStatus('Profile saved.');
+            try {
+              localStorage.setItem(
+                'metricsDisplayRefreshSignal',
+                JSON.stringify({ at: Date.now(), reason: 'corporate-branding', owner: ctx.userId })
+              );
+            } catch (e2) {}
+            setText('corporateBrandingStatus', 'Branding saved.');
           })
           .catch(function (err) {
-            setStatus((err && err.message) ? err.message : 'Could not save profile.', true);
+            setText('corporateBrandingStatus', (err && err.message) ? err.message : 'Could not save.', true);
           });
       }
+
+      function saveBillingOnly() {
+        if (!ctx || !window.metricsLoadBusinessDashboard || !window.metricsSaveBusinessDashboard) return;
+        var bn = (document.getElementById('corporateBusinessName').value || '').trim();
+        var bimg = selectedBusinessImage || '';
+        var dc = (document.getElementById('corporateDisplayColor').value || '').trim();
+        var cname = (document.getElementById('billingContactName').value || '').trim();
+        var cemail = (document.getElementById('billingContactEmail').value || '').trim();
+        setText('billingStatus', 'Saving…');
+        return window.metricsLoadBusinessDashboard(ctx.userId)
+          .then(function (dash) {
+            ownerDash = dash;
+            return window.metricsSaveBusinessDashboard(
+              ctx.userId,
+              {
+                businessName: (dash && dash.businessName) ? dash.businessName : bn,
+                businessImage: (dash && dash.businessImage) ? dash.businessImage : bimg,
+                displayBoardColor: (dash && dash.displayBoardColor) ? dash.displayBoardColor : dc,
+                billingContactName: cname,
+                billingContactEmail: cemail,
+                planColumn: (dash && dash.planColumn) ? dash.planColumn : 3,
+                metrics: (dash && dash.metrics) ? dash.metrics : []
+              },
+              null,
+              { includeProfile: true }
+            );
+          })
+          .then(function () {
+            setText('billingStatus', 'Billing details saved.');
+          })
+          .catch(function (err) {
+            setText('billingStatus', (err && err.message) ? err.message : 'Could not save.', true);
+          });
+      }
+
+      function groupInvitesByEmail(rows) {
+        var map = {};
+        (rows || []).forEach(function (r) {
+          if (!r || r.status === 'revoked') return;
+          var em = normalizeEmail(r.email);
+          if (!em || em === normalizeEmail(ctx.email)) return;
+          if (!map[em]) {
+            map[em] = { email: em, name: displayNameFromRow(r), boards: [] };
+          }
+          var mi = r.metric_index;
+          if (mi == null || mi < 0) return;
+          map[em].boards.push({
+            metric_index: mi,
+            permission: r.permission || 'edit'
+          });
+        });
+        return Object.keys(map)
+          .map(function (k) {
+            return map[k];
+          })
+          .sort(function (a, b) {
+            var sa = sortKeyForInviteRow({ first_name: a.name, last_name: '', email: a.email });
+            var sb = sortKeyForInviteRow({ first_name: b.name, last_name: '', email: b.email });
+            if (sa !== sb) return sa.localeCompare(sb);
+            return a.email.localeCompare(b.email);
+          });
+      }
+
+      function metricTitleForIndex(ix) {
+        var m =
+          ownerDash && ownerDash.metrics && ownerDash.metrics[ix] ? ownerDash.metrics[ix] : null;
+        var h = m && m.heading ? String(m.heading).trim() : '';
+        return h || 'Board ' + (ix + 1);
+      }
+
+      function refreshPeopleTable() {
+        var body = document.getElementById('corpPeopleBody');
+        if (!body || !window.metricsFetchAllMetricInvitesForOwner) return;
+        setText('corpPeopleStatus', 'Loading…');
+        return window.metricsFetchAllMetricInvitesForOwner(ctx.userId).then(function (res) {
+          if (res && res.error) throw res.error;
+          allInvitesCache = res && res.data ? res.data : [];
+          var grouped = groupInvitesByEmail(allInvitesCache);
+          body.innerHTML = '';
+          if (!grouped.length) {
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="3" class="mv-corp-empty">No collaborators yet.</td>';
+            body.appendChild(tr);
+            setText('corpPeopleStatus', '');
+            return;
+          }
+          grouped.forEach(function (g) {
+            var tr = document.createElement('tr');
+            tr.className = 'mv-corp-person-row';
+            tr.setAttribute('data-email', g.email);
+            tr.innerHTML =
+              '<td>' +
+              escapeHtml(g.name || '—') +
+              '</td><td>' +
+              escapeHtml(g.email) +
+              '</td><td>' +
+              g.boards.length +
+              '</td>';
+            tr.addEventListener('click', function () {
+              document.querySelectorAll('.mv-corp-person-row').forEach(function (x) {
+                x.classList.remove('mv-corp-person-selected');
+              });
+              tr.classList.add('mv-corp-person-selected');
+              selectedPersonEmail = g.email;
+              showPersonDetail(g);
+            });
+            body.appendChild(tr);
+          });
+          setText('corpPeopleStatus', '');
+        }).catch(function (err) {
+          setText('corpPeopleStatus', (err && err.message) ? err.message : 'Could not load people.', true);
+        });
+      }
+
+      function escapeHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = s == null ? '' : String(s);
+        return d.innerHTML;
+      }
+
+      function showPersonDetail(g) {
+        var panel = document.getElementById('corpPersonDetail');
+        var list = document.getElementById('corpBoardList');
+        var title = document.getElementById('corpDetailTitle');
+        if (!panel || !list) return;
+        panel.hidden = false;
+        title.textContent = 'Access for ' + (g.name || g.email);
+        list.innerHTML = '';
+        g.boards.forEach(function (b) {
+          var li = document.createElement('li');
+          li.className = 'mv-corp-board-item';
+          var ix = b.metric_index;
+          var perm = b.permission === 'read' ? 'read' : b.permission === 'admin' ? 'admin' : 'edit';
+          li.innerHTML =
+            '<div class="mv-corp-board-head"><span class="mv-corp-board-title">' +
+            escapeHtml(metricTitleForIndex(ix)) +
+            '</span></div>';
+          var tools = document.createElement('div');
+          tools.className = 'mv-corp-board-tools';
+          var sel = document.createElement('select');
+          sel.className = 'mv-input mv-corp-perm-select';
+          sel.innerHTML =
+            '<option value="read"' +
+            (perm === 'read' ? ' selected' : '') +
+            '>Viewer</option><option value="edit"' +
+            (perm === 'edit' ? ' selected' : '') +
+            '>Editor</option><option value="admin"' +
+            (perm === 'admin' ? ' selected' : '') +
+            '>Admin</option>';
+          sel.addEventListener('change', function () {
+            window.metricsUpdateMetricInvitePermission({
+              ownerUserId: ctx.userId,
+              metricIndex: ix,
+              email: g.email,
+              permission: sel.value
+            }).then(function (r) {
+              if (r && r.error) throw r.error;
+              return refreshPeopleTable();
+            }).then(function () {
+              var rr = document.querySelector('.mv-corp-person-row[data-email="' + g.email + '"]');
+              if (rr) rr.click();
+            }).catch(function (e) {
+              alert((e && e.message) ? e.message : 'Update failed.');
+            });
+          });
+          var rm = document.createElement('button');
+          rm.type = 'button';
+          rm.className = 'mv-btn mv-btn-ghost mv-btn-sm';
+          rm.textContent = 'Remove from board';
+          rm.addEventListener('click', function () {
+            if (!window.confirm('Are you sure? This cannot be undone.')) return;
+            window.metricsDeleteMetricInvite({
+              ownerUserId: ctx.userId,
+              metricIndex: ix,
+              email: g.email
+            }).then(function (r) {
+              if (r && r.error) throw r.error;
+              return refreshPeopleTable();
+            }).then(function () {
+              panel.hidden = true;
+              selectedPersonEmail = '';
+            }).catch(function (e) {
+              alert((e && e.message) ? e.message : 'Remove failed.');
+            });
+          });
+          tools.appendChild(sel);
+          tools.appendChild(rm);
+          li.appendChild(tools);
+          list.appendChild(li);
+        });
+      }
+
+      document.getElementById('corpRemoveFromCompanyBtn').addEventListener('click', function () {
+        if (!selectedPersonEmail) return;
+        if (!window.confirm('Are you sure? This cannot be undone.')) return;
+        window.metricsDeleteAllInvitesForOwnerEmail(ctx.userId, selectedPersonEmail).then(function (res) {
+          if (res && res.error) throw res.error;
+          document.getElementById('corpPersonDetail').hidden = true;
+          selectedPersonEmail = '';
+          return refreshPeopleTable();
+        }).catch(function (e) {
+          alert((e && e.message) ? e.message : 'Could not remove user.');
+        });
+      });
+
+      document.getElementById('corpInviteSendBtn').addEventListener('click', function () {
+        var name = (document.getElementById('corpInviteName').value || '').trim();
+        var email = (document.getElementById('corpInviteEmail').value || '').trim();
+        if (!email) {
+          setText('corpInviteStatus', 'Email is required.', true);
+          return;
+        }
+        var btn = document.getElementById('corpInviteSendBtn');
+        var redirectTo = window.metricsAbsoluteAppUrl('auth/?mode=signup');
+        var biz = (document.getElementById('corporateBusinessName').value || '').trim();
+        btn.disabled = true;
+        setText('corpInviteStatus', 'Sending…');
+        window.metricsSendInvite(email, biz, redirectTo).then(function (r) {
+          if (r && r.error) throw r.error;
+          return window.metricsUpsertMetricInvite({
+            ownerUserId: ctx.userId,
+            metricIndex: -1,
+            email: email,
+            name: name,
+            permission: 'edit',
+            businessName: biz,
+            invitedByUserId: ctx.userId
+          });
+        }).then(function (db) {
+          if (db && db.error) throw db.error;
+          setText('corpInviteStatus', 'Invitation sent.');
+          document.getElementById('corpInviteName').value = '';
+          document.getElementById('corpInviteEmail').value = '';
+          return refreshPeopleTable();
+        }).catch(function (e) {
+          setText('corpInviteStatus', (e && e.message) ? e.message : 'Invite failed.', true);
+        }).finally(function () {
+          btn.disabled = false;
+        });
+      });
 
       document.getElementById('corporatePicChoose').addEventListener('click', function () {
         var fi = document.getElementById('corporatePicFile');
         if (fi) fi.click();
       });
-
       document.getElementById('corporatePicFile').addEventListener('change', function () {
         var file = (this.files || [])[0];
         if (!file) return;
@@ -172,17 +543,44 @@
         reader.readAsDataURL(file);
         this.value = '';
       });
+      document.getElementById('corporateSaveBrandingBtn').addEventListener('click', saveBranding);
+      document.getElementById('billingSaveBtn').addEventListener('click', saveBillingOnly);
 
-      document.getElementById('corporateSaveBtn').addEventListener('click', saveCorporateProfile);
-
-      loadProfile();
+      loadProfile().then(function () {
+        return refreshPeopleTable();
+      });
     })();
   </script>
 
   <footer class="mv-site-footer">
-    <a class="mv-site-footer-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
-    <a class="mv-corporate-dot-link" href="../corporate-profile/" aria-label="Corporate profile" title="Corporate profile">•</a>
+    <div class="mv-site-footer-top">
+      <a class="mv-site-footer-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+      <span class="mv-footer-dot-links">
+        <a class="mv-corporate-dot-link" href="./" aria-label="Corporate profile" title="Corporate profile">•</a>
+        <a class="mv-pricing-dot-link" href="../pricing/" aria-label="Pricing" title="Pricing">•</a>
+      </span>
+    </div>
+    <section class="mv-footer-support" aria-label="Support">
+      <h3 class="mv-footer-support-title">Support</h3>
+      <form class="mv-footer-support-form" id="mvSupportForm" novalidate>
+        <div class="mv-support-grid">
+          <label class="mv-support-label">Name <span class="mv-req" aria-hidden="true">*</span><input name="mvSupportName" type="text" required class="mv-input mv-support-input" autocomplete="name" /></label>
+          <label class="mv-support-label">Email <span class="mv-req" aria-hidden="true">*</span><input name="mvSupportEmail" type="email" required class="mv-input mv-support-input" autocomplete="email" /></label>
+          <label class="mv-support-label">Company<input name="mvSupportCompany" type="text" class="mv-input mv-support-input" autocomplete="organization" /></label>
+          <label class="mv-support-label">Topic
+            <select name="mvSupportType" class="mv-input mv-support-input">
+              <option value="Support">Support</option>
+              <option value="Feedback">Feedback</option>
+              <option value="Enquiry">Enquiry</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          <label class="mv-support-label mv-support-msg-label">Message<textarea name="mvSupportMessage" class="mv-input mv-support-textarea" rows="3"></textarea></label>
+        </div>
+        <button type="submit" class="mv-btn mv-btn-primary mv-support-submit">Send</button>
+      </form>
+    </section>
   </footer>
+  <script src="../metrics-footer.js"></script>
 </body>
 </html>
-
