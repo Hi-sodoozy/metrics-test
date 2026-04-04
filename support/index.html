@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics View – Support</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .mv-support-page-main { max-width: 560px; margin: 0 auto; padding: 28px 20px 56px; }
+    .mv-support-page-title { margin: 0 0 8px; font-size: 1.5rem; font-weight: 800; color: #0f172a; }
+    .mv-support-page-lead { margin: 0 0 22px; font-size: 14px; color: #64748b; line-height: 1.55; }
+    .mv-support-page-form { text-align: left; }
+    .metrics-page.mv-landing .mv-support-page-title { color: #f3f4f6; }
+    .metrics-page.mv-landing .mv-support-page-lead { color: #9aa3b2; }
+  </style>
+</head>
+<body class="metrics-page mv-landing">
+  <div class="mv-landing-bg" aria-hidden="true"></div>
+  <header class="mv-landing-nav">
+    <a class="mv-landing-nav-link" href="../">Home</a>
+    <a class="mv-landing-nav-link" href="../input/">Metrics Centre</a>
+  </header>
+  <main class="mv-support-page-main mv-page-shell">
+    <h1 class="mv-support-page-title">Support</h1>
+    <p class="mv-support-page-lead">Send us a message using the form below. Your email app will open with your details filled in so you can send from your own address.</p>
+    <form class="mv-support-page-form" id="mvSupportForm" novalidate>
+      <div class="mv-support-grid">
+        <label class="mv-support-label">Name <span class="mv-req" aria-hidden="true">*</span><input name="mvSupportName" type="text" required class="mv-input mv-support-input" autocomplete="name" /></label>
+        <label class="mv-support-label">Email <span class="mv-req" aria-hidden="true">*</span><input name="mvSupportEmail" type="email" required class="mv-input mv-support-input" autocomplete="email" /></label>
+        <label class="mv-support-label">Company<input name="mvSupportCompany" type="text" class="mv-input mv-support-input" autocomplete="organization" /></label>
+        <label class="mv-support-label">Topic
+          <select name="mvSupportType" class="mv-input mv-support-input">
+            <option value="Support">Support</option>
+            <option value="Feedback">Feedback</option>
+            <option value="Enquiry">Enquiry</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+        <label class="mv-support-label mv-support-msg-label">Message<textarea name="mvSupportMessage" class="mv-input mv-support-textarea" rows="4"></textarea></label>
+      </div>
+      <button type="submit" class="mv-btn mv-btn-primary mv-support-submit">Send</button>
+    </form>
+  </main>
+  <footer class="mv-site-footer">
+    <div class="mv-site-footer-top">
+      <a class="mv-site-footer-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+      <span class="mv-footer-dot-links">
+        <a class="mv-corporate-dot-link" href="../corporate-profile/" aria-label="Corporate profile" title="Corporate profile">•</a>
+        <a class="mv-pricing-dot-link" href="../pricing/" aria-label="Pricing" title="Pricing">•</a>
+      </span>
+      <a class="mv-footer-support-text-link" href="./">Support</a>
+    </div>
+  </footer>
+  <script src="../metrics-footer.js"></script>
+</body>
+</html>

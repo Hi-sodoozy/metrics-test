@@ -1094,6 +1094,22 @@
   text-decoration: underline;
 }
 
+.mv-footer-support-text-link {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #7dd3fc;
+  text-decoration: none;
+}
+
+.mv-footer-support-text-link:hover {
+  text-decoration: underline;
+}
+
+.input-page.input-theme-dark .mv-footer-support-text-link {
+  color: #7dd3fc;
+}
+
 /* Corporate profile dot (inconspicuous while still visible in dark mode) */
 .mv-corporate-dot-link {
   display: inline-flex;
