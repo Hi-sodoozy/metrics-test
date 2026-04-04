@@ -482,12 +482,18 @@
 }
 
 .results-page.results-display-has-brand-color:not(.results-theme-dark) .input-link {
-  color: var(--mv-display-accent);
+  color: color-mix(in srgb, var(--mv-display-accent) 18%, #0b1220);
   font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 2px;
+  text-decoration-color: color-mix(in srgb, var(--mv-display-accent) 65%, #0b1220);
 }
 
 .results-page.results-display-has-brand-color:not(.results-theme-dark) .input-link:hover {
-  filter: brightness(0.92);
+  color: #020617;
+  text-decoration-color: var(--mv-display-accent);
+  filter: none;
 }
 
 .results-page.results-display-has-brand-color.results-theme-dark .results-main .result-column {

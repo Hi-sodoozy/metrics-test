@@ -64,6 +64,19 @@
           if (mainEl) mainEl.classList.remove('results-has-display-accent');
         }
 
+        var linkInput = document.getElementById('linkToInput');
+        if (linkInput && window.metricsGetUserContext && window.metricsAppUrl) {
+          var uc = window.metricsGetUserContext();
+          if (uc && uc.userId) {
+            var op = (new URLSearchParams(window.location.search).get('owner') || '').trim();
+            var oid = uuidLooksValid(op) ? op : uc.userId;
+            linkInput.href =
+              uuidLooksValid(op) && op !== uc.userId
+                ? window.metricsAppUrl('input/?owner=' + encodeURIComponent(oid))
+                : window.metricsAppUrl('input/');
+          }
+        }
+
         var metrics = (data.metrics && data.metrics.length) ? data.metrics.slice(0, 10) : [];
         var displayed = [];
         for (var i = 0; i < metrics.length; i++) {

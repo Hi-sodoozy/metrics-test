@@ -183,25 +183,69 @@
 
       var DEFAULT_DISPLAY_COLOR = '#4a6fa5';
 
+      function rgbMatchToHex(rgbStr) {
+        var m = String(rgbStr || '').match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+        if (!m) return '';
+        function hx(n) {
+          var x = Math.max(0, Math.min(255, parseInt(n, 10)));
+          return ('0' + x.toString(16)).slice(-2);
+        }
+        return '#' + hx(m[1]) + hx(m[2]) + hx(m[3]);
+      }
+
+      function probeCssColorToHex(cssColor) {
+        var s = String(cssColor || '').trim();
+        if (!s) return '';
+        try {
+          var el = document.createElement('span');
+          el.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;pointer-events:none';
+          el.style.color = s;
+          document.body.appendChild(el);
+          var out = rgbMatchToHex(window.getComputedStyle(el).color);
+          document.body.removeChild(el);
+          return out;
+        } catch (e) {
+          return '';
+        }
+      }
+
+      function displayColorTextToPickerHex(v) {
+        v = String(v || '').trim();
+        if (!v) return '';
+        if (/^#[0-9a-fA-F]{6}$/i.test(v)) return v.slice(0, 1) + v.slice(1).toLowerCase();
+        if (/^#[0-9a-fA-F]{3}$/i.test(v)) {
+          var h = v.slice(1);
+          return ('#' + h[0] + h[0] + h[1] + h[1] + h[2] + h[2]).toLowerCase();
+        }
+        if (/^#[0-9a-fA-F]{8}$/i.test(v)) return ('#' + v.slice(1, 7)).toLowerCase();
+        if (/^[0-9a-fA-F]{6}$/i.test(v)) return ('#' + v.toLowerCase());
+        if (/^(rgb|hsl)a?\(/i.test(v)) return probeCssColorToHex(v);
+        return probeCssColorToHex(v);
+      }
+
       function syncColorPickers() {
         var t = document.getElementById('corporateDisplayColor');
         var p = document.getElementById('corporateDisplayColorPick');
         if (!t || !p) return;
         var v = (t.value || '').trim();
-        if (/^#[0-9a-fA-F]{6}$/i.test(v)) {
-          p.value = v;
-        } else if (/^#[0-9a-fA-F]{3}$/i.test(v)) {
-          var h = v.slice(1);
-          p.value = '#' + h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
-        } else if (!v) {
+        if (!v) {
           p.value = DEFAULT_DISPLAY_COLOR;
+          return;
         }
+        var hex = displayColorTextToPickerHex(v);
+        if (hex) p.value = hex;
       }
 
       document.getElementById('corporateDisplayColor').addEventListener('input', syncColorPickers);
+      document.getElementById('corporateDisplayColor').addEventListener('change', syncColorPickers);
       document.getElementById('corporateDisplayColorPick').addEventListener('input', function () {
         var t = document.getElementById('corporateDisplayColor');
         if (t) t.value = this.value;
+      });
+      document.getElementById('corporateDisplayColorPick').addEventListener('change', function () {
+        var t = document.getElementById('corporateDisplayColor');
+        if (t) t.value = this.value;
+        syncColorPickers();
       });
 
       document.getElementById('corporateColorDefaultBtn').addEventListener('click', function () {
