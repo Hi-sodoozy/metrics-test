@@ -34,15 +34,29 @@
         return div.innerHTML;
       }
 
+      function normalizeDisplayAccent(raw) {
+        var s = String(raw || '').trim();
+        if (!s) return '';
+        if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(s)) return s;
+        if (/^[0-9a-fA-F]{6}$/i.test(s)) return '#' + s;
+        if (/^(rgb|hsl)a?\(/i.test(s)) return s;
+        return s;
+      }
+
       function renderDashboard(data) {
         var grid = document.getElementById('resultsGrid');
         if (!grid) return;
 
         var mainEl = document.querySelector('.results-main');
         if (mainEl) {
-          var accent = (data && data.displayBoardColor) ? String(data.displayBoardColor).trim() : '';
-          if (accent) mainEl.style.setProperty('--mv-display-accent', accent);
-          else mainEl.style.removeProperty('--mv-display-accent');
+          var accent = normalizeDisplayAccent(data && data.displayBoardColor);
+          if (accent) {
+            mainEl.style.setProperty('--mv-display-accent', accent);
+            mainEl.classList.add('results-has-display-accent');
+          } else {
+            mainEl.style.removeProperty('--mv-display-accent');
+            mainEl.classList.remove('results-has-display-accent');
+          }
         }
 
         var metrics = (data.metrics && data.metrics.length) ? data.metrics.slice(0, 10) : [];
@@ -237,12 +251,14 @@
       function loadFromLocalStorage(key) {
         var raw;
         try { raw = localStorage.getItem(key); } catch (e) { raw = null; }
-        var data = { businessName: '', businessImage: '', metrics: [] };
+        var data = { businessName: '', businessImage: '', displayBoardColor: '', metrics: [] };
         if (raw) {
           try {
             var parsed = JSON.parse(raw);
             data.businessName = (parsed.businessName != null) ? String(parsed.businessName) : '';
             data.businessImage = (parsed.businessImage != null) ? String(parsed.businessImage) : '';
+            data.displayBoardColor =
+              parsed.displayBoardColor != null ? String(parsed.displayBoardColor) : '';
             data.metrics = (parsed && parsed.metrics) ? parsed.metrics.slice(0, 4) : (Array.isArray(parsed) ? parsed.slice(0, 4) : []);
           } catch (e) {}
         }

@@ -38,9 +38,11 @@
           </div>
           <label class="mv-form-label" for="corporateDisplayColor">Display board colour</label>
           <div class="mv-color-row">
-            <input id="corporateDisplayColor" class="mv-input mv-color-text" type="text" placeholder="#3366cc" maxlength="32" spellcheck="false" />
+            <input id="corporateDisplayColor" class="mv-input mv-color-text" type="text" placeholder="#3366cc or rgb()" maxlength="40" spellcheck="false" />
             <input id="corporateDisplayColorPick" type="color" class="mv-color-picker" value="#4a6fa5" aria-label="Pick display colour" />
+            <button type="button" id="corporateColorDefaultBtn" class="mv-btn mv-btn-ghost mv-color-default-btn">Default colour scheme</button>
           </div>
+          <p class="mv-color-hint">Custom colour applies to the display screen (metric panels and titles). Default restores the standard Metrics View look.</p>
         </div>
         <div class="mv-actions-row" style="margin-top:16px;">
           <button id="corporateSaveBrandingBtn" class="mv-btn mv-btn-primary" type="button">Save branding</button>
@@ -91,8 +93,10 @@
           <div class="mv-form-label">Next payment due</div>
           <div class="mv-billing-next-due" aria-live="polite">TBC</div>
         </div>
-        <div class="mv-actions-row" style="margin-top:16px;">
+        <div class="mv-actions-row mv-billing-actions" style="margin-top:16px;">
           <button id="billingSaveBtn" class="mv-btn mv-btn-primary" type="button">Save billing details</button>
+          <button id="billingEditBtn" class="mv-btn mv-btn-ghost" type="button" hidden>Edit contact details</button>
+          <button id="billingCancelBtn" class="mv-btn mv-btn-ghost" type="button" hidden>Cancel</button>
         </div>
         <p id="billingStatus" class="mv-landing-note" aria-live="polite" style="margin-top:12px;"></p>
       </section>
@@ -110,6 +114,8 @@
       var ownerDash = null;
       var allInvitesCache = [];
       var selectedPersonEmail = '';
+      var billingSnapshot = { name: '', email: '' };
+      var billingUiState = 'new';
 
       function setText(id, msg, isError) {
         var el = document.getElementById(id);
@@ -175,13 +181,20 @@
         });
       });
 
+      var DEFAULT_DISPLAY_COLOR = '#4a6fa5';
+
       function syncColorPickers() {
         var t = document.getElementById('corporateDisplayColor');
         var p = document.getElementById('corporateDisplayColorPick');
         if (!t || !p) return;
         var v = (t.value || '').trim();
-        if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+        if (/^#[0-9a-fA-F]{6}$/i.test(v)) {
           p.value = v;
+        } else if (/^#[0-9a-fA-F]{3}$/i.test(v)) {
+          var h = v.slice(1);
+          p.value = '#' + h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+        } else if (!v) {
+          p.value = DEFAULT_DISPLAY_COLOR;
         }
       }
 
@@ -190,6 +203,49 @@
         var t = document.getElementById('corporateDisplayColor');
         if (t) t.value = this.value;
       });
+
+      document.getElementById('corporateColorDefaultBtn').addEventListener('click', function () {
+        var t = document.getElementById('corporateDisplayColor');
+        var p = document.getElementById('corporateDisplayColorPick');
+        if (t) t.value = '';
+        if (p) p.value = DEFAULT_DISPLAY_COLOR;
+      });
+
+      function refreshBillingUi() {
+        var nameEl = document.getElementById('billingContactName');
+        var emailEl = document.getElementById('billingContactEmail');
+        var saveBtn = document.getElementById('billingSaveBtn');
+        var editBtn = document.getElementById('billingEditBtn');
+        var cancelBtn = document.getElementById('billingCancelBtn');
+        if (!nameEl || !emailEl || !saveBtn || !editBtn || !cancelBtn) return;
+        if (billingUiState === 'new') {
+          nameEl.readOnly = false;
+          emailEl.readOnly = false;
+          saveBtn.hidden = false;
+          editBtn.hidden = true;
+          cancelBtn.hidden = true;
+        } else if (billingUiState === 'locked') {
+          nameEl.readOnly = true;
+          emailEl.readOnly = true;
+          saveBtn.hidden = true;
+          editBtn.hidden = false;
+          cancelBtn.hidden = true;
+        } else {
+          nameEl.readOnly = false;
+          emailEl.readOnly = false;
+          saveBtn.hidden = false;
+          editBtn.hidden = true;
+          cancelBtn.hidden = false;
+        }
+      }
+
+      function initBillingFromDash(dash) {
+        var n = (dash && dash.billingContactName) ? String(dash.billingContactName).trim() : '';
+        var e = (dash && dash.billingContactEmail) ? String(dash.billingContactEmail).trim() : '';
+        billingSnapshot = { name: n, email: e };
+        billingUiState = n || e ? 'locked' : 'new';
+        refreshBillingUi();
+      }
 
       function loadProfile() {
         return Promise.resolve()
@@ -220,6 +276,7 @@
               document.getElementById('billingContactEmail').value =
                 (dash && dash.billingContactEmail) ? String(dash.billingContactEmail) : '';
               renderBillingPlan((dash && dash.planColumn) ? dash.planColumn : 3);
+              initBillingFromDash(dash);
             });
           });
       }
@@ -281,6 +338,7 @@
                 JSON.stringify({
                   businessName: businessName,
                   businessImage: selectedBusinessImage || '',
+                  displayBoardColor: displayColor,
                   metrics: (ownerDash && ownerDash.metrics) ? ownerDash.metrics : []
                 })
               );
@@ -325,12 +383,27 @@
             );
           })
           .then(function () {
+            billingSnapshot = { name: cname, email: cemail };
+            billingUiState = 'locked';
+            refreshBillingUi();
             setText('billingStatus', 'Billing details saved.');
           })
           .catch(function (err) {
             setText('billingStatus', (err && err.message) ? err.message : 'Could not save.', true);
           });
       }
+
+      document.getElementById('billingEditBtn').addEventListener('click', function () {
+        billingUiState = 'editing';
+        refreshBillingUi();
+      });
+      document.getElementById('billingCancelBtn').addEventListener('click', function () {
+        document.getElementById('billingContactName').value = billingSnapshot.name;
+        document.getElementById('billingContactEmail').value = billingSnapshot.email;
+        billingUiState = billingSnapshot.name || billingSnapshot.email ? 'locked' : 'new';
+        refreshBillingUi();
+        setText('billingStatus', '');
+      });
 
       function groupInvitesByEmail(rows) {
         var map = {};
