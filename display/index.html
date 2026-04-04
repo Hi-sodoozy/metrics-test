@@ -12,9 +12,14 @@
     <div class="results-grid" id="resultsGrid"></div>
     <div class="results-bottom-actions">
       <a href="../input/" class="input-link" id="linkToInput">Metrics Centre</a>
-      <button type="button" class="results-theme-toggle" id="resultsThemeToggle" aria-label="Toggle display theme">
-        <span class="results-theme-label" id="resultsThemeLabel">Dark mode</span>
-      </button>
+      <div class="results-display-theme-group" role="group" aria-labelledby="resultsDisplayThemeLegend">
+        <span class="results-display-theme-legend" id="resultsDisplayThemeLegend">Display</span>
+        <div class="results-display-theme-segments">
+          <button type="button" class="results-theme-seg results-theme-seg-active" data-display-theme="light">Light</button>
+          <button type="button" class="results-theme-seg" data-display-theme="dark">Dark</button>
+          <button type="button" class="results-theme-seg" data-display-theme="custom">Custom</button>
+        </div>
+      </div>
     </div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -48,15 +53,15 @@
         if (!grid) return;
 
         var mainEl = document.querySelector('.results-main');
-        if (mainEl) {
-          var accent = normalizeDisplayAccent(data && data.displayBoardColor);
-          if (accent) {
-            mainEl.style.setProperty('--mv-display-accent', accent);
-            mainEl.classList.add('results-has-display-accent');
-          } else {
-            mainEl.style.removeProperty('--mv-display-accent');
-            mainEl.classList.remove('results-has-display-accent');
-          }
+        var accent = normalizeDisplayAccent(data && data.displayBoardColor);
+        if (accent) {
+          document.body.style.setProperty('--mv-display-accent', accent);
+          document.body.classList.add('results-display-has-brand-color');
+          if (mainEl) mainEl.classList.add('results-has-display-accent');
+        } else {
+          document.body.style.removeProperty('--mv-display-accent');
+          document.body.classList.remove('results-display-has-brand-color');
+          if (mainEl) mainEl.classList.remove('results-has-display-accent');
         }
 
         var metrics = (data.metrics && data.metrics.length) ? data.metrics.slice(0, 10) : [];
@@ -382,24 +387,38 @@
         lastRenderedHash = h;
         renderDashboard(data || {});
       }
-      function applyResultsTheme(theme) {
-        var t = theme === 'dark' ? 'dark' : 'light';
-        document.body.classList.toggle('results-theme-dark', t === 'dark');
-        document.body.classList.toggle('results-theme-light', t !== 'dark');
-        try { localStorage.setItem(RESULTS_THEME_KEY, t); } catch (e) {}
-        var toggle = document.getElementById('resultsThemeToggle');
-        if (toggle) {
-          var label = document.getElementById('resultsThemeLabel');
-          if (label) label.textContent = t === 'dark' ? 'Light mode' : 'Dark mode';
-          toggle.setAttribute('aria-label', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-        }
+      function applyResultsDisplayTheme(mode) {
+        var m = mode === 'dark' ? 'dark' : mode === 'custom' ? 'custom' : 'light';
+        document.body.classList.remove(
+          'results-display-theme-light',
+          'results-display-theme-dark',
+          'results-display-theme-custom'
+        );
+        document.body.classList.add('results-display-theme-' + m);
+        document.body.classList.toggle('results-theme-dark', m === 'dark');
+        document.body.classList.toggle('results-theme-light', m === 'light' || m === 'custom');
+        try {
+          localStorage.setItem(RESULTS_THEME_KEY, m);
+        } catch (e) {}
+        document.querySelectorAll('.results-theme-seg').forEach(function (btn) {
+          var active = btn.getAttribute('data-display-theme') === m;
+          btn.classList.toggle('results-theme-seg-active', active);
+          btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
       }
+
       function initResultsTheme() {
         var stored = 'light';
         try {
-          stored = localStorage.getItem(RESULTS_THEME_KEY) || localStorage.getItem(INPUT_THEME_KEY) || 'light';
-        } catch (e) {}
-        applyResultsTheme(stored);
+          stored = localStorage.getItem(RESULTS_THEME_KEY) || '';
+          if (stored !== 'light' && stored !== 'dark' && stored !== 'custom') {
+            var legacy = localStorage.getItem(INPUT_THEME_KEY) || 'light';
+            stored = legacy === 'dark' ? 'dark' : 'light';
+          }
+        } catch (e) {
+          stored = 'light';
+        }
+        applyResultsDisplayTheme(stored);
       }
 
       function loadDashboardForOwner(ownerId, userCtx) {
@@ -433,13 +452,12 @@
           return window.metricsSyncContextFromSession ? window.metricsSyncContextFromSession() : null;
         })
         .then(function () {
-          var toggle = document.getElementById('resultsThemeToggle');
-          if (toggle) {
-            toggle.addEventListener('click', function () {
-              var isDark = document.body.classList.contains('results-theme-dark');
-              applyResultsTheme(isDark ? 'light' : 'dark');
+          document.querySelectorAll('.results-theme-seg').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var m = btn.getAttribute('data-display-theme') || 'light';
+              applyResultsDisplayTheme(m);
             });
-          }
+          });
           initResultsTheme();
           var userCtx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
           if (!userCtx || !userCtx.email) {

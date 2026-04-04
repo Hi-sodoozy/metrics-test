@@ -230,6 +230,39 @@
         return KEY_BUSINESS;
       }
 
+      function readStoredDisplayBoardColor() {
+        try {
+          var raw = localStorage.getItem(activeKey());
+          if (!raw) return '';
+          var p = JSON.parse(raw);
+          if (p.displayBoardColor == null) return '';
+          return String(p.displayBoardColor).trim();
+        } catch (e) {
+          return '';
+        }
+      }
+
+      /** Keeps displayBoardColor unless parts.displayBoardColor is explicitly provided (e.g. server sync). */
+      function writeMetricsDashboardLocal(parts) {
+        if (!parts) return;
+        var hasDbc = Object.prototype.hasOwnProperty.call(parts, 'displayBoardColor');
+        var prev = readStoredDisplayBoardColor();
+        var dbc = hasDbc
+          ? (parts.displayBoardColor != null && String(parts.displayBoardColor).trim()
+              ? String(parts.displayBoardColor).trim()
+              : '')
+          : prev;
+        var blob = {
+          businessName: parts.businessName != null ? String(parts.businessName) : '',
+          businessImage: parts.businessImage != null ? String(parts.businessImage) : '',
+          displayBoardColor: dbc,
+          metrics: Array.isArray(parts.metrics) ? parts.metrics : []
+        };
+        try {
+          localStorage.setItem(activeKey(), JSON.stringify(blob));
+        } catch (e) {}
+      }
+
       function getRowOwnerId(row) {
         if (!row) return dashboardOwnerId;
         var o = row.getAttribute('data-dashboard-owner');
@@ -466,15 +499,14 @@
         if (!data) return;
         var raw = Array.isArray(data.metrics) ? data.metrics.slice(0, MAX_METRICS) : [];
         var metrics = trimMetricsArrayForUi(raw);
-        var blob = {
+        var img = data.businessImage != null ? String(data.businessImage) : '';
+        writeMetricsDashboardLocal({
           businessName: data.businessName != null ? String(data.businessName) : '',
-          businessImage: data.businessImage != null ? String(data.businessImage) : '',
+          businessImage: img,
+          displayBoardColor: data.displayBoardColor != null ? String(data.displayBoardColor) : '',
           metrics: metrics
-        };
-        if (blob.businessImage) businessImageDataUrl = blob.businessImage;
-        try {
-          localStorage.setItem(activeKey(), JSON.stringify(blob));
-        } catch (e) {}
+        });
+        if (img) businessImageDataUrl = img;
       }
 
       function collectOneMetricFromFormRow(row) {
@@ -1102,13 +1134,11 @@
               return;
             }
             arr.splice(ix, 1);
-            try {
-              localStorage.setItem(activeKey(), JSON.stringify({
-                businessName: (document.getElementById('inputBusinessName') || {}).value || '',
-                businessImage: businessImageDataUrl || '',
-                metrics: arr
-              }));
-            } catch (e) {}
+            writeMetricsDashboardLocal({
+              businessName: (document.getElementById('inputBusinessName') || {}).value || '',
+              businessImage: businessImageDataUrl || '',
+              metrics: arr
+            });
             carouselPageIndex = 0;
             renderMainInputCarousel(trimMetricsArrayForUi(arr));
             syncTitleRowFromTextareasCarousel();
@@ -1399,13 +1429,11 @@
         var nextMetrics = nextSlots.map(function (ix) {
           return metricsByIndex[ix] || emptyMetricSlot();
         });
-        try {
-          localStorage.setItem(activeKey(), JSON.stringify({
-            businessName: payloadBiz.businessName || '',
-            businessImage: payloadBiz.businessImage || '',
-            metrics: nextMetrics
-          }));
-        } catch (err) {}
+        writeMetricsDashboardLocal({
+          businessName: payloadBiz.businessName || '',
+          businessImage: payloadBiz.businessImage || '',
+          metrics: nextMetrics
+        });
 
         businessImageDataUrl = payloadBiz.businessImage || '';
         carouselPageIndex = sharedCount + targetPos;
@@ -1849,12 +1877,14 @@
       function getData() {
         var raw;
         try { raw = localStorage.getItem(activeKey()); } catch (e) { raw = null; }
-        var data = { businessName: '', businessImage: '', metrics: [] };
+        var data = { businessName: '', businessImage: '', displayBoardColor: '', metrics: [] };
         if (raw) {
           try {
             var parsed = JSON.parse(raw);
             data.businessName = (parsed.businessName != null) ? String(parsed.businessName) : '';
             data.businessImage = (parsed.businessImage != null) ? String(parsed.businessImage) : '';
+            data.displayBoardColor =
+              parsed.displayBoardColor != null ? String(parsed.displayBoardColor) : '';
             if (data.businessImage) businessImageDataUrl = data.businessImage;
             var list = (parsed && parsed.metrics) ? parsed.metrics : (Array.isArray(parsed) ? parsed : []);
             for (var i = 0; i < list.length && i < MAX_METRICS; i++) {
@@ -2313,13 +2343,11 @@
 
       function save() {
         var blob = collectDashboardFromDom();
-        try {
-          localStorage.setItem(activeKey(), JSON.stringify({
-            businessName: blob.businessName,
-            businessImage: blob.businessImage || '',
-            metrics: blob.metrics
-          }));
-        } catch (e) {}
+        writeMetricsDashboardLocal({
+          businessName: blob.businessName,
+          businessImage: blob.businessImage || '',
+          metrics: blob.metrics
+        });
         scheduleRemoteSave();
         signalDisplayRefresh('autosave');
       }
@@ -2430,13 +2458,11 @@
           var m = data.metrics.slice();
           if (m.length >= MAX_METRICS) return;
           m.push(emptyMetricSlot());
-          try {
-            localStorage.setItem(activeKey(), JSON.stringify({
-              businessName: (document.getElementById('inputBusinessName') || {}).value || '',
-              businessImage: businessImageDataUrl || '',
-              metrics: m
-            }));
-          } catch (e) {}
+          writeMetricsDashboardLocal({
+            businessName: (document.getElementById('inputBusinessName') || {}).value || '',
+            businessImage: businessImageDataUrl || '',
+            metrics: m
+          });
           if (isHomeDashboard) {
             carouselPageIndex = individualSlotInviteList.length + m.length - 1;
           } else {
