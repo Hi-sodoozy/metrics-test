@@ -1106,10 +1106,6 @@
   text-decoration: underline;
 }
 
-.input-page.input-theme-dark .mv-footer-support-text-link {
-  color: #7dd3fc;
-}
-
 /* Corporate profile dot (inconspicuous while still visible in dark mode) */
 .mv-corporate-dot-link {
   display: inline-flex;
