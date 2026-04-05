@@ -11,18 +11,19 @@
   <main class="results-main">
     <div class="results-grid" id="resultsGrid"></div>
     <div class="results-bottom-dock" id="resultsBottomDock">
-      <div class="results-bottom-actions" id="resultsBottomActions">
-        <a href="../input/" class="input-link" id="linkToInput">Metrics Centre</a>
-        <div class="results-display-theme-group" role="group" aria-labelledby="resultsDisplayThemeLegend">
-          <span class="results-display-theme-legend" id="resultsDisplayThemeLegend">Display</span>
-          <div class="results-display-theme-segments">
-            <button type="button" class="results-theme-seg results-theme-seg-active" data-display-theme="light">Light</button>
-            <button type="button" class="results-theme-seg" data-display-theme="dark">Dark</button>
-            <button type="button" class="results-theme-seg" data-display-theme="custom">Custom</button>
+      <div class="results-bottom-cluster">
+        <div class="results-bottom-actions" id="resultsBottomActions">
+          <a href="../input/" class="input-link" id="linkToInput">Metrics Centre</a>
+          <div class="results-display-theme-group" role="group" aria-labelledby="resultsDisplayThemeLegend">
+            <span class="results-display-theme-legend" id="resultsDisplayThemeLegend">Display</span>
+            <div class="results-display-theme-segments">
+              <button type="button" class="results-theme-seg results-theme-seg-active" data-display-theme="light">Light</button>
+              <button type="button" class="results-theme-seg" data-display-theme="dark">Dark</button>
+            </div>
           </div>
         </div>
+        <button type="button" class="results-bottom-reveal-hit" id="resultsBottomReveal" aria-label="Show Metrics Centre and display options" aria-expanded="false" aria-controls="resultsBottomActions"></button>
       </div>
-      <button type="button" class="results-bottom-reveal-hit" id="resultsBottomReveal" aria-label="Show Metrics Centre and display options" aria-expanded="false" aria-controls="resultsBottomActions"></button>
     </div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -409,14 +410,14 @@
         renderDashboard(data || {});
       }
       function applyResultsDisplayTheme(mode) {
-        var m = mode === 'dark' ? 'dark' : mode === 'custom' ? 'custom' : 'light';
+        var m = mode === 'dark' || mode === 'custom' ? 'dark' : 'light';
         document.body.classList.remove(
           'results-display-theme-light',
           'results-display-theme-dark',
           'results-display-theme-custom'
         );
         document.body.classList.add('results-display-theme-' + m);
-        document.body.classList.toggle('results-theme-dark', m === 'dark' || m === 'custom');
+        document.body.classList.toggle('results-theme-dark', m === 'dark');
         document.body.classList.toggle('results-theme-light', m === 'light');
         try {
           localStorage.setItem(RESULTS_THEME_KEY, m);
@@ -433,7 +434,8 @@
         var stored = 'light';
         try {
           stored = localStorage.getItem(RESULTS_THEME_KEY) || '';
-          if (stored !== 'light' && stored !== 'dark' && stored !== 'custom') {
+          if (stored === 'custom') stored = 'dark';
+          if (stored !== 'light' && stored !== 'dark') {
             var legacy = localStorage.getItem(INPUT_THEME_KEY) || 'light';
             stored = legacy === 'dark' ? 'dark' : 'light';
           }

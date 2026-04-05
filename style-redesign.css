@@ -170,7 +170,7 @@
   gap: 12px 16px;
 }
 
-/* Bottom dock: thin translucent line; show controls on hover, focus, or tap */
+/* Bottom dock: line at bottom; menu anchors flush above it so the pointer barely moves */
 .results-bottom-dock {
   position: fixed;
   bottom: 0;
@@ -183,23 +183,31 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
   pointer-events: none;
   box-sizing: border-box;
 }
 
-.results-bottom-dock .results-bottom-actions {
+.results-bottom-cluster {
   position: relative;
-  left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 100vw;
+  padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+.results-bottom-dock .results-bottom-actions {
+  position: absolute;
+  left: 50%;
   right: auto;
-  bottom: auto;
-  align-self: center;
+  bottom: 100%;
   width: fit-content;
   max-width: calc(100vw - 24px);
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 2px;
-  transform: translateY(14px);
+  margin: 0;
+  transform: translate(-50%, 8px);
   opacity: 0;
   visibility: hidden;
   transition:
@@ -207,6 +215,7 @@
     transform 0.24s ease,
     visibility 0.24s;
   pointer-events: none;
+  z-index: 1;
 }
 
 .results-bottom-dock:hover .results-bottom-actions,
@@ -214,7 +223,7 @@
 .results-bottom-dock.results-bottom-dock--open .results-bottom-actions {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translate(-50%, 0);
   pointer-events: auto;
 }
 
@@ -234,6 +243,8 @@
   border-radius: 8px 8px 0 0;
   flex-shrink: 0;
   align-self: center;
+  position: relative;
+  z-index: 2;
 }
 
 .results-bottom-reveal-hit::after {
