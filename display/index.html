@@ -54,8 +54,7 @@
       function syncDisplayBoardAccent(data) {
         var mainEl = document.querySelector('.results-main');
         var accent = normalizeDisplayAccent(data && data.displayBoardColor);
-        var customOn = document.body.classList.contains('results-display-theme-custom');
-        if (accent && customOn) {
+        if (accent) {
           document.body.style.setProperty('--mv-display-accent', accent);
           document.body.classList.add('results-display-has-brand-color');
           if (mainEl) mainEl.classList.add('results-has-display-accent');
