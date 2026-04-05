@@ -527,6 +527,16 @@
     };
   }
 
+  window.metricsSuperAdminFetchDirectory = function () {
+    if (!window.metricsSupabase) {
+      return Promise.reject(new Error('Supabase is not initialized.'));
+    }
+    return window.metricsSupabase.rpc('super_admin_directory').then(function (res) {
+      if (res && res.error) throw res.error;
+      return res.data;
+    });
+  };
+
   window.metricsLogout = function (redirectTo) {
     var dest = redirectTo || 'welcome.html';
     function finish() {

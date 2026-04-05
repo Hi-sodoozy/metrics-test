@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="../style.css" />
   <style>
     .sa-main { max-width: 640px; margin: 0 auto; padding: 24px 20px 48px; }
+    .sa-main.sa-main--wide { max-width: 1120px; }
     .sa-card {
       padding: 28px 24px;
       border-radius: 14px;
@@ -62,6 +63,10 @@
       border: 1px solid rgba(255, 255, 255, 0.15);
     }
     .sa-btn.secondary:hover { background: rgba(255, 255, 255, 0.12); }
+    .sa-btn.tab-active {
+      border: 1px solid rgba(125, 211, 252, 0.45);
+      box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.2);
+    }
     .sa-msg { margin-top: 14px; padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.45; }
     .sa-msg.error {
       background: rgba(248, 113, 113, 0.14);
@@ -77,6 +82,84 @@
     .sa-panel h2 { margin: 0 0 12px; font-size: 1.1rem; color: #e8eaef; }
     .sa-panel ul { margin: 0; padding-left: 1.2em; color: #9aa3b2; font-size: 14px; line-height: 1.55; }
     .sa-panel a { color: #7dd3fc; }
+    .sa-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+    .sa-tab-panel { margin-top: 8px; }
+    .sa-biz-layout {
+      display: grid;
+      grid-template-columns: minmax(220px, 320px) 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 800px) {
+      .sa-biz-layout { grid-template-columns: 1fr; }
+    }
+    .sa-biz-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      max-height: min(60vh, 520px);
+      overflow: auto;
+      background: rgba(0, 0, 0, 0.15);
+    }
+    .sa-biz-list li { border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+    .sa-biz-list li:last-child { border-bottom: 0; }
+    .sa-biz-list button {
+      width: 100%;
+      text-align: left;
+      padding: 10px 12px;
+      border: none;
+      background: transparent;
+      color: #e8eaef;
+      font: inherit;
+      cursor: pointer;
+      line-height: 1.35;
+    }
+    .sa-biz-list button:hover { background: rgba(255, 255, 255, 0.06); }
+    .sa-biz-list button.sa-biz-item--active {
+      background: rgba(125, 211, 252, 0.12);
+      box-shadow: inset 3px 0 0 #7dd3fc;
+    }
+    .sa-biz-list .sa-biz-section-label {
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #64748b;
+      background: rgba(0, 0, 0, 0.25);
+    }
+    .sa-biz-detail {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 16px 18px;
+      background: rgba(0, 0, 0, 0.12);
+      min-height: 200px;
+    }
+    .sa-biz-detail h3 { margin: 0 0 14px; font-size: 1.05rem; color: #f1f5f9; }
+    .sa-dl { margin: 0; display: grid; gap: 10px 16px; grid-template-columns: auto 1fr; font-size: 14px; }
+    .sa-dl dt { margin: 0; color: #94a3b8; font-weight: 600; }
+    .sa-dl dd { margin: 0; color: #e2e8f0; }
+    .sa-biz-members { margin-top: 18px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px; }
+    .sa-biz-members summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: #7dd3fc;
+      list-style: none;
+    }
+    .sa-biz-members summary::-webkit-details-marker { display: none; }
+    .sa-member-block {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .sa-member-block strong { color: #f1f5f9; }
+    .sa-member-meta { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+    .sa-member-slots { font-size: 12px; color: #cbd5e1; margin-top: 6px; padding-left: 1em; }
+    .sa-biz-placeholder { color: #64748b; font-size: 14px; }
   </style>
 </head>
 <body class="metrics-page mv-landing auth-landing">
@@ -84,7 +167,7 @@
   <header class="mv-landing-nav mv-landing-nav-right">
     <a class="auth-logo-link" href="../">Metrics View</a>
   </header>
-  <main class="mv-landing-main sa-main">
+  <main class="mv-landing-main sa-main" id="saMain">
     <div class="sa-card" id="cardRoot">
       <h1 id="saHeading">Metrics View</h1>
       <p class="lead" id="leadText">This page is not available.</p>
@@ -112,11 +195,39 @@
 
       <div id="blockAdmin" class="sa-hidden sa-panel">
         <h2>Operator portal</h2>
-        <p class="lead" style="margin-bottom:12px">Signed in as super admin. Additional tools can be added here later.</p>
-        <ul>
-          <li><a href="../input/">Metrics Centre</a></li>
-          <li><a href="../corporate-profile/">Corporate profile</a></li>
-        </ul>
+        <nav class="sa-tabs" aria-label="Portal sections">
+          <button type="button" class="sa-btn secondary sa-tab-active" id="tabBtnOverview" data-sa-tab="overview">Overview</button>
+          <button type="button" class="sa-btn secondary" id="tabBtnBusiness" data-sa-tab="business">Business</button>
+        </nav>
+
+        <div id="tabOverview" class="sa-tab-panel">
+          <p class="lead" style="margin-bottom:12px">Signed in as super admin.</p>
+          <ul>
+            <li><a href="../input/">Metrics Centre</a></li>
+            <li><a href="../corporate-profile/">Corporate profile</a></li>
+          </ul>
+        </div>
+
+        <div id="tabBusiness" class="sa-tab-panel sa-hidden">
+          <p class="lead" style="margin-bottom:12px">
+            Business accounts and individuals without a business profile (personal or invited users). Data loads from the database; run
+            <strong>supabase-migration-super-admin-directory.sql</strong> and ensure your user is in <strong>super_admins</strong>.
+          </p>
+          <div class="sa-actions" style="margin-bottom:14px">
+            <button type="button" class="sa-btn" id="btnRefreshDirectory">Refresh list</button>
+          </div>
+          <div id="saBizError" class="sa-msg error sa-hidden" role="alert"></div>
+          <div class="sa-biz-layout">
+            <div>
+              <ul class="sa-biz-list" id="saBizList" aria-label="Accounts"></ul>
+            </div>
+            <div class="sa-biz-detail" id="saBizDetail">
+              <p class="sa-biz-placeholder" id="saBizPlaceholder">Select an account to view details.</p>
+              <div id="saBizDetailInner" class="sa-hidden"></div>
+            </div>
+          </div>
+        </div>
+
         <div class="sa-actions" style="margin-top:22px">
           <button type="button" class="sa-btn secondary" id="btnLockPortal3">Lock portal (this tab)</button>
         </div>
@@ -148,6 +259,7 @@
           : '';
 
       var el = {
+        main: document.getElementById('saMain'),
         heading: document.getElementById('saHeading'),
         lead: document.getElementById('leadText'),
         denied: document.getElementById('blockDenied'),
@@ -156,7 +268,48 @@
         formPortal: document.getElementById('formPortal'),
         admin: document.getElementById('blockAdmin'),
         msgPortal: document.getElementById('msgPortal'),
+        tabOverview: document.getElementById('tabOverview'),
+        tabBusiness: document.getElementById('tabBusiness'),
+        tabBtnOverview: document.getElementById('tabBtnOverview'),
+        tabBtnBusiness: document.getElementById('tabBtnBusiness'),
+        saBizList: document.getElementById('saBizList'),
+        saBizError: document.getElementById('saBizError'),
+        saBizPlaceholder: document.getElementById('saBizPlaceholder'),
+        saBizDetailInner: document.getElementById('saBizDetailInner'),
       };
+
+      var selectedKey = '';
+      var directoryData = null;
+
+      function escapeHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = s == null ? '' : String(s);
+        return d.innerHTML;
+      }
+
+      function formatDate(iso) {
+        if (!iso) return '—';
+        try {
+          var d = new Date(iso);
+          if (isNaN(d.getTime())) return '—';
+          return d.toLocaleString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        } catch (e) {
+          return '—';
+        }
+      }
+
+      function personName(first, last) {
+        var a = (first || '').trim();
+        var b = (last || '').trim();
+        var n = (a + ' ' + b).trim();
+        return n || '';
+      }
 
       function getUnlockUntil() {
         try {
@@ -189,6 +342,11 @@
         el.msgPortal.classList.toggle('sa-hidden', !msg);
       }
 
+      function showBizError(msg) {
+        el.saBizError.textContent = msg || '';
+        el.saBizError.classList.toggle('sa-hidden', !msg);
+      }
+
       function showDenied(kind) {
         document.title = 'Metrics View';
         el.heading.textContent = 'Metrics View';
@@ -196,6 +354,7 @@
         el.denied.classList.remove('sa-hidden');
         el.formPortal.classList.add('sa-hidden');
         el.admin.classList.add('sa-hidden');
+        if (el.main) el.main.classList.remove('sa-main--wide');
         if (kind === 'notSignedIn') {
           el.deniedDetail.textContent = 'Sign in to continue.';
           el.deniedSignIn.classList.remove('sa-hidden');
@@ -212,6 +371,7 @@
         el.denied.classList.add('sa-hidden');
         el.formPortal.classList.remove('sa-hidden');
         el.admin.classList.add('sa-hidden');
+        if (el.main) el.main.classList.remove('sa-main--wide');
       }
 
       function showAdminPanel() {
@@ -221,6 +381,237 @@
         el.denied.classList.add('sa-hidden');
         el.formPortal.classList.add('sa-hidden');
         el.admin.classList.remove('sa-hidden');
+        if (el.main) el.main.classList.add('sa-main--wide');
+      }
+
+      function setTab(which) {
+        var isBiz = which === 'business';
+        el.tabOverview.classList.toggle('sa-hidden', isBiz);
+        el.tabBusiness.classList.toggle('sa-hidden', !isBiz);
+        el.tabBtnOverview.classList.toggle('sa-tab-active', !isBiz);
+        el.tabBtnBusiness.classList.toggle('sa-tab-active', isBiz);
+        if (isBiz && !directoryData) loadDirectory();
+      }
+
+      function groupMembersByEmail(members) {
+        var map = {};
+        (members || []).forEach(function (m) {
+          var em = (m && m.email) ? String(m.email).toLowerCase() : '';
+          if (!em) return;
+          if (!map[em]) map[em] = { email: m.email, first_name: m.first_name, last_name: m.last_name, rows: [] };
+          map[em].rows.push(m);
+        });
+        return Object.keys(map)
+          .sort()
+          .map(function (k) {
+            return map[k];
+          });
+      }
+
+      function renderDetail(row) {
+        if (!row) return;
+        el.saBizPlaceholder.classList.add('sa-hidden');
+        el.saBizDetailInner.classList.remove('sa-hidden');
+        var html = '';
+        if (row.kind === 'business') {
+          var adminLabel =
+            (row.billing_contact_name && String(row.billing_contact_name).trim()) ||
+            personName(row.owner_first_name, row.owner_last_name) ||
+            row.owner_email ||
+            '—';
+          var contactEmail =
+            (row.billing_contact_email && String(row.billing_contact_email).trim()) || row.owner_email || '—';
+          var phone = row.owner_phone && String(row.owner_phone).trim() ? escapeHtml(row.owner_phone) : '—';
+          html += '<h3>' + escapeHtml(row.business_name || 'Business') + '</h3>';
+          html += '<dl class="sa-dl">';
+          html += '<dt>Account admin</dt><dd>' + escapeHtml(adminLabel) + '</dd>';
+          html += '<dt>Contact email</dt><dd>' + escapeHtml(contactEmail) + '</dd>';
+          html += '<dt>Phone</dt><dd>' + phone + '</dd>';
+          html += '<dt>Owner sign-up</dt><dd>' + escapeHtml(formatDate(row.owner_created_at)) + '</dd>';
+          html += '<dt>Boards in use</dt><dd>' + escapeHtml(String(row.board_count != null ? row.board_count : 0)) + '</dd>';
+          html += '<dt>Plan expires</dt><dd>' + escapeHtml(row.plan_expires_at ? formatDate(row.plan_expires_at) : 'Not set') + '</dd>';
+          html += '<dt>Plan column</dt><dd>' + escapeHtml(String(row.plan_column != null ? row.plan_column : '—')) + '</dd>';
+          html += '</dl>';
+          var groups = groupMembersByEmail(row.members);
+          html += '<details class="sa-biz-members" open>';
+          html +=
+            '<summary>People registered under this business (' +
+            groups.length +
+            ')</summary>';
+          if (!groups.length) {
+            html += '<p class="sa-member-meta" style="margin-top:10px">No active invites.</p>';
+          } else {
+            groups.forEach(function (g) {
+              var nm = personName(g.first_name, g.last_name) || '—';
+              var firstRow = g.rows[0] || {};
+              var linked = firstRow.linked_user_id
+                ? formatDate(firstRow.linked_user_created_at)
+                : 'No linked login yet';
+              html += '<div class="sa-member-block">';
+              html += '<strong>' + escapeHtml(g.email) + '</strong>';
+              html += '<div class="sa-member-meta">Name (from invite): ' + escapeHtml(nm) + '</div>';
+              html += '<div class="sa-member-meta">Account sign-up: ' + escapeHtml(linked) + '</div>';
+              html += '<ul class="sa-member-slots">';
+              g.rows.forEach(function (r) {
+                html +=
+                  '<li>Board slot ' +
+                  escapeHtml(String(r.metric_index)) +
+                  ' · ' +
+                  escapeHtml(r.permission || '') +
+                  ' · ' +
+                  escapeHtml(r.status || '') +
+                  '</li>';
+              });
+              html += '</ul></div>';
+            });
+          }
+          html += '</details>';
+        } else {
+          var indName =
+            personName(row.first_name, row.last_name) ||
+            (row.business_name_meta && String(row.business_name_meta).trim()) ||
+            row.email ||
+            'Individual';
+          var indPhone = row.phone && String(row.phone).trim() ? escapeHtml(row.phone) : '—';
+          html += '<h3>' + escapeHtml(indName) + '</h3>';
+          html += '<dl class="sa-dl">';
+          html += '<dt>Email</dt><dd>' + escapeHtml(row.email || '—') + '</dd>';
+          html += '<dt>Phone</dt><dd>' + indPhone + '</dd>';
+          html += '<dt>Sign-up</dt><dd>' + escapeHtml(formatDate(row.created_at)) + '</dd>';
+          html += '<dt>Boards in use</dt><dd>' + escapeHtml(String(row.board_count != null ? row.board_count : 0)) + '</dd>';
+          html += '<dt>Plan expires</dt><dd>Not applicable</dd>';
+          html += '</dl>';
+        }
+        el.saBizDetailInner.innerHTML = html;
+      }
+
+      function selectRow(key, row) {
+        selectedKey = key;
+        Array.prototype.forEach.call(el.saBizList.querySelectorAll('button'), function (b) {
+          b.classList.toggle('sa-biz-item--active', b.getAttribute('data-sa-key') === key);
+        });
+        renderDetail(row);
+      }
+
+      function buildList() {
+        el.saBizList.innerHTML = '';
+        if (!directoryData) return;
+        var businesses = directoryData.businesses || [];
+        var individuals = directoryData.standalone_individuals || [];
+
+        function addSection(label) {
+          var li = document.createElement('li');
+          li.className = 'sa-biz-section-label';
+          li.textContent = label;
+          el.saBizList.appendChild(li);
+        }
+
+        addSection('Businesses');
+        if (!businesses.length) {
+          var empty = document.createElement('li');
+          empty.className = 'sa-biz-section-label';
+          empty.style.color = '#64748b';
+          empty.textContent = 'None yet';
+          el.saBizList.appendChild(empty);
+        } else {
+          businesses.forEach(function (b) {
+            var key = 'b:' + b.owner_user_id;
+            var li = document.createElement('li');
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.setAttribute('data-sa-key', key);
+            var title = b.business_name ? String(b.business_name) : b.owner_email || key;
+            btn.innerHTML =
+              '<div style="font-weight:700">' +
+              escapeHtml(title) +
+              '</div><div style="font-size:12px;color:#94a3b8">' +
+              escapeHtml(b.owner_email || '') +
+              '</div>';
+            btn.addEventListener('click', function () {
+              selectRow(key, b);
+            });
+            li.appendChild(btn);
+            el.saBizList.appendChild(li);
+          });
+        }
+
+        addSection('Individuals (no business)');
+        if (!individuals.length) {
+          var empty2 = document.createElement('li');
+          empty2.className = 'sa-biz-section-label';
+          empty2.style.color = '#64748b';
+          empty2.textContent = 'None matched';
+          el.saBizList.appendChild(empty2);
+        } else {
+          individuals.forEach(function (u) {
+            var key = 'i:' + u.user_id;
+            var li = document.createElement('li');
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.setAttribute('data-sa-key', key);
+            var line =
+              personName(u.first_name, u.last_name) ||
+              (u.business_name_meta && String(u.business_name_meta).trim()) ||
+              u.email;
+            btn.innerHTML =
+              '<div style="font-weight:700">' +
+              escapeHtml(line) +
+              '</div><div style="font-size:12px;color:#94a3b8">' +
+              escapeHtml(u.email || '') +
+              '</div>';
+            btn.addEventListener('click', function () {
+              selectRow(key, u);
+            });
+            li.appendChild(btn);
+            el.saBizList.appendChild(li);
+          });
+        }
+
+        if (selectedKey) {
+          var found = null;
+          businesses.forEach(function (b) {
+            if ('b:' + b.owner_user_id === selectedKey) found = b;
+          });
+          individuals.forEach(function (u) {
+            if ('i:' + u.user_id === selectedKey) found = u;
+          });
+          if (found) selectRow(selectedKey, found);
+          else {
+            selectedKey = '';
+            el.saBizPlaceholder.classList.remove('sa-hidden');
+            el.saBizDetailInner.classList.add('sa-hidden');
+            el.saBizDetailInner.innerHTML = '';
+          }
+        } else {
+          el.saBizPlaceholder.classList.remove('sa-hidden');
+          el.saBizDetailInner.classList.add('sa-hidden');
+          el.saBizDetailInner.innerHTML = '';
+        }
+      }
+
+      function loadDirectory() {
+        showBizError('');
+        if (!window.metricsSuperAdminFetchDirectory) {
+          showBizError('Directory API is not available.');
+          return;
+        }
+        window
+          .metricsSuperAdminFetchDirectory()
+          .then(function (data) {
+            directoryData = data || { businesses: [], standalone_individuals: [] };
+            buildList();
+          })
+          .catch(function (err) {
+            var msg =
+              (err && err.message) ||
+              (err && err.details) ||
+              'Could not load directory.';
+            if (/forbidden|42501|permission/i.test(String(msg))) {
+              msg +=
+                ' Add your account to public.super_admins (see supabase-migration-super-admin.sql) and run supabase-migration-super-admin-directory.sql.';
+            }
+            showBizError(msg);
+          });
       }
 
       function refresh() {
@@ -248,6 +639,17 @@
           showAdminPanel();
         });
       }
+
+      el.tabBtnOverview.addEventListener('click', function () {
+        setTab('overview');
+      });
+      el.tabBtnBusiness.addEventListener('click', function () {
+        setTab('business');
+      });
+      document.getElementById('btnRefreshDirectory').addEventListener('click', function () {
+        directoryData = null;
+        loadDirectory();
+      });
 
       document.getElementById('formPortal').addEventListener('submit', function (e) {
         e.preventDefault();

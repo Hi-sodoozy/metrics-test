@@ -1059,6 +1059,8 @@
 
 .footer-site-link-wrap {
   flex: 1 0 100%;
+  width: 100%;
+  max-width: 100%;
   text-align: center;
 }
 
@@ -1077,9 +1079,12 @@
 /* Simple centred footer used on non-display pages */
 .mv-site-footer {
   margin-top: 32px;
-  padding-top: 20px;
+  padding: 20px 16px 0;
   border-top: 1px solid #e2e4e8;
   text-align: center;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
 }
 
 .mv-site-footer-link {
@@ -1125,6 +1130,10 @@
 .mv-corporate-dot-link:hover {
   opacity: 1;
   text-decoration: none;
+}
+
+.mv-footer-dot-links .mv-corporate-dot-link {
+  margin-left: 0;
 }
 
 .input-page.input-theme-dark .mv-site-footer {
@@ -2992,14 +3001,36 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px 12px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.mv-site-footer-top .mv-site-footer-link,
+.mv-site-footer-top .footer-site-link {
+  order: 1;
+}
+
+.mv-site-footer-top .mv-footer-support-text-link {
+  order: 2;
+}
+
+.mv-site-footer-top .mv-footer-dot-links {
+  order: 3;
+  margin-left: auto;
+}
+
+.footer-site-link-wrap .mv-site-footer-top {
+  text-align: left;
 }
 
 .mv-footer-dot-links {
   display: inline-flex;
   align-items: center;
   gap: 2px;
+  flex-shrink: 0;
 }
 
 .mv-pricing-dot-link {
