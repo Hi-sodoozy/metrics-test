@@ -3408,12 +3408,12 @@
   --mv-display-accent: transparent;
 }
 
-.result-column-metric-title {
-  border-bottom-color: color-mix(in srgb, var(--mv-display-accent, transparent) 22%, #e2e4e8);
+.results-page.results-display-theme-custom.results-display-has-brand-color .result-column-metric-title {
+  border-bottom-color: color-mix(in srgb, var(--mv-display-accent) 35%, #e2e4e8);
 }
 
-.results-theme-dark .result-column-metric-title {
-  border-bottom-color: color-mix(in srgb, var(--mv-display-accent, transparent) 28%, rgba(255, 255, 255, 0.12));
+.results-page.results-display-theme-custom.results-display-has-brand-color.results-theme-dark .result-column-metric-title {
+  border-bottom-color: color-mix(in srgb, var(--mv-display-accent) 32%, rgba(255, 255, 255, 0.12));
 }
 
 .results-grid.count-1 {

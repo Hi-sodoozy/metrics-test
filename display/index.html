@@ -51,13 +51,11 @@
         return s;
       }
 
-      function renderDashboard(data) {
-        var grid = document.getElementById('resultsGrid');
-        if (!grid) return;
-
+      function syncDisplayBoardAccent(data) {
         var mainEl = document.querySelector('.results-main');
         var accent = normalizeDisplayAccent(data && data.displayBoardColor);
-        if (accent) {
+        var customOn = document.body.classList.contains('results-display-theme-custom');
+        if (accent && customOn) {
           document.body.style.setProperty('--mv-display-accent', accent);
           document.body.classList.add('results-display-has-brand-color');
           if (mainEl) mainEl.classList.add('results-has-display-accent');
@@ -66,6 +64,14 @@
           document.body.classList.remove('results-display-has-brand-color');
           if (mainEl) mainEl.classList.remove('results-has-display-accent');
         }
+      }
+
+      function renderDashboard(data) {
+        var grid = document.getElementById('resultsGrid');
+        if (!grid) return;
+
+        window.__mvLastDisplayDashboard = data || {};
+        syncDisplayBoardAccent(window.__mvLastDisplayDashboard);
 
         var linkInput = document.getElementById('linkToInput');
         if (linkInput && window.metricsGetUserContext && window.metricsAppUrl) {
@@ -411,11 +417,12 @@
           'results-display-theme-custom'
         );
         document.body.classList.add('results-display-theme-' + m);
-        document.body.classList.toggle('results-theme-dark', m === 'dark');
-        document.body.classList.toggle('results-theme-light', m === 'light' || m === 'custom');
+        document.body.classList.toggle('results-theme-dark', m === 'dark' || m === 'custom');
+        document.body.classList.toggle('results-theme-light', m === 'light');
         try {
           localStorage.setItem(RESULTS_THEME_KEY, m);
         } catch (e) {}
+        syncDisplayBoardAccent(window.__mvLastDisplayDashboard || {});
         document.querySelectorAll('.results-theme-seg').forEach(function (btn) {
           var active = btn.getAttribute('data-display-theme') === m;
           btn.classList.toggle('results-theme-seg-active', active);
