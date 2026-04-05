@@ -78,6 +78,17 @@
       color: #dbeafe;
       border: 1px solid rgba(125, 211, 252, 0.25);
     }
+    .sa-link-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      font: inherit;
+      font-weight: 600;
+      color: #7dd3fc;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .sa-link-btn:hover { color: #bae6fd; }
     .sa-hidden { display: none !important; }
     .sa-panel h2 { margin: 0 0 12px; font-size: 1.1rem; color: #e8eaef; }
     .sa-panel ul { margin: 0; padding-left: 1.2em; color: #9aa3b2; font-size: 14px; line-height: 1.55; }
@@ -180,24 +191,85 @@
         </div>
       </div>
 
-      <form id="formPortal" class="sa-hidden" autocomplete="off">
-        <p class="lead" style="margin-top:0">Enter the operator password to open the portal.</p>
-        <div class="sa-field">
-          <label for="portalPassword">Password</label>
-          <input id="portalPassword" name="portalPassword" type="password" required />
+      <div id="blockPortalGate" class="sa-hidden">
+        <div id="gateBootstrap" class="sa-hidden">
+          <p class="lead" style="margin-top:0">
+            No portal password is set yet. Create one (at least 8 characters). It is stored as a hash in Supabase.
+          </p>
+          <form id="formPortalBootstrap" autocomplete="off">
+            <div class="sa-field">
+              <label for="portalBootstrapNew">New password</label>
+              <input id="portalBootstrapNew" name="portalBootstrapNew" type="password" minlength="8" required />
+            </div>
+            <div class="sa-field">
+              <label for="portalBootstrapConfirm">Confirm password</label>
+              <input id="portalBootstrapConfirm" name="portalBootstrapConfirm" type="password" minlength="8" required />
+            </div>
+            <div class="sa-actions">
+              <button type="submit" class="sa-btn" id="btnBootstrapPw">Save and continue</button>
+              <button type="button" class="sa-btn secondary" id="btnCancelBootstrap">Cancel</button>
+            </div>
+          </form>
         </div>
-        <div class="sa-actions">
-          <button type="submit" class="sa-btn" id="btnUnlock">Continue</button>
-          <button type="button" class="sa-btn secondary" id="btnLockPortalPw">Cancel</button>
+
+        <div id="gateUnlock" class="sa-hidden">
+          <p class="lead" style="margin-top:0">Enter the operator password to open the portal.</p>
+          <form id="formPortalUnlock" autocomplete="off">
+            <div class="sa-field">
+              <label for="portalPassword">Password</label>
+              <input id="portalPassword" name="portalPassword" type="password" required />
+            </div>
+            <div class="sa-actions">
+              <button type="submit" class="sa-btn" id="btnUnlock">Continue</button>
+              <button type="button" class="sa-btn secondary" id="btnLockPortalPw">Cancel</button>
+            </div>
+          </form>
+          <p class="sa-actions" style="margin-top:6px">
+            <button type="button" class="sa-link-btn" id="btnForgotPortal">Forgot password?</button>
+          </p>
         </div>
+
+        <div id="gateForgotSend" class="sa-hidden">
+          <p class="lead" style="margin-top:0">
+            We will email a one-time code to <strong id="forgotEmailDisplay"></strong>. After you verify the code, you can set a new portal password.
+          </p>
+          <div class="sa-actions">
+            <button type="button" class="sa-btn" id="btnSendForgotOtp">Email me a code</button>
+            <button type="button" class="sa-btn secondary" id="btnBackFromForgotSend">Back</button>
+          </div>
+        </div>
+
+        <div id="gateForgotVerify" class="sa-hidden">
+          <p class="lead" style="margin-top:0">Enter the code from your email, then choose a new portal password.</p>
+          <form id="formPortalForgotVerify" autocomplete="off">
+            <div class="sa-field">
+              <label for="forgotOtpCode">Email code</label>
+              <input id="forgotOtpCode" name="forgotOtpCode" type="text" inputmode="numeric" autocomplete="one-time-code" required />
+            </div>
+            <div class="sa-field">
+              <label for="forgotNewPw">New password</label>
+              <input id="forgotNewPw" name="forgotNewPw" type="password" minlength="8" required />
+            </div>
+            <div class="sa-field">
+              <label for="forgotNewPw2">Confirm new password</label>
+              <input id="forgotNewPw2" name="forgotNewPw2" type="password" minlength="8" required />
+            </div>
+            <div class="sa-actions">
+              <button type="submit" class="sa-btn" id="btnForgotSubmit">Update password</button>
+              <button type="button" class="sa-btn secondary" id="btnBackFromForgotVerify">Back</button>
+            </div>
+          </form>
+        </div>
+
         <div id="msgPortal" class="sa-msg sa-hidden error" role="alert"></div>
-      </form>
+      </div>
 
       <div id="blockAdmin" class="sa-hidden sa-panel">
         <h2>Operator portal</h2>
         <nav class="sa-tabs" aria-label="Portal sections">
           <button type="button" class="sa-btn secondary sa-tab-active" id="tabBtnOverview" data-sa-tab="overview">Overview</button>
           <button type="button" class="sa-btn secondary" id="tabBtnBusiness" data-sa-tab="business">Business</button>
+          <button type="button" class="sa-btn secondary" id="tabBtnSecurity" data-sa-tab="security">Security</button>
         </nav>
 
         <div id="tabOverview" class="sa-tab-panel">
@@ -228,6 +300,28 @@
           </div>
         </div>
 
+        <div id="tabSecurity" class="sa-tab-panel sa-hidden">
+          <p class="lead" style="margin-bottom:12px">Change the operator portal password (stored as a bcrypt hash via Supabase RPCs).</p>
+          <form id="formSaChangePw" autocomplete="off">
+            <div class="sa-field">
+              <label for="saPwOld">Current password</label>
+              <input id="saPwOld" type="password" required />
+            </div>
+            <div class="sa-field">
+              <label for="saPwNew">New password</label>
+              <input id="saPwNew" type="password" minlength="8" required />
+            </div>
+            <div class="sa-field">
+              <label for="saPwNew2">Confirm new password</label>
+              <input id="saPwNew2" type="password" minlength="8" required />
+            </div>
+            <div class="sa-actions">
+              <button type="submit" class="sa-btn" id="btnSaChangePw">Update password</button>
+            </div>
+          </form>
+          <div id="msgSaSecurity" class="sa-msg sa-hidden" role="alert"></div>
+        </div>
+
         <div class="sa-actions" style="margin-top:22px">
           <button type="button" class="sa-btn secondary" id="btnLockPortal3">Lock portal (this tab)</button>
         </div>
@@ -253,10 +347,7 @@
       var PORTAL_KEY = 'mvSuperAdminPortalUnlockUntil';
       var PORTAL_TTL_MS = 12 * 60 * 60 * 1000;
 
-      var portalPwd =
-        typeof window.MV_SUPER_ADMIN_PORTAL_PASSWORD === 'string'
-          ? window.MV_SUPER_ADMIN_PORTAL_PASSWORD
-          : '';
+      var forgotUserEmail = '';
 
       var el = {
         main: document.getElementById('saMain'),
@@ -265,13 +356,21 @@
         denied: document.getElementById('blockDenied'),
         deniedDetail: document.getElementById('deniedDetail'),
         deniedSignIn: document.getElementById('deniedSignIn'),
-        formPortal: document.getElementById('formPortal'),
+        blockPortalGate: document.getElementById('blockPortalGate'),
+        gateBootstrap: document.getElementById('gateBootstrap'),
+        gateUnlock: document.getElementById('gateUnlock'),
+        gateForgotSend: document.getElementById('gateForgotSend'),
+        gateForgotVerify: document.getElementById('gateForgotVerify'),
+        forgotEmailDisplay: document.getElementById('forgotEmailDisplay'),
         admin: document.getElementById('blockAdmin'),
         msgPortal: document.getElementById('msgPortal'),
         tabOverview: document.getElementById('tabOverview'),
         tabBusiness: document.getElementById('tabBusiness'),
+        tabSecurity: document.getElementById('tabSecurity'),
         tabBtnOverview: document.getElementById('tabBtnOverview'),
         tabBtnBusiness: document.getElementById('tabBtnBusiness'),
+        tabBtnSecurity: document.getElementById('tabBtnSecurity'),
+        msgSaSecurity: document.getElementById('msgSaSecurity'),
         saBizList: document.getElementById('saBizList'),
         saBizError: document.getElementById('saBizError'),
         saBizPlaceholder: document.getElementById('saBizPlaceholder'),
@@ -280,6 +379,37 @@
 
       var selectedKey = '';
       var directoryData = null;
+
+      function maskEmail(email) {
+        var s = String(email || '');
+        var at = s.indexOf('@');
+        if (at < 1) return s;
+        return s.slice(0, 2) + '•••@' + s.slice(at + 1);
+      }
+
+      function mapPortalRpcError(err) {
+        var m = String((err && err.message) || err || '');
+        if (/password_too_short|22023/i.test(m)) return 'Password must be at least 8 characters.';
+        if (/wrong_portal_password/i.test(m)) return 'Current password is incorrect.';
+        if (/portal_password_already_set/i.test(m)) {
+          return 'A portal password is already set. Use it to sign in, or use forgot password.';
+        }
+        if (/portal_password_not_configured/i.test(m)) return 'No portal password is configured yet.';
+        if (/otp_sign_in_required/i.test(m)) {
+          return 'Email verification was not recognized. Request a new code and submit it right after it arrives.';
+        }
+        if (/42501|forbidden/i.test(m)) return 'Not allowed.';
+        if (/PGRST202|does not exist|schema cache/i.test(m)) {
+          return 'Database functions are missing. Run supabase-migration-super-admin-portal-password.sql in Supabase.';
+        }
+        return m || 'Something went wrong.';
+      }
+
+      function clearSecurityMsg() {
+        el.msgSaSecurity.textContent = '';
+        el.msgSaSecurity.classList.add('sa-hidden');
+        el.msgSaSecurity.classList.remove('error', 'info');
+      }
 
       function escapeHtml(s) {
         var d = document.createElement('div');
@@ -339,6 +469,8 @@
 
       function showPortalError(msg) {
         el.msgPortal.textContent = msg || '';
+        el.msgPortal.classList.remove('info');
+        el.msgPortal.classList.add('error');
         el.msgPortal.classList.toggle('sa-hidden', !msg);
       }
 
@@ -352,7 +484,7 @@
         el.heading.textContent = 'Metrics View';
         el.lead.classList.add('sa-hidden');
         el.denied.classList.remove('sa-hidden');
-        el.formPortal.classList.add('sa-hidden');
+        el.blockPortalGate.classList.add('sa-hidden');
         el.admin.classList.add('sa-hidden');
         if (el.main) el.main.classList.remove('sa-main--wide');
         if (kind === 'notSignedIn') {
@@ -364,14 +496,21 @@
         }
       }
 
-      function showPasswordForm() {
+      function showPortalGate() {
         document.title = 'Metrics View';
         el.heading.textContent = 'Metrics View';
         el.lead.classList.add('sa-hidden');
         el.denied.classList.add('sa-hidden');
-        el.formPortal.classList.remove('sa-hidden');
+        el.blockPortalGate.classList.remove('sa-hidden');
         el.admin.classList.add('sa-hidden');
         if (el.main) el.main.classList.remove('sa-main--wide');
+      }
+
+      function showPortalGateMode(mode) {
+        el.gateBootstrap.classList.toggle('sa-hidden', mode !== 'bootstrap');
+        el.gateUnlock.classList.toggle('sa-hidden', mode !== 'unlock');
+        el.gateForgotSend.classList.toggle('sa-hidden', mode !== 'forgotSend');
+        el.gateForgotVerify.classList.toggle('sa-hidden', mode !== 'forgotVerify');
       }
 
       function showAdminPanel() {
@@ -379,18 +518,20 @@
         el.heading.textContent = 'Super admin';
         el.lead.classList.add('sa-hidden');
         el.denied.classList.add('sa-hidden');
-        el.formPortal.classList.add('sa-hidden');
+        el.blockPortalGate.classList.add('sa-hidden');
         el.admin.classList.remove('sa-hidden');
         if (el.main) el.main.classList.add('sa-main--wide');
       }
 
       function setTab(which) {
-        var isBiz = which === 'business';
-        el.tabOverview.classList.toggle('sa-hidden', isBiz);
-        el.tabBusiness.classList.toggle('sa-hidden', !isBiz);
-        el.tabBtnOverview.classList.toggle('sa-tab-active', !isBiz);
-        el.tabBtnBusiness.classList.toggle('sa-tab-active', isBiz);
-        if (isBiz && !directoryData) loadDirectory();
+        clearSecurityMsg();
+        el.tabOverview.classList.toggle('sa-hidden', which !== 'overview');
+        el.tabBusiness.classList.toggle('sa-hidden', which !== 'business');
+        el.tabSecurity.classList.toggle('sa-hidden', which !== 'security');
+        el.tabBtnOverview.classList.toggle('sa-tab-active', which === 'overview');
+        el.tabBtnBusiness.classList.toggle('sa-tab-active', which === 'business');
+        el.tabBtnSecurity.classList.toggle('sa-tab-active', which === 'security');
+        if (which === 'business' && !directoryData) loadDirectory();
       }
 
       function groupMembersByEmail(members) {
@@ -633,7 +774,21 @@
             return;
           }
           if (!isPortalUnlocked()) {
-            showPasswordForm();
+            showPortalGate();
+            if (!window.metricsSuperAdminPortalPasswordConfigured) {
+              showPortalError('Portal API is not available.');
+              showPortalGateMode('unlock');
+              return;
+            }
+            window
+              .metricsSuperAdminPortalPasswordConfigured()
+              .then(function (configured) {
+                showPortalGateMode(configured ? 'unlock' : 'bootstrap');
+              })
+              .catch(function (err) {
+                showPortalError(mapPortalRpcError(err));
+                showPortalGateMode('unlock');
+              });
             return;
           }
           showAdminPanel();
@@ -646,21 +801,165 @@
       el.tabBtnBusiness.addEventListener('click', function () {
         setTab('business');
       });
+      el.tabBtnSecurity.addEventListener('click', function () {
+        setTab('security');
+      });
       document.getElementById('btnRefreshDirectory').addEventListener('click', function () {
         directoryData = null;
         loadDirectory();
       });
 
-      document.getElementById('formPortal').addEventListener('submit', function (e) {
+      document.getElementById('formPortalBootstrap').addEventListener('submit', function (e) {
+        e.preventDefault();
+        showPortalError('');
+        var a = (document.getElementById('portalBootstrapNew').value || '').trim();
+        var b = (document.getElementById('portalBootstrapConfirm').value || '').trim();
+        if (a.length < 8) {
+          showPortalError('Password must be at least 8 characters.');
+          return;
+        }
+        if (a !== b) {
+          showPortalError('Passwords do not match.');
+          return;
+        }
+        window
+          .metricsSuperAdminPortalBootstrapPassword(a)
+          .then(function () {
+            setPortalUnlock();
+            refresh();
+          })
+          .catch(function (err) {
+            showPortalError(mapPortalRpcError(err));
+          });
+      });
+
+      document.getElementById('btnCancelBootstrap').addEventListener('click', lockPortal);
+
+      document.getElementById('formPortalUnlock').addEventListener('submit', function (e) {
         e.preventDefault();
         showPortalError('');
         var input = (document.getElementById('portalPassword').value || '').trim();
-        if (input !== portalPwd) {
-          showPortalError('Incorrect password.');
+        window
+          .metricsSuperAdminPortalVerifyPassword(input)
+          .then(function (ok) {
+            if (!ok) {
+              showPortalError('Incorrect password.');
+              return;
+            }
+            setPortalUnlock();
+            refresh();
+          })
+          .catch(function (err) {
+            showPortalError(mapPortalRpcError(err));
+          });
+      });
+
+      document.getElementById('btnForgotPortal').addEventListener('click', function () {
+        showPortalError('');
+        window.metricsSupabase.auth.getSession().then(function (res) {
+          var u = res && res.data && res.data.session && res.data.session.user;
+          forgotUserEmail = (u && u.email) || '';
+          if (!forgotUserEmail) {
+            showPortalError('No email on this session.');
+            return;
+          }
+          el.forgotEmailDisplay.textContent = maskEmail(forgotUserEmail);
+          showPortalGateMode('forgotSend');
+        });
+      });
+
+      document.getElementById('btnBackFromForgotSend').addEventListener('click', function () {
+        showPortalError('');
+        showPortalGateMode('unlock');
+      });
+
+      document.getElementById('btnSendForgotOtp').addEventListener('click', function () {
+        showPortalError('');
+        if (!forgotUserEmail) return;
+        window.metricsSupabase.auth
+          .signInWithOtp({
+            email: forgotUserEmail,
+            options: { shouldCreateUser: false },
+          })
+          .then(function (res) {
+            if (res.error) throw res.error;
+            showPortalGateMode('forgotVerify');
+            document.getElementById('forgotOtpCode').focus();
+          })
+          .catch(function (err) {
+            showPortalError(String((err && err.message) || err || 'Could not send code.'));
+          });
+      });
+
+      document.getElementById('btnBackFromForgotVerify').addEventListener('click', function () {
+        showPortalError('');
+        showPortalGateMode('forgotSend');
+      });
+
+      document.getElementById('formPortalForgotVerify').addEventListener('submit', function (e) {
+        e.preventDefault();
+        showPortalError('');
+        var code = (document.getElementById('forgotOtpCode').value || '').trim();
+        var a = (document.getElementById('forgotNewPw').value || '').trim();
+        var b = (document.getElementById('forgotNewPw2').value || '').trim();
+        if (a.length < 8 || b.length < 8) {
+          showPortalError('Password must be at least 8 characters.');
           return;
         }
-        setPortalUnlock();
-        refresh();
+        if (a !== b) {
+          showPortalError('New passwords do not match.');
+          return;
+        }
+        if (!forgotUserEmail) {
+          showPortalError('Session email missing. Go back and try again.');
+          return;
+        }
+        window.metricsSupabase.auth
+          .verifyOtp({ email: forgotUserEmail, token: code, type: 'email' })
+          .then(function (res) {
+            if (res.error) throw res.error;
+            return window.metricsSuperAdminPortalResetPasswordAfterOtp(a);
+          })
+          .then(function () {
+            setPortalUnlock();
+            refresh();
+          })
+          .catch(function (err) {
+            showPortalError(mapPortalRpcError(err));
+          });
+      });
+
+      document.getElementById('formSaChangePw').addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearSecurityMsg();
+        var oldP = (document.getElementById('saPwOld').value || '').trim();
+        var n1 = (document.getElementById('saPwNew').value || '').trim();
+        var n2 = (document.getElementById('saPwNew2').value || '').trim();
+        if (n1.length < 8) {
+          el.msgSaSecurity.textContent = 'New password must be at least 8 characters.';
+          el.msgSaSecurity.classList.remove('sa-hidden');
+          el.msgSaSecurity.classList.add('error');
+          return;
+        }
+        if (n1 !== n2) {
+          el.msgSaSecurity.textContent = 'New passwords do not match.';
+          el.msgSaSecurity.classList.remove('sa-hidden');
+          el.msgSaSecurity.classList.add('error');
+          return;
+        }
+        window
+          .metricsSuperAdminPortalChangePassword(oldP, n1)
+          .then(function () {
+            el.msgSaSecurity.textContent = 'Password updated.';
+            el.msgSaSecurity.classList.remove('sa-hidden', 'error');
+            el.msgSaSecurity.classList.add('info');
+            document.getElementById('formSaChangePw').reset();
+          })
+          .catch(function (err) {
+            el.msgSaSecurity.textContent = mapPortalRpcError(err);
+            el.msgSaSecurity.classList.remove('sa-hidden', 'info');
+            el.msgSaSecurity.classList.add('error');
+          });
       });
 
       document.getElementById('btnLockPortalPw').addEventListener('click', lockPortal);

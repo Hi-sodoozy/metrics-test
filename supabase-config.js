@@ -527,6 +527,55 @@
     };
   }
 
+  window.metricsSuperAdminPortalPasswordConfigured = function () {
+    if (!window.metricsSupabase) {
+      return Promise.reject(new Error('Supabase is not initialized.'));
+    }
+    return window.metricsSupabase.rpc('super_admin_portal_password_configured').then(function (res) {
+      if (res && res.error) throw res.error;
+      return !!res.data;
+    });
+  };
+
+  window.metricsSuperAdminPortalVerifyPassword = function (plain) {
+    if (!window.metricsSupabase) {
+      return Promise.reject(new Error('Supabase is not initialized.'));
+    }
+    return window.metricsSupabase.rpc('super_admin_portal_verify_password', { p_plain: plain }).then(function (res) {
+      if (res && res.error) throw res.error;
+      return !!res.data;
+    });
+  };
+
+  window.metricsSuperAdminPortalBootstrapPassword = function (newPassword) {
+    if (!window.metricsSupabase) {
+      return Promise.reject(new Error('Supabase is not initialized.'));
+    }
+    return window.metricsSupabase.rpc('super_admin_portal_bootstrap_password', { p_new: newPassword }).then(function (res) {
+      if (res && res.error) throw res.error;
+    });
+  };
+
+  window.metricsSuperAdminPortalChangePassword = function (oldPassword, newPassword) {
+    if (!window.metricsSupabase) {
+      return Promise.reject(new Error('Supabase is not initialized.'));
+    }
+    return window.metricsSupabase
+      .rpc('super_admin_portal_change_password', { p_old: oldPassword, p_new: newPassword })
+      .then(function (res) {
+        if (res && res.error) throw res.error;
+      });
+  };
+
+  window.metricsSuperAdminPortalResetPasswordAfterOtp = function (newPassword) {
+    if (!window.metricsSupabase) {
+      return Promise.reject(new Error('Supabase is not initialized.'));
+    }
+    return window.metricsSupabase.rpc('super_admin_portal_reset_password_after_otp', { p_new: newPassword }).then(function (res) {
+      if (res && res.error) throw res.error;
+    });
+  };
+
   window.metricsSuperAdminFetchDirectory = function () {
     if (!window.metricsSupabase) {
       return Promise.reject(new Error('Supabase is not initialized.'));
