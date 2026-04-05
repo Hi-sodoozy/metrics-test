@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Metrics View</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .sa-main { max-width: 640px; margin: 0 auto; padding: 24px 20px 48px; }
+    .sa-card {
+      padding: 28px 24px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .sa-card h1 { margin: 0 0 8px; font-size: 1.45rem; font-weight: 700; color: #f3f4f6; }
+    .sa-card p.lead { margin: 0 0 20px; font-size: 14px; color: #9aa3b2; line-height: 1.5; }
+    .sa-field { margin-bottom: 14px; }
+    .sa-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #9aa3b2;
+      margin-bottom: 6px;
+    }
+    .sa-field input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      font: inherit;
+      box-sizing: border-box;
+      background: rgba(15, 20, 25, 0.75);
+      color: #e8eaef;
+    }
+    .sa-field input:focus {
+      outline: none;
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+    }
+    .sa-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; align-items: center; }
+    .sa-btn {
+      padding: 10px 18px;
+      font: inherit;
+      font-weight: 700;
+      color: #0a0c10;
+      background: linear-gradient(135deg, #7dd3fc 0%, #60a5fa 100%);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sa-btn:hover { filter: brightness(1.05); }
+    .sa-btn.secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e8eaef;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .sa-btn.secondary:hover { background: rgba(255, 255, 255, 0.12); }
+    .sa-msg { margin-top: 14px; padding: 12px; border-radius: 8px; font-size: 14px; line-height: 1.45; }
+    .sa-msg.error {
+      background: rgba(248, 113, 113, 0.14);
+      color: #fecaca;
+      border: 1px solid rgba(248, 113, 113, 0.3);
+    }
+    .sa-msg.info {
+      background: rgba(125, 211, 252, 0.14);
+      color: #dbeafe;
+      border: 1px solid rgba(125, 211, 252, 0.25);
+    }
+    .sa-hidden { display: none !important; }
+    .sa-panel h2 { margin: 0 0 12px; font-size: 1.1rem; color: #e8eaef; }
+    .sa-panel ul { margin: 0; padding-left: 1.2em; color: #9aa3b2; font-size: 14px; line-height: 1.55; }
+    .sa-panel a { color: #7dd3fc; }
+  </style>
+</head>
+<body class="metrics-page mv-landing auth-landing">
+  <div class="mv-landing-bg" aria-hidden="true"></div>
+  <header class="mv-landing-nav mv-landing-nav-right">
+    <a class="auth-logo-link" href="../">Metrics View</a>
+  </header>
+  <main class="mv-landing-main sa-main">
+    <div class="sa-card" id="cardRoot">
+      <h1 id="saHeading">Metrics View</h1>
+      <p class="lead" id="leadText">This page is not available.</p>
+
+      <div id="blockDenied" class="sa-hidden">
+        <p class="sa-msg info" id="deniedDetail"></p>
+        <div class="sa-actions">
+          <a class="sa-btn sa-hidden" id="deniedSignIn" href="../auth/">Sign in</a>
+          <a class="sa-btn secondary" id="deniedHome" href="../">Home</a>
+        </div>
+      </div>
+
+      <form id="formPortal" class="sa-hidden" autocomplete="off">
+        <p class="lead" style="margin-top:0">Enter the operator password to open the portal.</p>
+        <div class="sa-field">
+          <label for="portalPassword">Password</label>
+          <input id="portalPassword" name="portalPassword" type="password" required />
+        </div>
+        <div class="sa-actions">
+          <button type="submit" class="sa-btn" id="btnUnlock">Continue</button>
+          <button type="button" class="sa-btn secondary" id="btnLockPortalPw">Cancel</button>
+        </div>
+        <div id="msgPortal" class="sa-msg sa-hidden error" role="alert"></div>
+      </form>
+
+      <div id="blockAdmin" class="sa-hidden sa-panel">
+        <h2>Operator portal</h2>
+        <p class="lead" style="margin-bottom:12px">Signed in as super admin. Additional tools can be added here later.</p>
+        <ul>
+          <li><a href="../input/">Metrics Centre</a></li>
+          <li><a href="../corporate-profile/">Corporate profile</a></li>
+        </ul>
+        <div class="sa-actions" style="margin-top:22px">
+          <button type="button" class="sa-btn secondary" id="btnLockPortal3">Lock portal (this tab)</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="mv-site-footer">
+    <div class="mv-site-footer-top">
+      <a class="mv-site-footer-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+      <span class="mv-footer-dot-links">
+        <a class="mv-corporate-dot-link" href="../corporate-profile/" aria-label="Corporate profile" title="Corporate profile">•</a>
+        <a class="mv-pricing-dot-link" href="../pricing/" aria-label="Pricing" title="Pricing">•</a>
+        <a class="mv-super-admin-dot-link" href="./" aria-label="Super admin" title="Super admin">•</a>
+      </span>
+      <a class="mv-footer-support-text-link" href="../support/">Support</a>
+    </div>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../super-admin-access.js"></script>
+  <script src="../supabase-config.js"></script>
+  <script>
+    (function () {
+      var PORTAL_KEY = 'mvSuperAdminPortalUnlockUntil';
+      var PORTAL_TTL_MS = 12 * 60 * 60 * 1000;
+
+      var portalPwd =
+        typeof window.MV_SUPER_ADMIN_PORTAL_PASSWORD === 'string'
+          ? window.MV_SUPER_ADMIN_PORTAL_PASSWORD
+          : '';
+
+      var el = {
+        heading: document.getElementById('saHeading'),
+        lead: document.getElementById('leadText'),
+        denied: document.getElementById('blockDenied'),
+        deniedDetail: document.getElementById('deniedDetail'),
+        deniedSignIn: document.getElementById('deniedSignIn'),
+        formPortal: document.getElementById('formPortal'),
+        admin: document.getElementById('blockAdmin'),
+        msgPortal: document.getElementById('msgPortal'),
+      };
+
+      function getUnlockUntil() {
+        try {
+          var raw = sessionStorage.getItem(PORTAL_KEY);
+          if (!raw) return 0;
+          var t = parseInt(raw, 10);
+          return isNaN(t) ? 0 : t;
+        } catch (e) {
+          return 0;
+        }
+      }
+
+      function isPortalUnlocked() {
+        return Date.now() < getUnlockUntil();
+      }
+
+      function setPortalUnlock() {
+        sessionStorage.setItem(PORTAL_KEY, String(Date.now() + PORTAL_TTL_MS));
+      }
+
+      function lockPortal() {
+        try {
+          sessionStorage.removeItem(PORTAL_KEY);
+        } catch (e) {}
+        window.location.reload();
+      }
+
+      function showPortalError(msg) {
+        el.msgPortal.textContent = msg || '';
+        el.msgPortal.classList.toggle('sa-hidden', !msg);
+      }
+
+      function showDenied(kind) {
+        document.title = 'Metrics View';
+        el.heading.textContent = 'Metrics View';
+        el.lead.classList.add('sa-hidden');
+        el.denied.classList.remove('sa-hidden');
+        el.formPortal.classList.add('sa-hidden');
+        el.admin.classList.add('sa-hidden');
+        if (kind === 'notSignedIn') {
+          el.deniedDetail.textContent = 'Sign in to continue.';
+          el.deniedSignIn.classList.remove('sa-hidden');
+        } else {
+          el.deniedDetail.textContent = 'This page is not available for your account.';
+          el.deniedSignIn.classList.add('sa-hidden');
+        }
+      }
+
+      function showPasswordForm() {
+        document.title = 'Metrics View';
+        el.heading.textContent = 'Metrics View';
+        el.lead.classList.add('sa-hidden');
+        el.denied.classList.add('sa-hidden');
+        el.formPortal.classList.remove('sa-hidden');
+        el.admin.classList.add('sa-hidden');
+      }
+
+      function showAdminPanel() {
+        document.title = 'Super admin – Metrics View';
+        el.heading.textContent = 'Super admin';
+        el.lead.classList.add('sa-hidden');
+        el.denied.classList.add('sa-hidden');
+        el.formPortal.classList.add('sa-hidden');
+        el.admin.classList.remove('sa-hidden');
+      }
+
+      function refresh() {
+        showPortalError('');
+        var client = window.metricsSupabase;
+        if (!client || !client.auth) {
+          showDenied('wrongAccount');
+          return;
+        }
+        client.auth.getSession().then(function (res) {
+          var session = res && res.data && res.data.session;
+          var user = session && session.user;
+          if (!user) {
+            showDenied('notSignedIn');
+            return;
+          }
+          if (!window.metricsIsSuperAdminUser(user)) {
+            showDenied('wrongAccount');
+            return;
+          }
+          if (!isPortalUnlocked()) {
+            showPasswordForm();
+            return;
+          }
+          showAdminPanel();
+        });
+      }
+
+      document.getElementById('formPortal').addEventListener('submit', function (e) {
+        e.preventDefault();
+        showPortalError('');
+        var input = (document.getElementById('portalPassword').value || '').trim();
+        if (input !== portalPwd) {
+          showPortalError('Incorrect password.');
+          return;
+        }
+        setPortalUnlock();
+        refresh();
+      });
+
+      document.getElementById('btnLockPortalPw').addEventListener('click', lockPortal);
+      document.getElementById('btnLockPortal3').addEventListener('click', lockPortal);
+
+      refresh();
+    })();
+  </script>
+</body>
+</html>

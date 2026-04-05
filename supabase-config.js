@@ -45,6 +45,9 @@
       if (ctx) localStorage.setItem(USER_CTX_KEY, JSON.stringify(ctx));
       else localStorage.removeItem(USER_CTX_KEY);
     } catch (e) {}
+    if (typeof window.metricsSyncSuperAdminFooterDot === 'function') {
+      window.metricsSyncSuperAdminFooterDot();
+    }
   };
 
   function init() {
@@ -540,4 +543,7 @@
   };
 
   init();
+  if (typeof window.metricsSyncSuperAdminFooterDot === 'function') {
+    window.metricsSyncSuperAdminFooterDot();
+  }
 })();
