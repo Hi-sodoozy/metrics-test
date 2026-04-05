@@ -10,16 +10,19 @@
 <body class="metrics-page results-page">
   <main class="results-main">
     <div class="results-grid" id="resultsGrid"></div>
-    <div class="results-bottom-actions">
-      <a href="../input/" class="input-link" id="linkToInput">Metrics Centre</a>
-      <div class="results-display-theme-group" role="group" aria-labelledby="resultsDisplayThemeLegend">
-        <span class="results-display-theme-legend" id="resultsDisplayThemeLegend">Display</span>
-        <div class="results-display-theme-segments">
-          <button type="button" class="results-theme-seg results-theme-seg-active" data-display-theme="light">Light</button>
-          <button type="button" class="results-theme-seg" data-display-theme="dark">Dark</button>
-          <button type="button" class="results-theme-seg" data-display-theme="custom">Custom</button>
+    <div class="results-bottom-dock" id="resultsBottomDock">
+      <div class="results-bottom-actions" id="resultsBottomActions">
+        <a href="../input/" class="input-link" id="linkToInput">Metrics Centre</a>
+        <div class="results-display-theme-group" role="group" aria-labelledby="resultsDisplayThemeLegend">
+          <span class="results-display-theme-legend" id="resultsDisplayThemeLegend">Display</span>
+          <div class="results-display-theme-segments">
+            <button type="button" class="results-theme-seg results-theme-seg-active" data-display-theme="light">Light</button>
+            <button type="button" class="results-theme-seg" data-display-theme="dark">Dark</button>
+            <button type="button" class="results-theme-seg" data-display-theme="custom">Custom</button>
+          </div>
         </div>
       </div>
+      <button type="button" class="results-bottom-reveal-hit" id="resultsBottomReveal" aria-label="Show Metrics Centre and display options" aria-expanded="false" aria-controls="resultsBottomActions"></button>
     </div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -471,6 +474,35 @@
               applyResultsDisplayTheme(m);
             });
           });
+          (function initBottomDock() {
+            var dock = document.getElementById('resultsBottomDock');
+            var reveal = document.getElementById('resultsBottomReveal');
+            var actions = document.getElementById('resultsBottomActions');
+            if (!dock || !reveal) return;
+            function setOpen(open) {
+              dock.classList.toggle('results-bottom-dock--open', open);
+              reveal.setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
+            reveal.addEventListener('click', function (e) {
+              e.stopPropagation();
+              setOpen(!dock.classList.contains('results-bottom-dock--open'));
+            });
+            document.addEventListener('click', function (e) {
+              if (!dock.classList.contains('results-bottom-dock--open')) return;
+              if (!dock.contains(e.target)) setOpen(false);
+            });
+            reveal.addEventListener('keydown', function (e) {
+              if (e.key === 'Escape') setOpen(false);
+            });
+            if (actions) {
+              actions.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                  setOpen(false);
+                  reveal.focus();
+                }
+              });
+            }
+          })();
           initResultsTheme();
           var userCtx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
           if (!userCtx || !userCtx.email) {
