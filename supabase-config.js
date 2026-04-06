@@ -587,7 +587,7 @@
   };
 
   window.metricsLogout = function (redirectTo) {
-    var dest = redirectTo || 'welcome.html';
+    var dest = redirectTo || 'https://www.metricsview.com.au/';
     function finish() {
       try {
         if (window.metricsSetUserContext) window.metricsSetUserContext(null);

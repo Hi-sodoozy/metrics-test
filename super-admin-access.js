@@ -1,13 +1,11 @@
 /**
- * Super admin allowlist (footer dot + portal gate). Change email/password here when needed.
+ * Super admin allowlist (footer dot + portal email check). Portal password lives in Supabase (see migration).
  * Loaded before supabase-config.js on Metrics pages.
  */
 (function () {
   var SUPER_ADMIN_EMAIL = 'iain@iainduguid.com';
-  var SUPER_ADMIN_PORTAL_PASSWORD = 'Super!';
 
   window.MV_SUPER_ADMIN_EMAIL = SUPER_ADMIN_EMAIL;
-  window.MV_SUPER_ADMIN_PORTAL_PASSWORD = SUPER_ADMIN_PORTAL_PASSWORD;
 
   window.metricsNormalizeEmailForSuperAdmin = function (s) {
     return String(s || '').trim().toLowerCase();

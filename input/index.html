@@ -44,15 +44,19 @@
     </div>
     <div id="metricCardCloneSource" class="metric-card-clone-source" aria-hidden="true">
       <div class="metric-card">
-      <div class="input-row metric-form" data-index="0">
+      <div class="metric-final-panel" hidden aria-hidden="true">
+        <div class="metric-final-panel-inner"></div>
+      </div>
+      <div class="input-row metric-form metric-view-edit-form" data-index="0">
         <div class="metric-title-row">
           <input type="text" class="metric-block-title-field" maxlength="240" placeholder="Metric" aria-label="Metric title" />
           <span class="metric-business-badge" hidden></span>
           <span class="metric-permission-badge" hidden title="Your permission for this metric" aria-label="Metric permission"></span>
         </div>
-        <label class="option-check option-show-main"><input type="checkbox" name="showOnMainScreen" aria-label="Metrics display visibility" /><span class="show-main-label-text">Add to Display</span></label>
+        <div class="metric-contributor-readout" hidden></div>
+        <label class="option-check option-show-main admin-only-board-setup"><input type="checkbox" name="showOnMainScreen" aria-label="Metrics display visibility" /><span class="show-main-label-text">Add to Display</span></label>
         <input type="hidden" name="heading" value="" />
-        <div class="form-block display-as-block">
+        <div class="form-block display-as-block admin-only-board-setup">
           <div class="display-as-heading-row">
             <span class="form-label display-as-block-label">Display as:</span>
             <span class="info-tip" tabindex="0" aria-label="Display mode info" title="Summary uses the Goal and Current values below. Individuals uses totals and rows from the Individual data section.">i</span>
@@ -63,20 +67,21 @@
               <label class="option-radio"><input type="radio" name="displayAs_0" value="ranking" /> Individuals</label>
             </div>
           </div>
-        </div>
-        <div class="form-block goal-current-block">
-          <label class="form-label">Goal + Current <span class="info-tip" tabindex="0" aria-label="Goal and current info" title="When Current ≥ Goal, the card turns green.">i</span></label>
-          <div class="goal-current-fields">
-            <input type="number" name="goal" class="metric-single-line-input metric-number-input" placeholder="0" inputmode="decimal" step="any" autocomplete="off" aria-label="Goal (numeric)" />
-            <input type="number" name="current" class="metric-single-line-input metric-number-input" placeholder="0" inputmode="decimal" step="any" autocomplete="off" aria-label="Current (numeric)" />
-          </div>
           <div class="summary-data-empty-placeholder" hidden>Enter Goal and Current below to show information on the display screen</div>
         </div>
-        <div class="form-block main-display-percent-block">
+        <div class="form-block goal-current-block admin-only-board-setup">
+          <h4 class="summary-section-heading">Summary</h4>
+          <label class="form-label">Current + Goal <span class="info-tip" tabindex="0" aria-label="Goal and current info" title="When Current ≥ Goal, the card turns green.">i</span></label>
+          <div class="goal-current-fields">
+            <input type="number" name="current" class="metric-single-line-input metric-number-input metric-narrow-number" placeholder="0" inputmode="decimal" step="any" maxlength="10" autocomplete="off" aria-label="Current (numeric)" />
+            <input type="number" name="goal" class="metric-single-line-input metric-number-input metric-narrow-number" placeholder="0" inputmode="decimal" step="any" maxlength="10" autocomplete="off" aria-label="Goal (numeric)" />
+          </div>
+        </div>
+        <div class="form-block main-display-percent-block admin-only-board-setup">
           <label class="option-check"><input type="checkbox" name="displayAsPercent" aria-label="Display as percentage" /> Display as %</label>
         </div>
-        <div class="metric-actions">
-          <button type="button" class="btn-save">Save</button>
+        <div class="metric-actions metric-actions-top">
+          <button type="button" class="btn-save btn-edit-save-toggle">Edit</button>
           <button type="button" class="btn-view-board">View Display</button>
         </div>
         <div class="metric-ranking-section">
@@ -89,7 +94,7 @@
             <p class="individual-data-active-note" hidden>Displaying Individual Data</p>
           </div>
           <div class="individual-data-muted-wrap">
-          <div class="individual-data-options" role="group" aria-label="Individual data display options">
+          <div class="individual-data-options admin-only-board-setup" role="group" aria-label="Individual data display options">
             <label class="toggle-row individual-data-option"><input type="checkbox" class="ranking-opt-simple" aria-label="Show total goal and progress" /> Show Total Goal + Progress</label>
             <label class="toggle-row individual-data-option"><input type="checkbox" class="ranking-opt-individual-progress" checked aria-label="Show individual goal and progress" /> Show Individual Goal + Progress</label>
             <label class="toggle-row individual-data-option"><input type="checkbox" class="ranking-display-as-pct" aria-label="Display individual data as percentage" /> Display as %</label>
@@ -107,12 +112,12 @@
             <button type="button" class="btn-add-row">Add more rows</button>
           </div>
           <div class="metric-actions metric-actions-after-ranking">
-            <button type="button" class="btn-save">Save</button>
+            <button type="button" class="btn-save btn-edit-save-toggle">Edit</button>
             <button type="button" class="btn-view-board">View Display</button>
           </div>
           </div>
         </div>
-        <div class="invited-users-wrap">
+        <div class="invited-users-wrap admin-only-board-setup">
           <h5 class="invited-users-title">Invited users <span class="invited-users-subtitle">All users that can view this metric board. Only board admins can add or remove people.</span></h5>
           <table class="input-table invited-users-table" aria-label="Invited users">
             <thead>
@@ -151,7 +156,7 @@
     <footer class="input-footer">
       <a href="../my-profile/" class="footer-link">My Profile</a>
       <a href="../user-guide/" class="footer-link">User Guide</a>
-      <a href="../invite-user/" class="footer-link">Invite User</a>
+      <a href="../invite-user/" class="footer-link" id="footerInviteUser">Invite User</a>
       <a href="../support/" class="footer-link">Support</a>
       <a href="#" class="footer-link" id="linkLogout">Log out</a>
       <div class="footer-site-link-wrap">
@@ -185,7 +190,7 @@
         .then(function () {
           var userCtx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
           if (!userCtx || !userCtx.email) {
-            window.location.href = window.metricsAppUrl('');
+            window.location.href = window.metricsAppUrl ? window.metricsAppUrl('') : '../';
             return;
           }
           var KEY_BUSINESS = 'metricsDashboard';
@@ -803,20 +808,315 @@
         ph.hidden = !isSummary || (g !== '' && c !== '');
       }
 
+      function rowHasViewAccess(metricRow) {
+        var idx = parseInt(metricRow.getAttribute('data-index') || '0', 10);
+        var oid = getRowOwnerId(metricRow);
+        var shared = isSharedBoardRow(metricRow);
+        if (!isCollaborator && !shared) return true;
+        if (isCollaborator && !shared) return collaborViewIndices.indexOf(idx) >= 0;
+        var v = collaborViewByOwner[oid] || [];
+        return v.indexOf(idx) >= 0;
+      }
+
+      function filterRankingRowsForDisplay(rows) {
+        return (rows || []).filter(function (r) {
+          if (!r) return false;
+          return !!(
+            String(r.name || '').trim() ||
+            String(r.goal != null ? r.goal : '').trim() ||
+            String(r.current != null ? r.current : '').trim() ||
+            String(r.individualGoal != null ? r.individualGoal : '').trim()
+          );
+        });
+      }
+
+      function renderFinalPanelIntoCard(metricRow) {
+        var card = metricRow.closest('.metric-card');
+        if (!card) return;
+        var inner = card.querySelector('.metric-final-panel-inner');
+        if (!inner) return;
+        var m = collectOneMetricFromFormRow(metricRow);
+        var titleEl = metricRow.querySelector('.metric-block-title-field');
+        var title = (titleEl && titleEl.value.trim()) || m.heading || 'Metric';
+        var parts = [];
+        parts.push('<div class="metric-final-title-row">');
+        parts.push('<h3 class="metric-final-title">' + escapeHtmlStr(title) + '</h3>');
+        if (m.showOnMainScreen) {
+          parts.push('<span class="metric-final-on-display-badge">On Display</span>');
+        }
+        parts.push('</div>');
+
+        if (m.displayAs === 'ranking') {
+          var rank = m.ranking || {};
+          var legR = !!rank.enabled;
+          var showSimpleR = rank.showSimpleAggregate != null ? !!rank.showSimpleAggregate : legR;
+          var showIndR = rank.showIndividualGoalProgress != null ? rank.showIndividualGoalProgress !== false : legR;
+          var rows = filterRankingRowsForDisplay(rank.rows || []);
+          var displaySummary = m.displaySummary !== false;
+          var showMainTotalsCard = displaySummary && rows.length > 0 && (showSimpleR || showIndR);
+          if (showMainTotalsCard) {
+            var totalGoal = 0;
+            var totalCurrent = 0;
+            var t;
+            for (t = 0; t < rows.length; t++) {
+              var rg = rows[t];
+              var g = parseFloat(rg.goal, 10) || 0;
+              var indG = rg.individualGoal != null ? parseFloat(rg.individualGoal, 10) : NaN;
+              if (!isNaN(indG) && indG > 0) g = indG;
+              totalGoal += g;
+              totalCurrent += parseFloat(rg.current, 10) || 0;
+            }
+            var displayAsPctAgg = !!rank.displayAsPercent;
+            var achievedAgg = totalGoal > 0 && totalCurrent >= totalGoal;
+            var aggText;
+            if (displayAsPctAgg && totalGoal > 0) {
+              aggText = '<span class="metric-final-current">' + Math.round((totalCurrent / totalGoal) * 100) + '%</span>';
+            } else {
+              aggText =
+                '<span class="metric-final-current">' +
+                escapeHtmlStr(String(totalCurrent)) +
+                '</span> <span class="metric-final-sep">/</span> <span class="metric-final-goal">' +
+                escapeHtmlStr(String(totalGoal)) +
+                '</span>';
+            }
+            parts.push(
+              '<div class="metric-final-summary-card metric-final-aggregate' +
+                (achievedAgg ? ' achieved' : '') +
+                '"><div class="metric-final-card-inner"><p class="metric-final-values">' +
+                aggText +
+                '</p></div></div>'
+            );
+          }
+          if (showIndR && rows.length > 0) {
+            var withPct = rows.map(function (r) {
+              var cur = parseFloat(r.current, 10) || 0;
+              var goal = parseFloat(r.goal, 10) || 0;
+              var indGoal = r.individualGoal != null ? parseFloat(r.individualGoal, 10) : NaN;
+              if (!isNaN(indGoal) && indGoal > 0) goal = indGoal;
+              return {
+                name: r.name || '',
+                goal: r.goal,
+                current: r.current,
+                individualGoal: r.individualGoal,
+                pct: goal > 0 ? (cur / goal) * 100 : 0,
+                showMission: !!rank.showIndividualGoal
+              };
+            });
+            if (rank.rankPerformance !== false) {
+              withPct.sort(function (a, b) {
+                return b.pct - a.pct;
+              });
+            }
+            var displayAsPct = !!rank.displayAsPercent;
+            parts.push('<div class="metric-final-ranking-list"><ul class="metric-final-ranking-ul">');
+            var k;
+            for (k = 0; k < withPct.length; k++) {
+              var it = withPct[k];
+              var rawName = it.name != null ? String(it.name).trim() : '';
+              var nameHtml = rawName ? escapeHtmlStr(rawName) : '<span class="metric-final-name-empty">—</span>';
+              var indGoalPart =
+                it.showMission && it.individualGoal != null && String(it.individualGoal).trim()
+                  ? '<span class="metric-final-mission">' + escapeHtmlStr(String(it.individualGoal)) + '</span>'
+                  : '';
+              var valText = displayAsPct
+                ? Math.round(it.pct) + '%'
+                : escapeHtmlStr(String(it.current)) + ' / ' + escapeHtmlStr(String(it.goal));
+              parts.push(
+                '<li class="metric-final-ranking-li"><span class="metric-final-rank-name">' +
+                  nameHtml +
+                  '</span>' +
+                  (indGoalPart ? '<span class="metric-final-mission-wrap">' + indGoalPart + '</span>' : '<span class="metric-final-mission-wrap" aria-hidden="true"></span>') +
+                  '<span class="metric-final-rank-value">' +
+                  valText +
+                  '</span></li>'
+              );
+            }
+            parts.push('</ul></div>');
+          }
+        } else {
+          var curN = parseFloat(m.current, 10) || 0;
+          var goalN = parseFloat(m.goal, 10) || 0;
+          var curStr = String(m.current != null ? m.current : '').trim();
+          var goalStr = String(m.goal != null ? m.goal : '').trim();
+          var hasCur = curStr !== '';
+          var hasGoal = goalStr !== '';
+          var achieved = goalN > 0 && curN >= goalN;
+          var valuesInner;
+          if (m.displayAsPercent && goalN > 0) {
+            valuesInner = '<span class="metric-final-current">' + Math.round((curN / goalN) * 100) + '%</span>';
+          } else if (hasCur && hasGoal) {
+            valuesInner =
+              '<span class="metric-final-current">' +
+              escapeHtmlStr(curStr) +
+              '</span> <span class="metric-final-sep">/</span> <span class="metric-final-goal">' +
+              escapeHtmlStr(goalStr) +
+              '</span>';
+          } else if (hasCur) {
+            valuesInner = '<span class="metric-final-current">' + escapeHtmlStr(curStr) + '</span>';
+          } else if (hasGoal) {
+            valuesInner = '<span class="metric-final-goal">' + escapeHtmlStr(goalStr) + '</span>';
+          } else {
+            valuesInner = '<span class="metric-final-placeholder-note">Enter Current and Goal in Edit to show on Display</span>';
+          }
+          parts.push(
+            '<div class="metric-final-summary-card' +
+              (achieved ? ' achieved' : '') +
+              '"><div class="metric-final-card-inner"><p class="metric-final-values">' +
+              valuesInner +
+              '</p></div></div>'
+          );
+        }
+        inner.innerHTML = parts.join('');
+      }
+
+      function fillContributorReadout(metricRow) {
+        var el = metricRow.querySelector('.metric-contributor-readout');
+        if (!el) return;
+        var m = collectOneMetricFromFormRow(metricRow);
+        var titleEl = metricRow.querySelector('.metric-block-title-field');
+        var title = (titleEl && titleEl.value.trim()) || m.heading || 'Metric';
+        var sub = [];
+        sub.push('<h3 class="metric-contributor-readout-title">' + escapeHtmlStr(title) + '</h3>');
+        sub.push(
+          '<p class="metric-contributor-readout-meta">Display: ' +
+            (m.showOnMainScreen ? 'On' : 'Off') +
+            ' · ' +
+            (m.displayAs === 'ranking' ? 'Individuals' : 'Summary') +
+            '</p>'
+        );
+        if (m.displayAs === 'summary') {
+          sub.push(
+            '<p class="metric-contributor-readout-values"><span class="lbl">Current</span> ' +
+              escapeHtmlStr(String((m.current != null && String(m.current).trim()) ? m.current : '—')) +
+              ' <span class="lbl">Goal</span> ' +
+              escapeHtmlStr(String((m.goal != null && String(m.goal).trim()) ? m.goal : '—')) +
+              '</p>'
+          );
+        }
+        el.innerHTML = sub.join('');
+        el.hidden = false;
+      }
+
+      function updateEditSaveToggleLabels(metricRow) {
+        var full = isFullMetricEditorForRow(metricRow);
+        var contrib = isContributorRankingOnlyForRow(metricRow);
+        var canView = rowHasViewAccess(metricRow);
+        var readOnlyViewer = canView && !full && !contrib;
+        metricRow.querySelectorAll('.btn-edit-save-toggle').forEach(function (btn) {
+          if (readOnlyViewer) {
+            btn.hidden = true;
+            return;
+          }
+          btn.hidden = false;
+          if (contrib) {
+            btn.textContent = 'Save';
+            return;
+          }
+          var mode = metricRow.dataset.mcPresentation || 'final';
+          btn.textContent = mode === 'final' ? 'Edit' : 'Save';
+        });
+      }
+
+      function applyMetricCardPresentation(metricRow) {
+        var card = metricRow.closest('.metric-card');
+        if (!card) return;
+        var finalPanel = card.querySelector('.metric-final-panel');
+        var full = isFullMetricEditorForRow(metricRow);
+        var contrib = isContributorRankingOnlyForRow(metricRow);
+        var canView = rowHasViewAccess(metricRow);
+        var readOnlyViewer = canView && !full && !contrib;
+
+        card.classList.remove('metric-card--mode-final', 'metric-card--viewer-final', 'metric-card--contributor-mode');
+        metricRow.classList.remove('metric-form--contributor-summary');
+        var cr = metricRow.querySelector('.metric-contributor-readout');
+        if (cr) {
+          cr.hidden = true;
+          cr.innerHTML = '';
+        }
+
+        if (readOnlyViewer) {
+          card.classList.add('metric-card--viewer-final');
+          renderFinalPanelIntoCard(metricRow);
+          if (finalPanel) {
+            finalPanel.hidden = false;
+            finalPanel.setAttribute('aria-hidden', 'false');
+          }
+          return;
+        }
+
+        if (contrib) {
+          card.classList.add('metric-card--contributor-mode');
+          metricRow.classList.add('metric-form--contributor-summary');
+          fillContributorReadout(metricRow);
+          if (finalPanel) {
+            finalPanel.hidden = true;
+            finalPanel.setAttribute('aria-hidden', 'true');
+          }
+          return;
+        }
+
+        if (full) {
+          var mode = metricRow.dataset.mcPresentation || 'final';
+          if (mode === 'final') {
+            card.classList.add('metric-card--mode-final');
+            renderFinalPanelIntoCard(metricRow);
+            if (finalPanel) {
+              finalPanel.hidden = false;
+              finalPanel.setAttribute('aria-hidden', 'false');
+            }
+          } else if (finalPanel) {
+            finalPanel.hidden = true;
+            finalPanel.setAttribute('aria-hidden', 'true');
+          }
+        } else if (finalPanel) {
+          finalPanel.hidden = true;
+          finalPanel.setAttribute('aria-hidden', 'true');
+        }
+      }
+
+      function performRowSaveAndMaybeViewForRow(metricRow, goToBoard, afterSave) {
+        function doneNav() {
+          if (typeof afterSave === 'function') afterSave();
+        }
+        if (isSharedBoardRow(metricRow)) {
+          persistSharedRowNow(metricRow)
+            .then(function () {
+              signalDisplayRefresh(goToBoard ? 'view-board' : 'save');
+              doneNav();
+              if (goToBoard) {
+                var oid = metricRow.getAttribute('data-dashboard-owner') || '';
+                window.location.href = (window.metricsAppUrl ? window.metricsAppUrl('display/?owner=' + encodeURIComponent(oid)) : '../display/?owner=' + encodeURIComponent(oid));
+              }
+            })
+            .catch(function (err) {
+              alert((err && err.message) ? err.message : 'Could not save to the server.');
+            });
+          return;
+        }
+        save();
+        persistRemoteNow()
+          .then(function () {
+            signalDisplayRefresh(goToBoard ? 'view-board' : 'save');
+            doneNav();
+            if (goToBoard) {
+              if (isCollaborator) {
+                window.location.href = (window.metricsAppUrl ? window.metricsAppUrl('display/?owner=' + encodeURIComponent(dashboardOwnerId)) : '../display/?owner=' + encodeURIComponent(dashboardOwnerId));
+              } else {
+                window.location.href = window.metricsAppUrl ? window.metricsAppUrl('display/') : '../display/';
+              }
+            }
+          })
+          .catch(function (err) {
+            alert((err && err.message) ? err.message : 'Could not save to the server.');
+          });
+      }
+
       function applyRowAccessLocks() {
         document.querySelectorAll('.input-row.metric-form').forEach(function (row) {
           var idx = parseInt(row.getAttribute('data-index') || '0', 10);
           var oid = getRowOwnerId(row);
           var shared = isSharedBoardRow(row);
-          var canView = false;
-          if (!isCollaborator && !shared) {
-            canView = true;
-          } else if (isCollaborator && !shared) {
-            canView = collaborViewIndices.indexOf(idx) >= 0;
-          } else if (shared) {
-            var v = collaborViewByOwner[oid] || [];
-            canView = v.indexOf(idx) >= 0;
-          }
+          var canView = rowHasViewAccess(row);
           var accessFullEdit = isFullMetricEditorForRow(row);
           var accessRankingOnly = canView && !accessFullEdit && isContributorRankingOnlyForRow(row);
           var mayEdit = accessFullEdit || accessRankingOnly;
@@ -832,8 +1132,11 @@
               if (el === titleField) return;
               el.disabled = true;
             });
-            row.querySelectorAll('.metric-actions .btn-save, .metric-actions .btn-view-board').forEach(function (actionBtn) {
+            row.querySelectorAll('.metric-actions .btn-edit-save-toggle').forEach(function (actionBtn) {
               actionBtn.disabled = true;
+            });
+            row.querySelectorAll('.metric-actions .btn-view-board').forEach(function (vb) {
+              vb.disabled = !canView;
             });
             var addRow0 = row.querySelector('.metric-ranking-section .btn-add-row');
             if (addRow0) addRow0.disabled = true;
@@ -844,7 +1147,7 @@
               if (el === titleField) return;
               el.disabled = false;
             });
-            row.querySelectorAll('.metric-actions .btn-save, .metric-actions .btn-view-board').forEach(function (actionBtn) {
+            row.querySelectorAll('.metric-actions .btn-edit-save-toggle, .metric-actions .btn-view-board').forEach(function (actionBtn) {
               actionBtn.disabled = false;
             });
             var addRow1 = row.querySelector('.metric-ranking-section .btn-add-row');
@@ -855,13 +1158,13 @@
               if (el.closest('.ranking-table')) return;
               if (el.classList.contains('input-carousel-btn')) return;
               if (el === titleField) return;
-              if (el.classList.contains('btn-save')) return;
+              if (el.classList.contains('btn-edit-save-toggle')) return;
               el.disabled = true;
             });
             row.querySelectorAll('.ranking-tbody input, .ranking-tbody button').forEach(function (el) {
               el.disabled = true;
             });
-            row.querySelectorAll('.metric-actions .btn-save, .metric-actions .btn-view-board').forEach(function (actionBtn) {
+            row.querySelectorAll('.metric-actions .btn-edit-save-toggle, .metric-actions .btn-view-board').forEach(function (actionBtn) {
               actionBtn.disabled = false;
             });
             var addRow2 = row.querySelector('.metric-ranking-section .btn-add-row');
@@ -888,19 +1191,26 @@
               if (el === titleField) return;
               el.disabled = true;
             });
-            row.querySelectorAll('.metric-actions .btn-save, .metric-actions .btn-view-board').forEach(function (actionBtn) {
+            row.querySelectorAll('.metric-actions .btn-edit-save-toggle').forEach(function (actionBtn) {
               actionBtn.disabled = true;
+            });
+            row.querySelectorAll('.metric-actions .btn-view-board').forEach(function (vb) {
+              vb.disabled = !canView;
             });
             var addRow3 = row.querySelector('.metric-ranking-section .btn-add-row');
             if (addRow3) addRow3.disabled = true;
           }
           var canManageInv = canManageInvitesForMetric(idx, row);
+          var wrapInv = row.querySelector('.invited-users-wrap');
+          if (wrapInv) wrapInv.hidden = !accessFullEdit;
           row.querySelectorAll('.invited-users-wrap input, .invited-users-wrap select, .invited-users-wrap button').forEach(function (el) {
             el.disabled = !canView || !canManageInv;
           });
           updateMetricPermissionBadge(row);
           applySummaryModeUiForRow(row);
           updateSummaryInputsState(row);
+          applyMetricCardPresentation(row);
+          updateEditSaveToggleLabels(row);
         });
       }
 
@@ -918,11 +1228,13 @@
         var linkResults = document.getElementById('linkViewResults');
         if (linkResults) {
           if (isCollaborator) {
-            linkResults.href = window.metricsAppUrl('display/?owner=' + encodeURIComponent(dashboardOwnerId));
+            linkResults.href = window.metricsAppUrl ? window.metricsAppUrl('display/?owner=' + encodeURIComponent(dashboardOwnerId)) : '../display/?owner=' + encodeURIComponent(dashboardOwnerId);
           } else {
-            linkResults.href = window.metricsAppUrl('display/');
+            linkResults.href = window.metricsAppUrl ? window.metricsAppUrl('display/') : '../display/';
           }
         }
+        var inviteFoot = document.getElementById('footerInviteUser');
+        if (inviteFoot) inviteFoot.hidden = !!isCollaborator;
       }
 
       function rewriteMetricFormDisplayAsNames(form, suffix) {
@@ -1079,6 +1391,10 @@
         }
         row.querySelector('input[name="showOnMainScreen"]').addEventListener('change', function () {
           syncShowMainLabel(row);
+          touch();
+          signalDisplayRefresh('toggle-display');
+          renderFinalPanelIntoCard(row);
+          updateEditSaveToggleLabels(row);
         });
         row.querySelector('.metric-ranking-section .btn-add-row').addEventListener('click', function () {
           var data = getRankingRowsFromBlock(row);
@@ -1086,42 +1402,59 @@
           renderRankingRowsInBlock(row, data);
           touch();
         });
-        function performRowSaveAndMaybeView(goToBoard) {
-          if (isSharedBoardRow(row)) {
-            persistSharedRowNow(row)
-              .then(function () {
-                signalDisplayRefresh(goToBoard ? 'view-board' : 'save');
-                if (goToBoard) {
-                  var oid = row.getAttribute('data-dashboard-owner') || '';
-                  window.location.href = window.metricsAppUrl('display/?owner=' + encodeURIComponent(oid));
-                }
-              })
-              .catch(function (err) {
-                alert((err && err.message) ? err.message : 'Could not save to the server.');
-              });
-            return;
-          }
-          save();
-          persistRemoteNow()
-            .then(function () {
-              signalDisplayRefresh(goToBoard ? 'view-board' : 'save');
-              if (goToBoard) {
-                if (isCollaborator) {
-                  window.location.href = window.metricsAppUrl('display/?owner=' + encodeURIComponent(dashboardOwnerId));
-                } else {
-                  window.location.href = window.metricsAppUrl('display/');
-                }
-              }
-            })
-            .catch(function (err) {
-              alert((err && err.message) ? err.message : 'Could not save to the server.');
+        row.querySelectorAll('.metric-actions .btn-edit-save-toggle').forEach(function (saveBtn) {
+          saveBtn.addEventListener('click', function () {
+            var full = isFullMetricEditorForRow(row);
+            var contrib = isContributorRankingOnlyForRow(row);
+            if (!full) {
+              performRowSaveAndMaybeViewForRow(row, false);
+              return;
+            }
+            var mode = row.dataset.mcPresentation || 'final';
+            if (mode === 'final') {
+              row.dataset.mcPresentation = 'edit';
+              applyMetricCardPresentation(row);
+              applyRowAccessLocks();
+              updateEditSaveToggleLabels(row);
+              return;
+            }
+            performRowSaveAndMaybeViewForRow(row, false, function () {
+              row.dataset.mcPresentation = 'final';
+              applyMetricCardPresentation(row);
+              applyRowAccessLocks();
+              updateEditSaveToggleLabels(row);
             });
-        }
-        row.querySelectorAll('.metric-actions .btn-save').forEach(function (saveBtn) {
-          saveBtn.addEventListener('click', function () { performRowSaveAndMaybeView(false); });
+          });
         });
         row.querySelectorAll('.metric-actions .btn-view-board').forEach(function (viewBtn) {
-          viewBtn.addEventListener('click', function () { performRowSaveAndMaybeView(true); });
+          viewBtn.addEventListener('click', function () {
+            var full = isFullMetricEditorForRow(row);
+            var contrib = isContributorRankingOnlyForRow(row);
+            var mayPersist = full || contrib;
+            var mode = row.dataset.mcPresentation || 'final';
+            if (full && mode === 'edit') {
+              performRowSaveAndMaybeViewForRow(row, true, function () {
+                row.dataset.mcPresentation = 'final';
+                applyMetricCardPresentation(row);
+                applyRowAccessLocks();
+              });
+              return;
+            }
+            if (mayPersist) {
+              performRowSaveAndMaybeViewForRow(row, true);
+              return;
+            }
+            signalDisplayRefresh('view-board');
+            if (isCollaborator) {
+              window.location.href = (window.metricsAppUrl ? window.metricsAppUrl('display/?owner=' + encodeURIComponent(dashboardOwnerId)) : '../display/?owner=' + encodeURIComponent(dashboardOwnerId));
+            } else if (isSharedBoardRow(row)) {
+              window.location.href = window.metricsAppUrl
+                ? window.metricsAppUrl('display/?owner=' + encodeURIComponent(row.getAttribute('data-dashboard-owner') || ''))
+                : '../display/?owner=' + encodeURIComponent(row.getAttribute('data-dashboard-owner') || '');
+            } else {
+              window.location.href = window.metricsAppUrl ? window.metricsAppUrl('display/') : '../display/';
+            }
+          });
         });
         var btnRmMetric = row.querySelector('.btn-remove-metric');
         if (btnRmMetric) {
@@ -2020,6 +2353,11 @@
         var wrap = metricRow.querySelector('.invited-users-wrap');
         var body = metricRow.querySelector('.invited-users-body');
         if (!wrap || !body) return;
+        if (!isFullMetricEditorForRow(metricRow)) {
+          wrap.hidden = true;
+          body.innerHTML = '';
+          return;
+        }
         wrap.hidden = false;
         var canManage = canManageInvitesForMetric(metricIndex, metricRow);
         var thCb = metricRow.querySelector('.th-invite-cb');
@@ -2137,7 +2475,7 @@
               businessName = (metricRow.getAttribute('data-business-name') || '').trim();
             }
             var rowOwnerId = getRowOwnerId(metricRow);
-            var redirectTo = window.metricsAbsoluteAppUrl('auth/?mode=signup');
+            var redirectTo = window.location.origin + window.location.pathname.replace(/[^/]*$/, 'auth.html?mode=signup');
             var email = fieldValue(emailEl);
             if (!email) {
               alert('Please enter an email address.');
@@ -2221,7 +2559,7 @@
               .then(function () {
                 save();
                 if (isCollaborator && removedSelf) {
-                  window.location.href = window.metricsAppUrl('input/');
+                  window.location.href = window.metricsAppUrl ? window.metricsAppUrl('input/') : '../input/';
                   return;
                 }
                 refreshInvitedUsersSection(metricRow);
@@ -2333,8 +2671,8 @@
         var goalBlock = row.querySelector('.goal-current-block');
         if (goalInput) goalInput.disabled = isRanking;
         if (currentInput) currentInput.disabled = isRanking;
-        if (goalInput) goalInput.placeholder = isRanking ? 'Using Individual data. Select Summary view to edit this field' : 'Goal';
         if (currentInput) currentInput.placeholder = isRanking ? 'Using Individual data. Select Summary view to edit this field' : 'Current';
+        if (goalInput) goalInput.placeholder = isRanking ? 'Using Individual data. Select Summary view to edit this field' : 'Goal';
         if (goalBlock) goalBlock.classList.toggle('goal-current-block-muted', isRanking);
         updateSummaryEmptyPlaceholder(row);
       }
@@ -2483,7 +2821,7 @@
       if (linkLogoutEl) {
         linkLogoutEl.addEventListener('click', function (e) {
           e.preventDefault();
-          if (window.metricsLogout) window.metricsLogout();
+          if (window.metricsLogout) window.metricsLogout('https://www.metricsview.com.au/');
         });
       }
 
@@ -2501,7 +2839,7 @@
         .catch(function (err) {
           if (isCollaborator) {
             alert((err && err.message) ? err.message : 'Unable to load this dashboard.');
-            window.location.href = window.metricsAppUrl('input/');
+            window.location.href = window.metricsAppUrl ? window.metricsAppUrl('input/') : '../input/';
             return;
           }
           updateChromeForMode();
