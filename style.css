@@ -348,6 +348,15 @@
 .result-values .current { font-weight: 700; color: #2c2c2c; }
 .result-values .goal { color: #6b6b6b; }
 
+.result-values .result-values-sub {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.88em;
+  font-weight: 500;
+  color: #6b6b6b;
+  line-height: 1.35;
+}
+
 .result-card.achieved .result-values .current { color: #1b5e20; }
 
 .ranking-results {
@@ -589,6 +598,7 @@
 .results-theme-dark .result-card-inner .result-values,
 .results-theme-dark .result-values .current,
 .results-theme-dark .result-values .goal,
+.results-theme-dark .result-values .result-values-sub,
 .results-theme-dark .ranking-list,
 .results-theme-dark .ranking-value,
 .results-theme-dark .ranking-individual-goal,
@@ -1304,9 +1314,9 @@
   letter-spacing: 0.02em;
 }
 
-.goal-current-fields .metric-narrow-number {
-  max-width: 10ch;
-  width: 10ch;
+.goal-current-fields .metric-text-metric-value {
+  max-width: 22ch;
+  width: 100%;
   min-width: 0;
   box-sizing: border-box;
 }
@@ -1366,6 +1376,32 @@
   background: #ecfdf5;
   color: #047857;
   border: 1px solid #a7f3d0;
+  flex-shrink: 0;
+}
+
+.metric-final-on-display-badge--off {
+  background: #f3f4f6;
+  color: #6b7280;
+  border-color: #e5e7eb;
+  opacity: 0.95;
+}
+
+button.metric-final-on-display-badge {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: center;
+}
+
+button.metric-final-on-display-badge:hover {
+  filter: brightness(0.96);
+}
+
+button.metric-final-on-display-badge:focus-visible {
+  outline: 2px solid #6b9bd1;
+  outline-offset: 2px;
 }
 
 .metric-final-summary-card {
@@ -1390,6 +1426,20 @@
 
 .metric-final-placeholder-note {
   font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.metric-final-pct {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.metric-final-pct-sub {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.95rem;
   font-weight: 500;
   color: #6b7280;
 }
@@ -1634,8 +1684,9 @@
 
 .goal-current-fields {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 22ch));
+  gap: 8px;
+  align-items: start;
 }
 
 /* Numeric goal/current fields: single-line look without browser spin buttons */
@@ -1675,6 +1726,13 @@
 
 .ranking-table .metric-single-line-input {
   max-width: 100%;
+}
+
+.ranking-table .goal-current-cell .metric-text-metric-value {
+  max-width: 22ch;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .btn-remove-metric {
@@ -2501,7 +2559,8 @@
 
   .goal-current-fields {
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 8px;
+    max-width: none;
   }
 
   .goal-current-fields textarea {
@@ -3065,6 +3124,19 @@
   color: #f1f5f9;
 }
 
+.input-page.input-theme-dark .metric-final-on-display-badge {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6ee7b7;
+  border-color: rgba(52, 211, 153, 0.45);
+}
+
+.input-page.input-theme-dark .metric-final-on-display-badge--off {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  border-color: rgba(148, 163, 184, 0.25);
+  opacity: 0.9;
+}
+
 .input-page.input-theme-dark .metric-final-summary-card {
   border-color: #243b56;
   background: linear-gradient(180deg, rgba(16, 28, 48, 0.6) 0%, rgba(12, 18, 30, 0.85) 100%);
@@ -3080,6 +3152,14 @@
 }
 
 .input-page.input-theme-dark .metric-final-placeholder-note {
+  color: #94a3b8;
+}
+
+.input-page.input-theme-dark .metric-final-pct {
+  color: #e8eaef;
+}
+
+.input-page.input-theme-dark .metric-final-pct-sub {
   color: #94a3b8;
 }
 

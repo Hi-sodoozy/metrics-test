@@ -44,6 +44,15 @@
         return div.innerHTML;
       }
 
+      function parseMetricNumber(raw) {
+        if (raw == null) return NaN;
+        var str = String(raw).trim();
+        if (!str) return NaN;
+        str = str.replace(/\$/g, '').replace(/,/g, '').trim();
+        var n = parseFloat(str, 10);
+        return isNaN(n) ? NaN : n;
+      }
+
       function normalizeDisplayAccent(raw) {
         var s = String(raw || '').trim();
         if (!s) return '';
@@ -121,15 +130,32 @@
             if (showMainTotalsCard) {
               for (var t = 0; t < rows.length; t++) {
                 var rg = rows[t];
-                var g = parseFloat(rg.goal, 10) || 0;
-                var indG = rg.individualGoal != null ? parseFloat(rg.individualGoal, 10) : NaN;
+                var g = parseMetricNumber(rg.goal) || 0;
+                var indG = rg.individualGoal != null ? parseMetricNumber(rg.individualGoal) : NaN;
                 if (!isNaN(indG) && indG > 0) g = indG;
                 totalGoal += g;
-                totalCurrent += parseFloat(rg.current, 10) || 0;
+                totalCurrent += parseMetricNumber(rg.current) || 0;
               }
               var displayAsPctAgg = !!(rank.displayAsPercent);
               achieved = totalGoal > 0 && totalCurrent >= totalGoal;
-              valuesText = (displayAsPctAgg && totalGoal > 0) ? ('<span class="current">' + Math.round((totalCurrent / totalGoal) * 100) + '%</span>') : ('<span class="current">' + escapeHtml(String(totalCurrent)) + '</span> / <span class="goal">' + escapeHtml(String(totalGoal)) + '</span>');
+              if (displayAsPctAgg && totalGoal > 0) {
+                var aggPr2 = Math.round((totalCurrent / totalGoal) * 100);
+                valuesText =
+                  '<span class="current">' +
+                  escapeHtml(String(aggPr2)) +
+                  '%</span><span class="result-values-sub">' +
+                  escapeHtml(String(totalCurrent)) +
+                  ' / ' +
+                  escapeHtml(String(totalGoal)) +
+                  '</span>';
+              } else {
+                valuesText =
+                  '<span class="current">' +
+                  escapeHtml(String(totalCurrent)) +
+                  '</span> / <span class="goal">' +
+                  escapeHtml(String(totalGoal)) +
+                  '</span>';
+              }
             }
             displayed.push({
               type: 'ranking',
@@ -147,8 +173,8 @@
               sourceBusinessImage: m.sourceBusinessImage || data.businessImage || ''
             });
           } else {
-            var cur = parseFloat(m.current, 10) || 0;
-            var goal = parseFloat(m.goal, 10) || 0;
+            var cur = parseMetricNumber(m.current) || 0;
+            var goal = parseMetricNumber(m.goal) || 0;
             var curStr = String(m.current != null ? m.current : '').trim();
             var goalStr = String(m.goal != null ? m.goal : '').trim();
             var hasCur = curStr !== '';
@@ -156,7 +182,17 @@
             var achieved = goal > 0 && cur >= goal;
             var valuesText;
             if (m.displayAsPercent && goal > 0) {
-              valuesText = '<span class="current">' + escapeHtml(String(Math.round((cur / goal) * 100))) + '%</span>';
+              var pctVal = Math.round((cur / goal) * 100);
+              valuesText =
+                '<span class="current">' + escapeHtml(String(pctVal)) + '%</span>';
+              if (hasCur && hasGoal) {
+                valuesText +=
+                  '<span class="result-values-sub">' +
+                  escapeHtml(curStr) +
+                  ' / ' +
+                  escapeHtml(goalStr) +
+                  '</span>';
+              }
             } else if (hasCur && hasGoal) {
               valuesText =
                 '<span class="current">' +
@@ -236,9 +272,9 @@
             }
             if (item.rows && item.rows.length > 0 && item.showIndividualGoalProgress) {
               var withPct = item.rows.map(function (r) {
-                var cur = parseFloat(r.current, 10) || 0;
-                var goal = parseFloat(r.goal, 10) || 0;
-                var indGoal = r.individualGoal != null ? parseFloat(r.individualGoal, 10) : NaN;
+                var cur = parseMetricNumber(r.current) || 0;
+                var goal = parseMetricNumber(r.goal) || 0;
+                var indGoal = r.individualGoal != null ? parseMetricNumber(r.individualGoal) : NaN;
                 if (!isNaN(indGoal) && indGoal > 0) goal = indGoal;
                 return { name: r.name || '', goal: r.goal, current: r.current, individualGoal: r.individualGoal, pct: goal > 0 ? (cur / goal) * 100 : 0 };
               });

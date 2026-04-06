@@ -60,11 +60,124 @@
       var client = window.metricsSupabase;
       var resetForm = document.getElementById('resetForm');
       var resetMessage = document.getElementById('resetMessage');
+      var recoveryReady = false;
+
       function showMessage(text, kind) {
         resetMessage.hidden = !text;
         resetMessage.className = 'reset-message ' + (kind || 'info');
         resetMessage.textContent = text || '';
       }
+
+      function setFormEnabled(enabled) {
+        Array.prototype.forEach.call(resetForm.querySelectorAll('input, button'), function (el) {
+          if (el.classList && el.classList.contains('reset-reveal')) return;
+          el.disabled = !enabled;
+        });
+      }
+
+      function stripRecoveryFromUrl() {
+        try {
+          var url = new URL(window.location.href);
+          url.searchParams.delete('code');
+          url.searchParams.delete('sent');
+          url.hash = '';
+          var qs = url.searchParams.toString();
+          window.history.replaceState({}, document.title, url.pathname + (qs ? '?' + qs : ''));
+        } catch (e) {}
+      }
+
+      function bootRecoverySession() {
+        if (!client) {
+          showMessage('Supabase is not configured.', 'error');
+          setFormEnabled(false);
+          return;
+        }
+        setFormEnabled(false);
+        var url = new URL(window.location.href);
+        var waitingForEmailLink = false;
+        if (url.searchParams.get('sent') === '1') {
+          waitingForEmailLink = true;
+          url.searchParams.delete('sent');
+          var qs0 = url.searchParams.toString();
+          window.history.replaceState({}, document.title, url.pathname + (qs0 ? '?' + qs0 : '') + url.hash);
+        }
+        var hasCode = new URLSearchParams(window.location.search).has('code');
+        var hashLooksRecovery = /type=recovery|type%3Drecovery/i.test(window.location.hash || '');
+
+        function markReady() {
+          recoveryReady = true;
+          setFormEnabled(true);
+          stripRecoveryFromUrl();
+        }
+
+        function finalizeNoSession() {
+          setFormEnabled(false);
+          if (hasCode || hashLooksRecovery) {
+            showMessage('This reset link is invalid or expired. Go back to sign in and request a new reset.', 'error');
+            return;
+          }
+          if (waitingForEmailLink) {
+            showMessage(
+              'When your email arrives, open the reset link on this device. This page will then unlock so you can enter a new password.',
+              'info'
+            );
+            return;
+          }
+          showMessage('Use the link in your password reset email to open this page, or go back to sign in.', 'error');
+        }
+
+        var chain = Promise.resolve();
+        if (hasCode) {
+          chain = chain.then(function () {
+            return client.auth.exchangeCodeForSession(window.location.href);
+          }).then(function (result) {
+            if (result && result.error) throw result.error;
+          });
+        }
+
+        chain
+          .then(function () {
+            return client.auth.getSession();
+          })
+          .then(function (res) {
+            var session = res && res.data && res.data.session;
+            if (session) {
+              markReady();
+              return;
+            }
+            return new Promise(function (resolve) {
+              var done = false;
+              var sub = client.auth.onAuthStateChange(function (event, sess) {
+                if (done) return;
+                if (event === 'PASSWORD_RECOVERY' && sess) {
+                  done = true;
+                  try {
+                    sub.data.subscription.unsubscribe();
+                  } catch (e1) {}
+                  markReady();
+                  resolve();
+                }
+              });
+              window.setTimeout(function () {
+                if (done) return;
+                done = true;
+                try {
+                  sub.data.subscription.unsubscribe();
+                } catch (e2) {}
+                client.auth.getSession().then(function (r2) {
+                  if (r2 && r2.data && r2.data.session) markReady();
+                  else finalizeNoSession();
+                  resolve();
+                });
+              }, 2500);
+            });
+          })
+          .catch(function (err) {
+            setFormEnabled(false);
+            showMessage((err && err.message) ? err.message : String(err), 'error');
+          });
+      }
+
       document.querySelectorAll('.reset-reveal').forEach(function (btn) {
         btn.addEventListener('click', function () {
           var target = document.getElementById(btn.getAttribute('data-target'));
@@ -74,11 +187,16 @@
           btn.textContent = next === 'password' ? 'Reveal' : 'Hide';
         });
       });
-      resetForm.addEventListener('submit', async function (e) {
+
+      resetForm.addEventListener('submit', function (e) {
         e.preventDefault();
         showMessage('');
         if (!client) {
           showMessage('Supabase is not configured.', 'error');
+          return;
+        }
+        if (!recoveryReady) {
+          showMessage('Finish opening this page from your reset email first, or wait a moment and try again.', 'error');
           return;
         }
         var p1 = document.getElementById('newPassword').value;
@@ -91,14 +209,24 @@
           showMessage('Passwords do not match.', 'error');
           return;
         }
-        try {
-          var res = await client.auth.updateUser({ password: p1 });
-          if (res && res.error) throw res.error;
-          showMessage('Password updated. You can now sign in.', 'info');
-        } catch (err) {
-          showMessage((err && err.message) ? err.message : 'Unable to update password.', 'error');
-        }
+        client.auth
+          .updateUser({ password: p1 })
+          .then(function (res) {
+            if (res && res.error) throw res.error;
+            showMessage('Password updated. Redirecting to sign in…', 'info');
+            window.setTimeout(function () {
+              window.location.href =
+                typeof window.metricsAbsoluteAppUrl === 'function'
+                  ? window.metricsAbsoluteAppUrl('auth/')
+                  : new URL('../auth/', window.location.href).href;
+            }, 900);
+          })
+          .catch(function (err) {
+            showMessage((err && err.message) ? err.message : 'Unable to update password.', 'error');
+          });
       });
+
+      bootRecoverySession();
     })();
   </script>
   <footer class="mv-site-footer">

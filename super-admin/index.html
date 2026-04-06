@@ -240,9 +240,9 @@
         </div>
 
         <div id="gateForgotVerify" class="sa-hidden">
-          <p class="lead" style="margin-top:0">Enter the code from your email, then choose a new portal password.</p>
+          <p class="lead" style="margin-top:0" id="forgotVerifyLead">Enter the code from your email, then choose a new portal password.</p>
           <form id="formPortalForgotVerify" autocomplete="off">
-            <div class="sa-field">
+            <div class="sa-field" id="forgotOtpFieldWrap">
               <label for="forgotOtpCode">Email code</label>
               <input id="forgotOtpCode" name="forgotOtpCode" type="text" inputmode="numeric" autocomplete="one-time-code" required />
             </div>
@@ -346,8 +346,10 @@
     (function () {
       var PORTAL_KEY = 'mvSuperAdminPortalUnlockUntil';
       var PORTAL_TTL_MS = 12 * 60 * 60 * 1000;
+      var SA_FORGOT_MAGIC_KEY = 'mvSaPortalForgotMagic';
 
       var forgotUserEmail = '';
+      var saForgotSkipOtpThisPage = false;
 
       var el = {
         main: document.getElementById('saMain'),
@@ -511,6 +513,38 @@
         el.gateUnlock.classList.toggle('sa-hidden', mode !== 'unlock');
         el.gateForgotSend.classList.toggle('sa-hidden', mode !== 'forgotSend');
         el.gateForgotVerify.classList.toggle('sa-hidden', mode !== 'forgotVerify');
+      }
+
+      function getSuperAdminForgotRedirectUrl() {
+        if (typeof window.metricsAbsoluteAppUrl === 'function') {
+          return window.metricsAbsoluteAppUrl('super-admin/?portal_forgot=1');
+        }
+        try {
+          return new URL('../super-admin/?portal_forgot=1', window.location.href).href;
+        } catch (e) {
+          return window.location.origin + '/super-admin/?portal_forgot=1';
+        }
+      }
+
+      function applyForgotMagicLinkUi(skipOtp) {
+        var wrap = document.getElementById('forgotOtpFieldWrap');
+        var lead = document.getElementById('forgotVerifyLead');
+        var inp = document.getElementById('forgotOtpCode');
+        if (!wrap || !inp) return;
+        wrap.hidden = !!skipOtp;
+        inp.required = !skipOtp;
+        if (skipOtp) inp.value = '';
+        if (lead) {
+          lead.textContent = skipOtp
+            ? 'Your email link signed you in. Choose a new portal password below.'
+            : 'Enter the code from your email, then choose a new portal password.';
+        }
+      }
+
+      function clearSaForgotMagicStorage() {
+        try {
+          sessionStorage.removeItem(SA_FORGOT_MAGIC_KEY);
+        } catch (e) {}
       }
 
       function showAdminPanel() {
@@ -757,42 +791,92 @@
 
       function refresh() {
         showPortalError('');
+        saForgotSkipOtpThisPage = false;
         var client = window.metricsSupabase;
         if (!client || !client.auth) {
           showDenied('wrongAccount');
           return;
         }
-        client.auth.getSession().then(function (res) {
-          var session = res && res.data && res.data.session;
-          var user = session && session.user;
-          if (!user) {
-            showDenied('notSignedIn');
-            return;
-          }
-          if (!window.metricsIsSuperAdminUser(user)) {
-            showDenied('wrongAccount');
-            return;
-          }
-          if (!isPortalUnlocked()) {
-            showPortalGate();
-            if (!window.metricsSuperAdminPortalPasswordConfigured) {
-              showPortalError('Portal API is not available.');
-              showPortalGateMode('unlock');
+
+        var startUrl = new URL(window.location.href);
+        var hadAuthCode = startUrl.searchParams.has('code');
+        var hadRecoveryHash = /type=recovery|type%3Drecovery/i.test(window.location.hash || '');
+        var portalForgotParam = startUrl.searchParams.get('portal_forgot') === '1';
+        var forgotMagicStorage = false;
+        try {
+          forgotMagicStorage = sessionStorage.getItem(SA_FORGOT_MAGIC_KEY) === '1';
+        } catch (e) {}
+
+        function continueRefresh() {
+          client.auth.getSession().then(function (res) {
+            var session = res && res.data && res.data.session;
+            var user = session && session.user;
+            if (!user) {
+              showDenied('notSignedIn');
               return;
             }
-            window
-              .metricsSuperAdminPortalPasswordConfigured()
-              .then(function (configured) {
-                showPortalGateMode(configured ? 'unlock' : 'bootstrap');
-              })
-              .catch(function (err) {
-                showPortalError(mapPortalRpcError(err));
+            if (!window.metricsIsSuperAdminUser(user)) {
+              showDenied('wrongAccount');
+              return;
+            }
+            if (!isPortalUnlocked()) {
+              showPortalGate();
+              if (!window.metricsSuperAdminPortalPasswordConfigured) {
+                showPortalError('Portal API is not available.');
                 showPortalGateMode('unlock');
-              });
-            return;
-          }
-          showAdminPanel();
-        });
+                applyForgotMagicLinkUi(false);
+                return;
+              }
+              var cleanUrl = new URL(window.location.href);
+              if (cleanUrl.searchParams.get('portal_forgot') === '1') {
+                cleanUrl.searchParams.delete('portal_forgot');
+                var qs = cleanUrl.searchParams.toString();
+                window.history.replaceState({}, document.title, cleanUrl.pathname + (qs ? '?' + qs : '') + cleanUrl.hash);
+              }
+              var skipOtp =
+                saForgotSkipOtpThisPage ||
+                (forgotMagicStorage && (hadAuthCode || hadRecoveryHash)) ||
+                (portalForgotParam && (hadAuthCode || hadRecoveryHash));
+              window
+                .metricsSuperAdminPortalPasswordConfigured()
+                .then(function (configured) {
+                  if (configured && skipOtp) {
+                    forgotUserEmail = (user && user.email) || '';
+                    showPortalGateMode('forgotVerify');
+                    applyForgotMagicLinkUi(true);
+                    return;
+                  }
+                  showPortalGateMode(configured ? 'unlock' : 'bootstrap');
+                  applyForgotMagicLinkUi(false);
+                })
+                .catch(function (err) {
+                  showPortalError(mapPortalRpcError(err));
+                  showPortalGateMode('unlock');
+                  applyForgotMagicLinkUi(false);
+                });
+              return;
+            }
+            showAdminPanel();
+          });
+        }
+
+        if (hadAuthCode) {
+          client.auth.exchangeCodeForSession(window.location.href).then(function (ex) {
+            if (ex && ex.error) {
+              showPortalError(String((ex.error && ex.error.message) || ex.error || 'Sign-in link invalid.'));
+            } else {
+              saForgotSkipOtpThisPage = true;
+            }
+            var u = new URL(window.location.href);
+            u.searchParams.delete('code');
+            var q = u.searchParams.toString();
+            window.history.replaceState({}, document.title, u.pathname + (q ? '?' + q : '') + u.hash);
+            continueRefresh();
+          });
+          return;
+        }
+
+        continueRefresh();
       }
 
       el.tabBtnOverview.addEventListener('click', function () {
@@ -870,35 +954,47 @@
 
       document.getElementById('btnBackFromForgotSend').addEventListener('click', function () {
         showPortalError('');
+        clearSaForgotMagicStorage();
         showPortalGateMode('unlock');
       });
 
       document.getElementById('btnSendForgotOtp').addEventListener('click', function () {
         showPortalError('');
         if (!forgotUserEmail) return;
+        try {
+          sessionStorage.setItem(SA_FORGOT_MAGIC_KEY, '1');
+        } catch (e) {}
         window.metricsSupabase.auth
           .signInWithOtp({
             email: forgotUserEmail,
-            options: { shouldCreateUser: false },
+            options: {
+              shouldCreateUser: false,
+              emailRedirectTo: getSuperAdminForgotRedirectUrl(),
+            },
           })
           .then(function (res) {
             if (res.error) throw res.error;
             showPortalGateMode('forgotVerify');
+            applyForgotMagicLinkUi(false);
             document.getElementById('forgotOtpCode').focus();
           })
           .catch(function (err) {
+            clearSaForgotMagicStorage();
             showPortalError(String((err && err.message) || err || 'Could not send code.'));
           });
       });
 
       document.getElementById('btnBackFromForgotVerify').addEventListener('click', function () {
         showPortalError('');
+        clearSaForgotMagicStorage();
         showPortalGateMode('forgotSend');
       });
 
       document.getElementById('formPortalForgotVerify').addEventListener('submit', function (e) {
         e.preventDefault();
         showPortalError('');
+        var otpWrap = document.getElementById('forgotOtpFieldWrap');
+        var skipOtp = otpWrap && otpWrap.hidden;
         var code = (document.getElementById('forgotOtpCode').value || '').trim();
         var a = (document.getElementById('forgotNewPw').value || '').trim();
         var b = (document.getElementById('forgotNewPw2').value || '').trim();
@@ -914,13 +1010,23 @@
           showPortalError('Session email missing. Go back and try again.');
           return;
         }
-        window.metricsSupabase.auth
-          .verifyOtp({ email: forgotUserEmail, token: code, type: 'email' })
+        if (!skipOtp && !code) {
+          showPortalError('Enter the code from your email, or open the link in that email on this device.');
+          return;
+        }
+        var afterVerify = function () {
+          return window.metricsSuperAdminPortalResetPasswordAfterOtp(a);
+        };
+        var chain = skipOtp
+          ? Promise.resolve({ data: {}, error: null })
+          : window.metricsSupabase.auth.verifyOtp({ email: forgotUserEmail, token: code, type: 'email' });
+        chain
           .then(function (res) {
-            if (res.error) throw res.error;
-            return window.metricsSuperAdminPortalResetPasswordAfterOtp(a);
+            if (res && res.error) throw res.error;
+            return afterVerify();
           })
           .then(function () {
+            clearSaForgotMagicStorage();
             setPortalUnlock();
             refresh();
           })

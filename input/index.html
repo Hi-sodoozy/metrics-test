@@ -73,8 +73,8 @@
           <h4 class="summary-section-heading">Summary</h4>
           <label class="form-label">Current + Goal <span class="info-tip" tabindex="0" aria-label="Goal and current info" title="When Current ≥ Goal, the card turns green.">i</span></label>
           <div class="goal-current-fields">
-            <input type="number" name="current" class="metric-single-line-input metric-number-input metric-narrow-number" placeholder="0" inputmode="decimal" step="any" maxlength="10" autocomplete="off" aria-label="Current (numeric)" />
-            <input type="number" name="goal" class="metric-single-line-input metric-number-input metric-narrow-number" placeholder="0" inputmode="decimal" step="any" maxlength="10" autocomplete="off" aria-label="Goal (numeric)" />
+            <input type="text" name="current" class="metric-single-line-input metric-text-metric-value" placeholder="e.g. 100 or $1,234.50" inputmode="decimal" maxlength="24" autocomplete="off" aria-label="Current" />
+            <input type="text" name="goal" class="metric-single-line-input metric-text-metric-value" placeholder="e.g. 100 or $1,234.50" inputmode="decimal" maxlength="24" autocomplete="off" aria-label="Goal" />
           </div>
         </div>
         <div class="form-block main-display-percent-block admin-only-board-setup">
@@ -818,6 +818,16 @@
         return v.indexOf(idx) >= 0;
       }
 
+      /** Strip $ and thousands separators; parse float for comparisons and percentages. */
+      function parseMetricNumber(raw) {
+        if (raw == null) return NaN;
+        var s = String(raw).trim();
+        if (!s) return NaN;
+        s = s.replace(/\$/g, '').replace(/,/g, '').trim();
+        var n = parseFloat(s, 10);
+        return isNaN(n) ? NaN : n;
+      }
+
       function filterRankingRowsForDisplay(rows) {
         return (rows || []).filter(function (r) {
           if (!r) return false;
@@ -841,8 +851,29 @@
         var parts = [];
         parts.push('<div class="metric-final-title-row">');
         parts.push('<h3 class="metric-final-title">' + escapeHtmlStr(title) + '</h3>');
-        if (m.showOnMainScreen) {
-          parts.push('<span class="metric-final-on-display-badge">On Display</span>');
+        var showOn = !!m.showOnMainScreen;
+        var canToggleFinalDisplay = isFullMetricEditorForRow(metricRow);
+        var badgeText = showOn ? 'On Display' : 'Not displayed';
+        var badgeClass =
+          'metric-final-on-display-badge' + (showOn ? '' : ' metric-final-on-display-badge--off');
+        if (canToggleFinalDisplay) {
+          parts.push(
+            '<button type="button" class="' +
+              badgeClass +
+              ' metric-final-display-toggle" aria-pressed="' +
+              (showOn ? 'true' : 'false') +
+              '" title="Click to toggle public Display">' +
+              escapeHtmlStr(badgeText) +
+              '</button>'
+          );
+        } else {
+          parts.push(
+            '<span class="' +
+              badgeClass +
+              '" role="status">' +
+              escapeHtmlStr(badgeText) +
+              '</span>'
+          );
         }
         parts.push('</div>');
 
@@ -860,17 +891,25 @@
             var t;
             for (t = 0; t < rows.length; t++) {
               var rg = rows[t];
-              var g = parseFloat(rg.goal, 10) || 0;
-              var indG = rg.individualGoal != null ? parseFloat(rg.individualGoal, 10) : NaN;
+              var g = parseMetricNumber(rg.goal) || 0;
+              var indG = rg.individualGoal != null ? parseMetricNumber(rg.individualGoal) : NaN;
               if (!isNaN(indG) && indG > 0) g = indG;
               totalGoal += g;
-              totalCurrent += parseFloat(rg.current, 10) || 0;
+              totalCurrent += parseMetricNumber(rg.current) || 0;
             }
             var displayAsPctAgg = !!rank.displayAsPercent;
             var achievedAgg = totalGoal > 0 && totalCurrent >= totalGoal;
             var aggText;
             if (displayAsPctAgg && totalGoal > 0) {
-              aggText = '<span class="metric-final-current">' + Math.round((totalCurrent / totalGoal) * 100) + '%</span>';
+              var aggPct = Math.round((totalCurrent / totalGoal) * 100);
+              aggText =
+                '<span class="metric-final-pct">' +
+                aggPct +
+                '%</span><span class="metric-final-pct-sub">' +
+                escapeHtmlStr(String(totalCurrent)) +
+                ' <span class="metric-final-sep">/</span> ' +
+                escapeHtmlStr(String(totalGoal)) +
+                '</span>';
             } else {
               aggText =
                 '<span class="metric-final-current">' +
@@ -889,9 +928,9 @@
           }
           if (showIndR && rows.length > 0) {
             var withPct = rows.map(function (r) {
-              var cur = parseFloat(r.current, 10) || 0;
-              var goal = parseFloat(r.goal, 10) || 0;
-              var indGoal = r.individualGoal != null ? parseFloat(r.individualGoal, 10) : NaN;
+              var cur = parseMetricNumber(r.current) || 0;
+              var goal = parseMetricNumber(r.goal) || 0;
+              var indGoal = r.individualGoal != null ? parseMetricNumber(r.individualGoal) : NaN;
               if (!isNaN(indGoal) && indGoal > 0) goal = indGoal;
               return {
                 name: r.name || '',
@@ -934,8 +973,8 @@
             parts.push('</ul></div>');
           }
         } else {
-          var curN = parseFloat(m.current, 10) || 0;
-          var goalN = parseFloat(m.goal, 10) || 0;
+          var curN = parseMetricNumber(m.current) || 0;
+          var goalN = parseMetricNumber(m.goal) || 0;
           var curStr = String(m.current != null ? m.current : '').trim();
           var goalStr = String(m.goal != null ? m.goal : '').trim();
           var hasCur = curStr !== '';
@@ -943,7 +982,19 @@
           var achieved = goalN > 0 && curN >= goalN;
           var valuesInner;
           if (m.displayAsPercent && goalN > 0) {
-            valuesInner = '<span class="metric-final-current">' + Math.round((curN / goalN) * 100) + '%</span>';
+            var sumPct = Math.round((curN / goalN) * 100);
+            valuesInner =
+              '<span class="metric-final-pct">' +
+              escapeHtmlStr(String(sumPct)) +
+              '%</span>';
+            if (hasCur && hasGoal) {
+              valuesInner +=
+                '<span class="metric-final-pct-sub">' +
+                escapeHtmlStr(curStr) +
+                ' <span class="metric-final-sep">/</span> ' +
+                escapeHtmlStr(goalStr) +
+                '</span>';
+            }
           } else if (hasCur && hasGoal) {
             valuesInner =
               '<span class="metric-final-current">' +
@@ -2591,8 +2642,8 @@
           var nameCell = '<td><input type="text" name="rankName" placeholder="Name" /></td>';
           var indCell = showInd ? '<td class="td-individual-goal"><input type="text" name="rankIndividualGoal" placeholder="Mission" /></td>' : '<td class="td-individual-goal" hidden><input type="text" name="rankIndividualGoal" placeholder="Mission" /></td>';
           tr.innerHTML = nameCell + indCell +
-            '<td class="goal-current-cell"><input type="number" name="rankGoal" class="metric-single-line-input metric-number-input" placeholder="0" inputmode="decimal" step="any" autocomplete="off" aria-label="Row goal" /></td>' +
-            '<td class="goal-current-cell"><input type="number" name="rankCurrent" class="metric-single-line-input metric-number-input" placeholder="0" inputmode="decimal" step="any" autocomplete="off" aria-label="Row current" /></td>' +
+            '<td class="goal-current-cell"><input type="text" name="rankGoal" class="metric-single-line-input metric-text-metric-value" placeholder="e.g. 100 or $1,234.50" inputmode="decimal" maxlength="24" autocomplete="off" aria-label="Row goal" /></td>' +
+            '<td class="goal-current-cell"><input type="text" name="rankCurrent" class="metric-single-line-input metric-text-metric-value" placeholder="e.g. 100 or $1,234.50" inputmode="decimal" maxlength="24" autocomplete="off" aria-label="Row current" /></td>' +
             '<td class="td-row-actions">' +
               '<button type="button" class="btn-remove-row" aria-label="Remove row"><span class="btn-remove-icon" aria-hidden="true">−</span></button>' +
             '</td>';
@@ -2738,6 +2789,25 @@
         });
       }
       initDisplayTheme();
+
+      var inputMainEl = document.querySelector('main.input-main');
+      if (inputMainEl) {
+        inputMainEl.addEventListener('click', function (e) {
+          var btn = e.target && e.target.closest ? e.target.closest('.metric-final-display-toggle') : null;
+          if (!btn || !inputMainEl.contains(btn)) return;
+          var card = btn.closest('.metric-card');
+          var metricRow = card && card.querySelector('.metric-view-edit-form');
+          if (!metricRow || !isFullMetricEditorForRow(metricRow)) return;
+          var cb = metricRow.querySelector('input[name="showOnMainScreen"]');
+          if (!cb || cb.disabled) return;
+          cb.checked = !cb.checked;
+          syncShowMainLabel(metricRow);
+          touch();
+          signalDisplayRefresh('toggle-display');
+          renderFinalPanelIntoCard(metricRow);
+          updateEditSaveToggleLabels(metricRow);
+        });
+      }
 
       var carouselPrev = document.getElementById('carouselPrev');
       var carouselNext = document.getElementById('carouselNext');

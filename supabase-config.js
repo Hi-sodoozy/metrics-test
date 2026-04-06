@@ -5,6 +5,7 @@
  * - Site URL: https://metrics-test-one.vercel.app
  *   (or your exact deploy URL, including /metrics if the app lives in a subpath)
  * - Additional redirect URLs: same origin + /metrics/auth.html?mode=signup (invites + email confirm),
+ *   password reset (…/reset-password/), super-admin OTP return (…/super-admin/?portal_forgot=1),
  *   and http://localhost:* for local dev
  *
  * The anon key is safe to expose in the browser; protect data with Row Level Security (RLS).

@@ -147,10 +147,18 @@
             return;
           }
           try {
-            var resetRedirect = window.metricsAppUrl('reset-password/');
+            var resetRedirect =
+              typeof window.metricsAbsoluteAppUrl === 'function'
+                ? window.metricsAbsoluteAppUrl('reset-password/')
+                : new URL('../reset-password/', window.location.href).href;
             var resetRes = await client.auth.resetPasswordForEmail(email, { redirectTo: resetRedirect });
             if (resetRes && resetRes.error) throw resetRes.error;
-            showMessage('Password reset email sent. Check your inbox.', 'info');
+            showMessage('Opening the page where you will set a new password after you use the email link…', 'info');
+            var afterSent =
+              typeof window.metricsAbsoluteAppUrl === 'function'
+                ? window.metricsAbsoluteAppUrl('reset-password/?sent=1')
+                : new URL('../reset-password/?sent=1', window.location.href).href;
+            window.location.href = afterSent;
           } catch (err) {
             showMessage((err && err.message) ? err.message : 'Unable to send reset email.', 'error');
           }
