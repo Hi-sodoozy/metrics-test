@@ -1324,8 +1324,16 @@
   display: block !important;
 }
 
+/* Keep top actions (Edit / View Display) visible; hide editable fields while final panel shows */
 .metric-card--mode-final .metric-view-edit-form,
 .metric-card--viewer-final .metric-view-edit-form {
+  display: flex !important;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.metric-card--mode-final .metric-view-edit-form > *:not(.metric-actions-top),
+.metric-card--viewer-final .metric-view-edit-form > *:not(.metric-actions-top) {
   display: none !important;
 }
 
