@@ -853,7 +853,7 @@
         parts.push('<h3 class="metric-final-title">' + escapeHtmlStr(title) + '</h3>');
         var showOn = !!m.showOnMainScreen;
         var canToggleFinalDisplay = isFullMetricEditorForRow(metricRow);
-        var badgeText = showOn ? 'On Display' : 'Not displayed';
+        var badgeText = showOn ? 'On Display' : 'not displayed';
         var badgeClass =
           'metric-final-on-display-badge' + (showOn ? '' : ' metric-final-on-display-badge--off');
         if (canToggleFinalDisplay) {
@@ -2802,7 +2802,8 @@
           if (!cb || cb.disabled) return;
           cb.checked = !cb.checked;
           syncShowMainLabel(metricRow);
-          touch();
+          if (isSharedBoardRow(metricRow)) scheduleSharedRowSave(metricRow);
+          else save();
           signalDisplayRefresh('toggle-display');
           renderFinalPanelIntoCard(metricRow);
           updateEditSaveToggleLabels(metricRow);
