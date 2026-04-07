@@ -1,58 +1,190 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
   <meta charset="UTF-8" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <title>Metrics View – Support</title>
+
   <link rel="stylesheet" href="../style.css" />
+
   <style>
+
     .mv-support-page-main { max-width: 560px; margin: 0 auto; padding: 28px 20px 56px; }
+
     .mv-support-page-title { margin: 0 0 8px; font-size: 1.5rem; font-weight: 800; color: #0f172a; }
+
     .mv-support-page-lead { margin: 0 0 22px; font-size: 14px; color: #64748b; line-height: 1.55; }
+
     .mv-support-page-form { text-align: left; }
+
     .metrics-page.mv-landing .mv-support-page-title { color: #f3f4f6; }
+
     .metrics-page.mv-landing .mv-support-page-lead { color: #9aa3b2; }
+
+    .mv-support-fs-msg { margin: 0 0 16px; padding: 12px 14px; border-radius: 8px; font-size: 14px; line-height: 1.45; }
+
+    .mv-support-fs-success { background: rgba(236, 253, 245, 0.95); color: #065f46; border: 1px solid #a7f3d0; }
+
+    .mv-support-fs-error { background: rgba(254, 242, 242, 0.95); color: #991b1b; border: 1px solid #fecaca; }
+
+    .metrics-page.mv-landing .mv-support-fs-success { background: rgba(6, 95, 70, 0.35); color: #d1fae5; border-color: rgba(167, 243, 208, 0.5); }
+
+    .metrics-page.mv-landing .mv-support-fs-error { background: rgba(127, 29, 29, 0.35); color: #fecaca; border-color: rgba(252, 165, 165, 0.4); }
+
+    .mv-support-field-error { display: block; margin-top: 6px; font-size: 12px; color: #b91c1c; }
+
+    .metrics-page.mv-landing .mv-support-field-error { color: #fca5a5; }
+
+    .mv-support-fs-msg:empty { display: none; margin: 0; padding: 0; border: none; min-height: 0; }
+
   </style>
+
 </head>
+
 <body class="metrics-page mv-landing">
+
   <div class="mv-landing-bg" aria-hidden="true"></div>
+
   <header class="mv-landing-nav">
+
     <a class="mv-landing-nav-link" href="../">Home</a>
+
     <a class="mv-landing-nav-link" href="../input/">Metrics Centre</a>
+
   </header>
+
   <main class="mv-support-page-main mv-page-shell">
+
     <h1 class="mv-support-page-title">Support</h1>
-    <p class="mv-support-page-lead">Send us a message using the form below. Your email app will open with your details filled in so you can send from your own address.</p>
+
+    <p class="mv-support-page-lead">
+
+      Send a message below. Submissions go to our team; replies come from
+
+      <a href="mailto:iain@iainduguid.com">iain@iainduguid.com</a>.
+
+      You’ll receive a confirmation by email when your message is received.
+
+    </p>
+
+    <div class="mv-support-fs-msg mv-support-fs-success" data-fs-success aria-live="polite"></div>
+
+    <div class="mv-support-fs-msg mv-support-fs-error" data-fs-error role="alert"></div>
+
     <form class="mv-support-page-form" id="mvSupportForm" novalidate>
+
+      <input type="hidden" name="_subject" value="Metrics View — Support form" />
+
       <div class="mv-support-grid">
-        <label class="mv-support-label">Name <span class="mv-req" aria-hidden="true">*</span><input name="mvSupportName" type="text" required class="mv-input mv-support-input" autocomplete="name" /></label>
-        <label class="mv-support-label">Email <span class="mv-req" aria-hidden="true">*</span><input name="mvSupportEmail" type="email" required class="mv-input mv-support-input" autocomplete="email" /></label>
-        <label class="mv-support-label">Company<input name="mvSupportCompany" type="text" class="mv-input mv-support-input" autocomplete="organization" /></label>
-        <label class="mv-support-label">Topic
-          <select name="mvSupportType" class="mv-input mv-support-input">
-            <option value="Support">Support</option>
-            <option value="Feedback">Feedback</option>
-            <option value="Enquiry">Enquiry</option>
-            <option value="Other">Other</option>
-          </select>
+
+        <label class="mv-support-label">Name <span class="mv-req" aria-hidden="true">*</span>
+
+          <input id="supportName" name="name" type="text" required class="mv-input mv-support-input" autocomplete="name" data-fs-field />
+
+          <span class="mv-support-field-error" data-fs-error="name"></span>
+
         </label>
-        <label class="mv-support-label mv-support-msg-label">Message<textarea name="mvSupportMessage" class="mv-input mv-support-textarea" rows="4"></textarea></label>
+
+        <label class="mv-support-label">Email <span class="mv-req" aria-hidden="true">*</span>
+
+          <input id="supportEmail" name="email" type="email" required class="mv-input mv-support-input" autocomplete="email" data-fs-field />
+
+          <span class="mv-support-field-error" data-fs-error="email"></span>
+
+        </label>
+
+        <label class="mv-support-label">Company
+
+          <input name="company" type="text" class="mv-input mv-support-input" autocomplete="organization" data-fs-field />
+
+          <span class="mv-support-field-error" data-fs-error="company"></span>
+
+        </label>
+
+        <label class="mv-support-label">Topic
+
+          <select name="topic" class="mv-input mv-support-input" data-fs-field>
+
+            <option value="Support">Support</option>
+
+            <option value="Feedback">Feedback</option>
+
+            <option value="Enquiry">Enquiry</option>
+
+            <option value="Other">Other</option>
+
+          </select>
+
+          <span class="mv-support-field-error" data-fs-error="topic"></span>
+
+        </label>
+
+        <label class="mv-support-label mv-support-msg-label">Message <span class="mv-req" aria-hidden="true">*</span>
+
+          <textarea id="supportMessage" name="message" class="mv-input mv-support-textarea" rows="4" required data-fs-field></textarea>
+
+          <span class="mv-support-field-error" data-fs-error="message"></span>
+
+        </label>
+
       </div>
-      <button type="submit" class="mv-btn mv-btn-primary mv-support-submit">Send</button>
+
+      <button type="submit" class="mv-btn mv-btn-primary mv-support-submit" data-fs-submit-btn>Send</button>
+
     </form>
+
   </main>
+
   <footer class="mv-site-footer">
+
     <div class="mv-site-footer-top">
+
       <a class="mv-site-footer-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+
       <span class="mv-footer-dot-links">
+
         <a class="mv-corporate-dot-link" href="../corporate-profile/" aria-label="Corporate profile" title="Corporate profile">•</a>
+
         <a class="mv-pricing-dot-link" href="../pricing/" aria-label="Pricing" title="Pricing">•</a>
+
         <a class="mv-super-admin-dot-link" href="../super-admin/" aria-label="Super admin" title="Super admin">•</a>
+
       </span>
+
       <a class="mv-footer-support-text-link" href="./">Support</a>
+
     </div>
+
   </footer>
+
   <script src="../super-admin-access.js"></script>
+
   <script src="../metrics-footer.js"></script>
+
+  <script>
+
+    window.formspree =
+
+      window.formspree ||
+
+      function () {
+
+        (formspree.q = formspree.q || []).push(arguments);
+
+      };
+
+    formspree('initForm', { formElement: '#mvSupportForm', formId: 'mgopdoop' });
+
+  </script>
+
+  <script src="https://unpkg.com/@formspree/ajax@1" defer></script>
+
 </body>
+
 </html>
+

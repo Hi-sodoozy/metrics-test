@@ -1367,16 +1367,16 @@
 }
 
 .metric-final-on-display-badge {
-  font-size: 0.625rem;
+  font-size: calc(0.4375rem * 0.75);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  padding: 2px 7px;
+  letter-spacing: calc(0.015em * 0.75);
+  padding: 0 calc(3px * 0.75);
   border-radius: 999px;
   background: #ecfdf5;
   color: #047857;
   border: 1px solid #a7f3d0;
-  line-height: 1.35;
+  line-height: 1.3;
   flex-shrink: 0;
 }
 
