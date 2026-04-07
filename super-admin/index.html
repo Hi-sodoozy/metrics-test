@@ -41,6 +41,24 @@
       border-color: #60a5fa;
       box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
     }
+    .sa-password-wrap { position: relative; }
+    .sa-password-wrap input { padding-right: 4.75rem; }
+    .sa-password-reveal {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 6px 10px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: #bae6fd;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .sa-password-reveal:hover { background: rgba(255, 255, 255, 0.12); }
     .sa-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; align-items: center; }
     .sa-btn {
       padding: 10px 18px;
@@ -199,11 +217,17 @@
           <form id="formPortalBootstrap" autocomplete="off">
             <div class="sa-field">
               <label for="portalBootstrapNew">New password</label>
-              <input id="portalBootstrapNew" name="portalBootstrapNew" type="password" minlength="8" required />
+              <div class="sa-password-wrap">
+                <input id="portalBootstrapNew" name="portalBootstrapNew" type="password" minlength="8" required />
+                <button type="button" class="sa-password-reveal" data-sa-pw-toggle="portalBootstrapNew" aria-label="Show password">Reveal</button>
+              </div>
             </div>
             <div class="sa-field">
               <label for="portalBootstrapConfirm">Confirm password</label>
-              <input id="portalBootstrapConfirm" name="portalBootstrapConfirm" type="password" minlength="8" required />
+              <div class="sa-password-wrap">
+                <input id="portalBootstrapConfirm" name="portalBootstrapConfirm" type="password" minlength="8" required />
+                <button type="button" class="sa-password-reveal" data-sa-pw-toggle="portalBootstrapConfirm" aria-label="Show password">Reveal</button>
+              </div>
             </div>
             <div class="sa-actions">
               <button type="submit" class="sa-btn" id="btnBootstrapPw">Save and continue</button>
@@ -217,7 +241,10 @@
           <form id="formPortalUnlock" autocomplete="off">
             <div class="sa-field">
               <label for="portalPassword">Password</label>
-              <input id="portalPassword" name="portalPassword" type="password" required />
+              <div class="sa-password-wrap">
+                <input id="portalPassword" name="portalPassword" type="password" required />
+                <button type="button" class="sa-password-reveal" data-sa-pw-toggle="portalPassword" aria-label="Show password">Reveal</button>
+              </div>
             </div>
             <div class="sa-actions">
               <button type="submit" class="sa-btn" id="btnUnlock">Continue</button>
@@ -231,10 +258,10 @@
 
         <div id="gateForgotSend" class="sa-hidden">
           <p class="lead" style="margin-top:0">
-            We will email a one-time code to <strong id="forgotEmailDisplay"></strong>. After you verify the code, you can set a new portal password.
+            We will send Supabase’s <strong>Reset your password</strong> email to <strong id="forgotEmailDisplay"></strong>. Open the link, then set a new <em>operator portal</em> password here (not your Metrics sign-in password).
           </p>
           <div class="sa-actions">
-            <button type="button" class="sa-btn" id="btnSendForgotOtp">Email me a code</button>
+            <button type="button" class="sa-btn" id="btnSendForgotOtp">Email reset link</button>
             <button type="button" class="sa-btn secondary" id="btnBackFromForgotSend">Back</button>
           </div>
         </div>
@@ -305,15 +332,24 @@
           <form id="formSaChangePw" autocomplete="off">
             <div class="sa-field">
               <label for="saPwOld">Current password</label>
-              <input id="saPwOld" type="password" required />
+              <div class="sa-password-wrap">
+                <input id="saPwOld" type="password" required />
+                <button type="button" class="sa-password-reveal" data-sa-pw-toggle="saPwOld" aria-label="Show password">Reveal</button>
+              </div>
             </div>
             <div class="sa-field">
               <label for="saPwNew">New password</label>
-              <input id="saPwNew" type="password" minlength="8" required />
+              <div class="sa-password-wrap">
+                <input id="saPwNew" type="password" minlength="8" required />
+                <button type="button" class="sa-password-reveal" data-sa-pw-toggle="saPwNew" aria-label="Show password">Reveal</button>
+              </div>
             </div>
             <div class="sa-field">
               <label for="saPwNew2">Confirm new password</label>
-              <input id="saPwNew2" type="password" minlength="8" required />
+              <div class="sa-password-wrap">
+                <input id="saPwNew2" type="password" minlength="8" required />
+                <button type="button" class="sa-password-reveal" data-sa-pw-toggle="saPwNew2" aria-label="Show password">Reveal</button>
+              </div>
             </div>
             <div class="sa-actions">
               <button type="submit" class="sa-btn" id="btnSaChangePw">Update password</button>
@@ -398,7 +434,7 @@
         }
         if (/portal_password_not_configured/i.test(m)) return 'No portal password is configured yet.';
         if (/otp_sign_in_required/i.test(m)) {
-          return 'Email verification was not recognized. Request a new code and submit it right after it arrives.';
+          return 'Password reset was not recognized. Open the reset link from your email on this device, then set your portal password.';
         }
         if (/42501|forbidden/i.test(m)) return 'Not allowed.';
         if (/PGRST202|does not exist|schema cache/i.test(m)) {
@@ -476,6 +512,13 @@
         el.msgPortal.classList.toggle('sa-hidden', !msg);
       }
 
+      function showPortalInfo(msg) {
+        el.msgPortal.textContent = msg || '';
+        el.msgPortal.classList.remove('error');
+        el.msgPortal.classList.add('info');
+        el.msgPortal.classList.toggle('sa-hidden', !msg);
+      }
+
       function showBizError(msg) {
         el.saBizError.textContent = msg || '';
         el.saBizError.classList.toggle('sa-hidden', !msg);
@@ -515,14 +558,14 @@
         el.gateForgotVerify.classList.toggle('sa-hidden', mode !== 'forgotVerify');
       }
 
-      function getSuperAdminForgotRedirectUrl() {
+      function getSuperAdminPortalRecoveryRedirectUrl() {
         if (typeof window.metricsAbsoluteAppUrl === 'function') {
-          return window.metricsAbsoluteAppUrl('super-admin/?portal_forgot=1');
+          return window.metricsAbsoluteAppUrl('super-admin/?portal_recovery=1');
         }
         try {
-          return new URL('../super-admin/?portal_forgot=1', window.location.href).href;
+          return new URL('../super-admin/?portal_recovery=1', window.location.href).href;
         } catch (e) {
-          return window.location.origin + '/super-admin/?portal_forgot=1';
+          return window.location.origin + '/super-admin/?portal_recovery=1';
         }
       }
 
@@ -536,13 +579,14 @@
         if (skipOtp) inp.value = '';
         if (lead) {
           lead.textContent = skipOtp
-            ? 'Your email link signed you in. Choose a new portal password below.'
+            ? 'You opened the password reset link. Set a new operator portal password below. (This is not your Metrics sign-in password.)'
             : 'Enter the code from your email, then choose a new portal password.';
         }
       }
 
-      function clearSaForgotMagicStorage() {
+      function clearSaForgotRecoveryStorage() {
         try {
+          sessionStorage.removeItem(SA_FORGOT_RECOVERY_KEY);
           sessionStorage.removeItem(SA_FORGOT_MAGIC_KEY);
         } catch (e) {}
       }
@@ -801,9 +845,12 @@
         var startUrl = new URL(window.location.href);
         var hadAuthCode = startUrl.searchParams.has('code');
         var hadRecoveryHash = /type=recovery|type%3Drecovery/i.test(window.location.hash || '');
+        var portalRecoveryParam = startUrl.searchParams.get('portal_recovery') === '1';
         var portalForgotParam = startUrl.searchParams.get('portal_forgot') === '1';
+        var forgotRecoveryStorage = false;
         var forgotMagicStorage = false;
         try {
+          forgotRecoveryStorage = sessionStorage.getItem(SA_FORGOT_RECOVERY_KEY) === '1';
           forgotMagicStorage = sessionStorage.getItem(SA_FORGOT_MAGIC_KEY) === '1';
         } catch (e) {}
 
@@ -828,15 +875,28 @@
                 return;
               }
               var cleanUrl = new URL(window.location.href);
+              var stripPortalQs = false;
+              if (cleanUrl.searchParams.get('portal_recovery') === '1') {
+                cleanUrl.searchParams.delete('portal_recovery');
+                stripPortalQs = true;
+              }
               if (cleanUrl.searchParams.get('portal_forgot') === '1') {
                 cleanUrl.searchParams.delete('portal_forgot');
-                var qs = cleanUrl.searchParams.toString();
-                window.history.replaceState({}, document.title, cleanUrl.pathname + (qs ? '?' + qs : '') + cleanUrl.hash);
+                stripPortalQs = true;
+              }
+              if (stripPortalQs) {
+                var qsClean = cleanUrl.searchParams.toString();
+                window.history.replaceState(
+                  {},
+                  document.title,
+                  cleanUrl.pathname + (qsClean ? '?' + qsClean : '') + cleanUrl.hash
+                );
               }
               var skipOtp =
                 saForgotSkipOtpThisPage ||
+                (forgotRecoveryStorage && (hadAuthCode || hadRecoveryHash)) ||
                 (forgotMagicStorage && (hadAuthCode || hadRecoveryHash)) ||
-                (portalForgotParam && (hadAuthCode || hadRecoveryHash));
+                ((portalRecoveryParam || portalForgotParam) && (hadAuthCode || hadRecoveryHash));
               window
                 .metricsSuperAdminPortalPasswordConfigured()
                 .then(function (configured) {
@@ -864,7 +924,12 @@
           client.auth.exchangeCodeForSession(window.location.href).then(function (ex) {
             if (ex && ex.error) {
               showPortalError(String((ex.error && ex.error.message) || ex.error || 'Sign-in link invalid.'));
-            } else {
+            } else if (
+              forgotRecoveryStorage ||
+              forgotMagicStorage ||
+              portalRecoveryParam ||
+              portalForgotParam
+            ) {
               saForgotSkipOtpThisPage = true;
             }
             var u = new URL(window.location.href);
@@ -954,7 +1019,7 @@
 
       document.getElementById('btnBackFromForgotSend').addEventListener('click', function () {
         showPortalError('');
-        clearSaForgotMagicStorage();
+        clearSaForgotRecoveryStorage();
         showPortalGateMode('unlock');
       });
 
@@ -962,31 +1027,27 @@
         showPortalError('');
         if (!forgotUserEmail) return;
         try {
-          sessionStorage.setItem(SA_FORGOT_MAGIC_KEY, '1');
+          sessionStorage.setItem(SA_FORGOT_RECOVERY_KEY, '1');
         } catch (e) {}
         window.metricsSupabase.auth
-          .signInWithOtp({
-            email: forgotUserEmail,
-            options: {
-              shouldCreateUser: false,
-              emailRedirectTo: getSuperAdminForgotRedirectUrl(),
-            },
+          .resetPasswordForEmail(forgotUserEmail, {
+            redirectTo: getSuperAdminPortalRecoveryRedirectUrl(),
           })
           .then(function (res) {
             if (res.error) throw res.error;
-            showPortalGateMode('forgotVerify');
-            applyForgotMagicLinkUi(false);
-            document.getElementById('forgotOtpCode').focus();
+            showPortalInfo(
+              'Check your email for the reset link. After you open it and return here, you can set a new operator portal password.'
+            );
           })
           .catch(function (err) {
-            clearSaForgotMagicStorage();
-            showPortalError(String((err && err.message) || err || 'Could not send code.'));
+            clearSaForgotRecoveryStorage();
+            showPortalError(String((err && err.message) || err || 'Could not send reset email.'));
           });
       });
 
       document.getElementById('btnBackFromForgotVerify').addEventListener('click', function () {
         showPortalError('');
-        clearSaForgotMagicStorage();
+        clearSaForgotRecoveryStorage();
         showPortalGateMode('forgotSend');
       });
 
@@ -1026,13 +1087,26 @@
             return afterVerify();
           })
           .then(function () {
-            clearSaForgotMagicStorage();
+            clearSaForgotRecoveryStorage();
             setPortalUnlock();
             refresh();
           })
           .catch(function (err) {
             showPortalError(mapPortalRpcError(err));
           });
+      });
+
+      var cardRootEl = document.getElementById('cardRoot');
+      cardRootEl.addEventListener('click', function (ev) {
+        var btn = ev.target && ev.target.closest && ev.target.closest('[data-sa-pw-toggle]');
+        if (!btn || !cardRootEl.contains(btn)) return;
+        var id = btn.getAttribute('data-sa-pw-toggle');
+        var inp = id ? document.getElementById(id) : null;
+        if (!inp) return;
+        var show = inp.type === 'password';
+        inp.type = show ? 'text' : 'password';
+        btn.textContent = show ? 'Hide' : 'Reveal';
+        btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
       });
 
       document.getElementById('formSaChangePw').addEventListener('submit', function (e) {
