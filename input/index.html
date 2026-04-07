@@ -105,10 +105,42 @@
           <div class="ranking-table-wrap" hidden>
             <table class="input-table ranking-table" aria-label="Individual data">
               <thead>
-                <tr class="ranking-thead-row"><th scope="col">Name</th><th scope="col" class="th-individual-goal" hidden>Mission</th><th scope="col">Goal</th><th scope="col">Current</th><th scope="col" class="th-remove">Remove</th></tr>
+                <tr class="ranking-thead-row"><th scope="col">Name</th><th scope="col" class="th-individual-goal" hidden>Mission</th><th scope="col">Current</th><th scope="col">Goal</th><th scope="col" class="th-remove">Remove</th></tr>
               </thead>
               <tbody class="ranking-tbody"></tbody>
+              <tfoot class="ranking-tfoot-total" hidden>
+                <tr class="ranking-row-total">
+                  <td class="ranking-total-name-cell"><strong>Total</strong></td>
+                  <td class="td-individual-goal ranking-total-mission-cell" hidden aria-hidden="true"></td>
+                  <td class="goal-current-cell">
+                    <input
+                      type="text"
+                      name="rankTotalCurrent"
+                      class="metric-single-line-input metric-text-metric-value"
+                      placeholder="Leave blank to sum Current above"
+                      inputmode="decimal"
+                      maxlength="24"
+                      autocomplete="off"
+                      aria-label="Total current (optional override)"
+                    />
+                  </td>
+                  <td class="goal-current-cell">
+                    <input
+                      type="text"
+                      name="rankTotalGoal"
+                      class="metric-single-line-input metric-text-metric-value"
+                      placeholder="Optional total goal"
+                      inputmode="decimal"
+                      maxlength="24"
+                      autocomplete="off"
+                      aria-label="Total goal (optional override)"
+                    />
+                  </td>
+                  <td class="td-row-actions"><span class="ranking-total-dash" aria-hidden="true">—</span></td>
+                </tr>
+              </tfoot>
             </table>
+            <p class="ranking-total-mismatch-msg" hidden role="alert">Current info below doesn't match this number</p>
             <button type="button" class="btn-add-row">Add more rows</button>
           </div>
           <div class="metric-actions metric-actions-after-ranking">
@@ -179,6 +211,21 @@
       var params = new URLSearchParams(window.location.search);
       var ownerParam = (params.get('owner') || '').trim();
 
+      function inputPageDisplayHref(ownerId) {
+        var o = (ownerId || '').trim();
+        if (typeof window.metricsAppUrl === 'function') {
+          return o
+            ? window.metricsAppUrl('display/?owner=' + encodeURIComponent(o))
+            : window.metricsAppUrl('display/');
+        }
+        return o ? '../display/?owner=' + encodeURIComponent(o) : '../display/';
+      }
+
+      function inputPageSelfHref() {
+        if (typeof window.metricsAppUrl === 'function') return window.metricsAppUrl('input/');
+        return '../input/';
+      }
+
       function uuidLooksValid(s) {
         return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s || '');
       }
@@ -190,7 +237,8 @@
         .then(function () {
           var userCtx = window.metricsGetUserContext ? window.metricsGetUserContext() : null;
           if (!userCtx || !userCtx.email) {
-            window.location.href = window.metricsAppUrl ? window.metricsAppUrl('') : '../';
+            window.location.href =
+              typeof window.metricsAppUrl === 'function' ? window.metricsAppUrl('') : '../';
             return;
           }
           var KEY_BUSINESS = 'metricsDashboard';
@@ -464,6 +512,7 @@
             showSimpleAggregate: false,
             showIndividualGoalProgress: true,
             rankPerformance: true,
+            totalLine: { goal: '', current: '' },
             rows: []
           }
         };
@@ -547,6 +596,7 @@
             showIndividualGoal: missionCb ? missionCb.checked : false,
             showIndividualGoalProgress: indOn,
             rankPerformance: optRankPerf ? optRankPerf.checked : true,
+            totalLine: getTotalLineFromBlock(row),
             rows: rankRows
           }
         };
@@ -828,6 +878,103 @@
         return isNaN(n) ? NaN : n;
       }
 
+      function ensureTotalLine(ranking) {
+        var t = ranking && ranking.totalLine && typeof ranking.totalLine === 'object' ? ranking.totalLine : null;
+        if (!t) return { goal: '', current: '' };
+        return {
+          goal: t.goal != null ? String(t.goal) : '',
+          current: t.current != null ? String(t.current) : ''
+        };
+      }
+
+      function rowGoalNumberForAgg(r) {
+        var g = parseMetricNumber(r.goal) || 0;
+        var indG = r.individualGoal != null ? parseMetricNumber(r.individualGoal) : NaN;
+        if (!isNaN(indG) && indG > 0) g = indG;
+        return g;
+      }
+
+      function sumRankingIndividualCurrents(rows) {
+        var s = 0;
+        (rows || []).forEach(function (r) {
+          s += parseMetricNumber(r.current) || 0;
+        });
+        return s;
+      }
+
+      function sumRankingIndividualGoals(rows) {
+        var s = 0;
+        (rows || []).forEach(function (r) {
+          s += rowGoalNumberForAgg(r);
+        });
+        return s;
+      }
+
+      function rankingRowHasGoalText(r) {
+        if (!r) return false;
+        if (String(r.goal != null ? r.goal : '').trim()) return true;
+        var indG = r.individualGoal != null ? parseMetricNumber(r.individualGoal) : NaN;
+        return !isNaN(indG) && indG > 0;
+      }
+
+      function rankingRowHasCurrentText(r) {
+        return !!(r && String(r.current != null ? r.current : '').trim());
+      }
+
+      function totalCurrentManualMismatch(rows, totalLine) {
+        var tl = ensureTotalLine({ totalLine: totalLine });
+        var manual = String(tl.current || '').trim();
+        if (!manual) return false;
+        var sum = sumRankingIndividualCurrents(rows);
+        var m = parseMetricNumber(manual);
+        if (isNaN(m)) return true;
+        return Math.abs(m - sum) > 0.009;
+      }
+
+      function formatIndividualPairHtml(it, displayAsPct) {
+        var curStr = String(it.current != null ? it.current : '').trim();
+        var goalStr = String(it.goal != null ? it.goal : '').trim();
+        var curNum = parseMetricNumber(it.current) || 0;
+        var goalNum = parseMetricNumber(it.goal) || 0;
+        var indGoal = it.individualGoal != null ? parseMetricNumber(it.individualGoal) : NaN;
+        if (!isNaN(indGoal) && indGoal > 0) goalNum = indGoal;
+        if (displayAsPct && goalNum > 0) {
+          return String(Math.round((curNum / goalNum) * 100)) + '%';
+        }
+        if (curStr !== '' && goalStr !== '') {
+          return escapeHtmlStr(curStr) + ' / ' + escapeHtmlStr(goalStr);
+        }
+        if (curStr !== '') return escapeHtmlStr(curStr);
+        if (goalStr !== '') return escapeHtmlStr(goalStr);
+        return '';
+      }
+
+      function formatTotalLinePairForPreview(rows, totalLine, displayAsPct) {
+        var tl = ensureTotalLine({ totalLine: totalLine });
+        var sumC = sumRankingIndividualCurrents(rows);
+        var sumG = sumRankingIndividualGoals(rows);
+        var anyC = (rows || []).some(rankingRowHasCurrentText);
+        var anyG = (rows || []).some(rankingRowHasGoalText);
+        var manualC = String(tl.current || '').trim();
+        var manualG = String(tl.goal || '').trim();
+        var curDisp = manualC || (anyC || sumC !== 0 ? String(sumC) : '');
+        var goalDisp = manualG || (anyG || sumG !== 0 ? String(sumG) : '');
+        if (displayAsPct) {
+          var effG = manualG ? parseMetricNumber(manualG) : sumG;
+          if (effG > 0) {
+            var effC = manualC ? parseMetricNumber(manualC) : sumC;
+            if (isNaN(effC)) effC = sumC;
+            return String(Math.round((effC / effG) * 100)) + '%';
+          }
+        }
+        if (curDisp !== '' && goalDisp !== '') {
+          return escapeHtmlStr(curDisp) + ' / ' + escapeHtmlStr(goalDisp);
+        }
+        if (curDisp !== '') return escapeHtmlStr(curDisp);
+        if (goalDisp !== '') return escapeHtmlStr(goalDisp);
+        return '';
+      }
+
       function filterRankingRowsForDisplay(rows) {
         return (rows || []).filter(function (r) {
           if (!r) return false;
@@ -900,23 +1047,41 @@
             var displayAsPctAgg = !!rank.displayAsPercent;
             var achievedAgg = totalGoal > 0 && totalCurrent >= totalGoal;
             var aggText;
+            var hasAggCur = totalCurrent !== 0 || rows.some(rankingRowHasCurrentText);
+            var hasAggGoal = totalGoal !== 0 || rows.some(rankingRowHasGoalText);
             if (displayAsPctAgg && totalGoal > 0) {
               var aggPct = Math.round((totalCurrent / totalGoal) * 100);
-              aggText =
-                '<span class="metric-final-pct">' +
-                aggPct +
-                '%</span><span class="metric-final-pct-sub">' +
-                escapeHtmlStr(String(totalCurrent)) +
-                ' <span class="metric-final-sep">/</span> ' +
-                escapeHtmlStr(String(totalGoal)) +
-                '</span>';
+              var subPart = '';
+              if (hasAggCur && hasAggGoal) {
+                subPart =
+                  '<span class="metric-final-pct-sub">' +
+                  escapeHtmlStr(String(totalCurrent)) +
+                  ' <span class="metric-final-sep">/</span> ' +
+                  escapeHtmlStr(String(totalGoal)) +
+                  '</span>';
+              } else if (hasAggCur) {
+                subPart = '<span class="metric-final-pct-sub">' + escapeHtmlStr(String(totalCurrent)) + '</span>';
+              } else if (hasAggGoal) {
+                subPart = '<span class="metric-final-pct-sub">' + escapeHtmlStr(String(totalGoal)) + '</span>';
+              }
+              aggText = '<span class="metric-final-pct">' + aggPct + '%</span>' + subPart;
             } else {
-              aggText =
-                '<span class="metric-final-current">' +
-                escapeHtmlStr(String(totalCurrent)) +
-                '</span> <span class="metric-final-sep">/</span> <span class="metric-final-goal">' +
-                escapeHtmlStr(String(totalGoal)) +
-                '</span>';
+              var curStrAgg = hasAggCur ? String(totalCurrent) : '';
+              var goalStrAgg = hasAggGoal ? String(totalGoal) : '';
+              if (curStrAgg !== '' && goalStrAgg !== '') {
+                aggText =
+                  '<span class="metric-final-current">' +
+                  escapeHtmlStr(curStrAgg) +
+                  '</span> <span class="metric-final-sep">/</span> <span class="metric-final-goal">' +
+                  escapeHtmlStr(goalStrAgg) +
+                  '</span>';
+              } else if (curStrAgg !== '') {
+                aggText = '<span class="metric-final-current">' + escapeHtmlStr(curStrAgg) + '</span>';
+              } else if (goalStrAgg !== '') {
+                aggText = '<span class="metric-final-goal">' + escapeHtmlStr(goalStrAgg) + '</span>';
+              } else {
+                aggText = '';
+              }
             }
             parts.push(
               '<div class="metric-final-summary-card metric-final-aggregate' +
@@ -948,6 +1113,23 @@
             }
             var displayAsPct = !!rank.displayAsPercent;
             parts.push('<div class="metric-final-ranking-list"><ul class="metric-final-ranking-ul">');
+            if (showSimpleR && showIndR && rows.length > 0) {
+              var tlPv = ensureTotalLine(rank);
+              var misPv = totalCurrentManualMismatch(rows, tlPv);
+              var totValHtml = formatTotalLinePairForPreview(rows, tlPv, displayAsPct);
+              parts.push(
+                '<li class="metric-final-ranking-li metric-final-ranking-li--total' +
+                  (misPv ? ' metric-final-ranking-li--mismatch' : '') +
+                  '"><span class="metric-final-rank-name">Total</span>' +
+                  '<span class="metric-final-mission-wrap" aria-hidden="true"></span>' +
+                  '<span class="metric-final-rank-value metric-final-rank-value--stack">' +
+                  (totValHtml ? '<span class="metric-final-rank-value-line">' + totValHtml + '</span>' : '') +
+                  (misPv
+                    ? '<span class="metric-final-total-mismatch-msg" role="alert">Current info below doesn\'t match this number</span>'
+                    : '') +
+                  '</span></li>'
+              );
+            }
             var k;
             for (k = 0; k < withPct.length; k++) {
               var it = withPct[k];
@@ -957,9 +1139,7 @@
                 it.showMission && it.individualGoal != null && String(it.individualGoal).trim()
                   ? '<span class="metric-final-mission">' + escapeHtmlStr(String(it.individualGoal)) + '</span>'
                   : '';
-              var valText = displayAsPct
-                ? Math.round(it.pct) + '%'
-                : escapeHtmlStr(String(it.current)) + ' / ' + escapeHtmlStr(String(it.goal));
+              var valText = formatIndividualPairHtml(it, displayAsPct);
               parts.push(
                 '<li class="metric-final-ranking-li"><span class="metric-final-rank-name">' +
                   nameHtml +
@@ -1136,7 +1316,7 @@
               doneNav();
               if (goToBoard) {
                 var oid = metricRow.getAttribute('data-dashboard-owner') || '';
-                window.location.href = (window.metricsAppUrl ? window.metricsAppUrl('display/?owner=' + encodeURIComponent(oid)) : '../display/?owner=' + encodeURIComponent(oid));
+                window.location.href = inputPageDisplayHref(oid);
               }
             })
             .catch(function (err) {
@@ -1151,9 +1331,9 @@
             doneNav();
             if (goToBoard) {
               if (isCollaborator) {
-                window.location.href = (window.metricsAppUrl ? window.metricsAppUrl('display/?owner=' + encodeURIComponent(dashboardOwnerId)) : '../display/?owner=' + encodeURIComponent(dashboardOwnerId));
+                window.location.href = inputPageDisplayHref(dashboardOwnerId);
               } else {
-                window.location.href = window.metricsAppUrl ? window.metricsAppUrl('display/') : '../display/';
+                window.location.href = inputPageDisplayHref('');
               }
             }
           })
@@ -1212,7 +1392,9 @@
               if (el.classList.contains('btn-edit-save-toggle')) return;
               el.disabled = true;
             });
-            row.querySelectorAll('.ranking-tbody input, .ranking-tbody button').forEach(function (el) {
+            row.querySelectorAll(
+              '.ranking-tbody input, .ranking-tbody button, .ranking-tfoot-total input'
+            ).forEach(function (el) {
               el.disabled = true;
             });
             row.querySelectorAll('.metric-actions .btn-edit-save-toggle, .metric-actions .btn-view-board').forEach(function (actionBtn) {
@@ -1279,9 +1461,9 @@
         var linkResults = document.getElementById('linkViewResults');
         if (linkResults) {
           if (isCollaborator) {
-            linkResults.href = window.metricsAppUrl ? window.metricsAppUrl('display/?owner=' + encodeURIComponent(dashboardOwnerId)) : '../display/?owner=' + encodeURIComponent(dashboardOwnerId);
+            linkResults.href = inputPageDisplayHref(dashboardOwnerId);
           } else {
-            linkResults.href = window.metricsAppUrl ? window.metricsAppUrl('display/') : '../display/';
+            linkResults.href = inputPageDisplayHref('');
           }
         }
         var inviteFoot = document.getElementById('footerInviteUser');
@@ -1335,7 +1517,7 @@
         while (rankRows.length < INITIAL_RANKING_ROWS) {
           rankRows.push({ mode: 'data', name: '', goal: '', current: '', individualGoal: '', contributorEmail: '' });
         }
-        renderRankingRowsInBlock(row, rankRows);
+        renderRankingRowsInBlock(row, rankRows, { totalLine: ensureTotalLine(rank) });
       }
 
       function setInvitedBoardTitleAndBadge(row, businessLabel, headingText) {
@@ -1420,6 +1602,8 @@
           var s = row.querySelector('.ranking-opt-simple');
           var ip = row.querySelector('.ranking-opt-individual-progress');
           wrap.hidden = !((s && s.checked) || (ip && ip.checked));
+          syncTotalLineTfoot(row, getTotalLineFromBlock(row));
+          updateTotalLineMismatchUi(row);
           updateIndividualDataEmptyPlaceholder(row);
         }
         row.querySelector('.ranking-opt-simple').addEventListener('change', function () {
@@ -1436,7 +1620,7 @@
         if (missionCb) {
           missionCb.addEventListener('change', function () {
             var data = getRankingRowsFromBlock(row);
-            renderRankingRowsInBlock(row, data);
+            renderRankingRowsInBlock(row, data, { totalLine: getTotalLineFromBlock(row) });
             touch();
           });
         }
@@ -1497,13 +1681,11 @@
             }
             signalDisplayRefresh('view-board');
             if (isCollaborator) {
-              window.location.href = (window.metricsAppUrl ? window.metricsAppUrl('display/?owner=' + encodeURIComponent(dashboardOwnerId)) : '../display/?owner=' + encodeURIComponent(dashboardOwnerId));
+              window.location.href = inputPageDisplayHref(dashboardOwnerId);
             } else if (isSharedBoardRow(row)) {
-              window.location.href = window.metricsAppUrl
-                ? window.metricsAppUrl('display/?owner=' + encodeURIComponent(row.getAttribute('data-dashboard-owner') || ''))
-                : '../display/?owner=' + encodeURIComponent(row.getAttribute('data-dashboard-owner') || '');
+              window.location.href = inputPageDisplayHref(row.getAttribute('data-dashboard-owner') || '');
             } else {
-              window.location.href = window.metricsAppUrl ? window.metricsAppUrl('display/') : '../display/';
+              window.location.href = inputPageDisplayHref('');
             }
           });
         });
@@ -2318,6 +2500,7 @@
                   showIndividualGoal: !!ranking.showIndividualGoal,
                   showIndividualGoalProgress: showIndR,
                   rankPerformance: ranking.rankPerformance !== false,
+                  totalLine: ensureTotalLine(ranking),
                   rows: rowsWithInd
                 }
               });
@@ -2381,6 +2564,50 @@
           });
         });
         return arr;
+      }
+
+      function getTotalLineFromBlock(metricRow) {
+        var g = metricRow.querySelector('input[name="rankTotalGoal"]');
+        var c = metricRow.querySelector('input[name="rankTotalCurrent"]');
+        return {
+          goal: g ? fieldValue(g) : '',
+          current: c ? fieldValue(c) : ''
+        };
+      }
+
+      function syncTotalLineTfoot(metricRow, totalLine) {
+        var foot = metricRow.querySelector('.ranking-tfoot-total');
+        if (!foot) return;
+        var simple = metricRow.querySelector('.ranking-opt-simple');
+        foot.hidden = !(simple && simple.checked);
+        var missionCell = metricRow.querySelector('.ranking-total-mission-cell');
+        var showInd = getShowIndividualGoalInBlock(metricRow);
+        if (missionCell) {
+          missionCell.hidden = !showInd;
+          missionCell.setAttribute('aria-hidden', showInd ? 'false' : 'true');
+        }
+        var tl = totalLine || { goal: '', current: '' };
+        var gIn = metricRow.querySelector('input[name="rankTotalGoal"]');
+        var cIn = metricRow.querySelector('input[name="rankTotalCurrent"]');
+        if (gIn) gIn.value = tl.goal != null ? String(tl.goal) : '';
+        if (cIn) cIn.value = tl.current != null ? String(tl.current) : '';
+      }
+
+      function updateTotalLineMismatchUi(metricRow) {
+        var msg = metricRow.querySelector('.ranking-total-mismatch-msg');
+        var curIn = metricRow.querySelector('input[name="rankTotalCurrent"]');
+        if (!msg || !curIn) return;
+        var simple = metricRow.querySelector('.ranking-opt-simple');
+        if (!simple || !simple.checked) {
+          msg.hidden = true;
+          curIn.classList.remove('ranking-total-input--mismatch');
+          return;
+        }
+        var rows = filterRankingRowsForDisplay(getRankingRowsFromBlock(metricRow));
+        var tl = getTotalLineFromBlock(metricRow);
+        var bad = totalCurrentManualMismatch(rows, tl);
+        msg.hidden = !bad;
+        curIn.classList.toggle('ranking-total-input--mismatch', bad);
       }
 
       function getShowIndividualGoalInBlock(metricRow) {
@@ -2526,7 +2753,10 @@
               businessName = (metricRow.getAttribute('data-business-name') || '').trim();
             }
             var rowOwnerId = getRowOwnerId(metricRow);
-            var redirectTo = window.location.origin + window.location.pathname.replace(/[^/]*$/, 'auth.html?mode=signup');
+            var redirectTo =
+              typeof window.metricsAppUrl === 'function'
+                ? window.metricsAppUrl('auth/?mode=signup')
+                : new URL('../auth/?mode=signup', window.location.href).href;
             var email = fieldValue(emailEl);
             if (!email) {
               alert('Please enter an email address.');
@@ -2610,7 +2840,7 @@
               .then(function () {
                 save();
                 if (isCollaborator && removedSelf) {
-                  window.location.href = window.metricsAppUrl ? window.metricsAppUrl('input/') : '../input/';
+                  window.location.href = inputPageSelfHref();
                   return;
                 }
                 refreshInvitedUsersSection(metricRow);
@@ -2628,6 +2858,7 @@
       function renderRankingRowsInBlock(metricRow, rowsData, opts) {
         var tbody = metricRow.querySelector('.ranking-tbody');
         if (!tbody) return;
+        opts = opts || {};
         var showInd = getShowIndividualGoalInBlock(metricRow);
         var theadTh = metricRow.querySelector('.th-individual-goal');
         if (theadTh) theadTh.hidden = !showInd;
@@ -2642,8 +2873,8 @@
           var nameCell = '<td><input type="text" name="rankName" placeholder="Name" /></td>';
           var indCell = showInd ? '<td class="td-individual-goal"><input type="text" name="rankIndividualGoal" placeholder="Mission" /></td>' : '<td class="td-individual-goal" hidden><input type="text" name="rankIndividualGoal" placeholder="Mission" /></td>';
           tr.innerHTML = nameCell + indCell +
-            '<td class="goal-current-cell"><input type="text" name="rankGoal" class="metric-single-line-input metric-text-metric-value" placeholder="e.g. 100 or $1,234.50" inputmode="decimal" maxlength="24" autocomplete="off" aria-label="Row goal" /></td>' +
             '<td class="goal-current-cell"><input type="text" name="rankCurrent" class="metric-single-line-input metric-text-metric-value" placeholder="e.g. 100 or $1,234.50" inputmode="decimal" maxlength="24" autocomplete="off" aria-label="Row current" /></td>' +
+            '<td class="goal-current-cell"><input type="text" name="rankGoal" class="metric-single-line-input metric-text-metric-value" placeholder="e.g. 100 or $1,234.50" inputmode="decimal" maxlength="24" autocomplete="off" aria-label="Row goal" /></td>' +
             '<td class="td-row-actions">' +
               '<button type="button" class="btn-remove-row" aria-label="Remove row"><span class="btn-remove-icon" aria-hidden="true">−</span></button>' +
             '</td>';
@@ -2671,8 +2902,12 @@
           })(ri);
         }
         if (!opts || !opts.skipInviteRefresh) refreshInvitedUsersSection(metricRow);
+        var totalLineForFoot =
+          opts.totalLine !== undefined ? opts.totalLine : getTotalLineFromBlock(metricRow);
+        syncTotalLineTfoot(metricRow, totalLineForFoot);
         bindRankingInputsInBlock(metricRow);
         updateIndividualDataEmptyPlaceholder(metricRow);
+        updateTotalLineMismatchUi(metricRow);
       }
 
       function bindRankingInputsInBlock(metricRow) {
@@ -2681,10 +2916,11 @@
             if (isSharedBoardRow(metricRow)) scheduleSharedRowSave(metricRow);
             else save();
             updateIndividualDataEmptyPlaceholder(metricRow);
+            updateTotalLineMismatchUi(metricRow);
           };
         }
         var onCh = metricRow._rankingTouchHandler;
-        var inputs = metricRow.querySelectorAll('.ranking-table input, .ranking-table textarea');
+        var inputs = metricRow.querySelectorAll('.ranking-table-wrap input, .ranking-table textarea');
         for (var i = 0; i < inputs.length; i++) {
           var el = inputs[i];
           el.removeEventListener('change', onCh);
@@ -2910,7 +3146,7 @@
         .catch(function (err) {
           if (isCollaborator) {
             alert((err && err.message) ? err.message : 'Unable to load this dashboard.');
-            window.location.href = window.metricsAppUrl ? window.metricsAppUrl('input/') : '../input/';
+            window.location.href = inputPageSelfHref();
             return;
           }
           updateChromeForMode();

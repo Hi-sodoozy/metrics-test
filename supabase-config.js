@@ -203,6 +203,7 @@
           showIndividualGoal: false,
           showIndividualGoalProgress: true,
           rankPerformance: true,
+          totalLine: { goal: '', current: '' },
           rows: []
         }
       };

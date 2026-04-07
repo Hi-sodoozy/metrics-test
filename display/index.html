@@ -53,6 +53,103 @@
         return isNaN(n) ? NaN : n;
       }
 
+      function ensureTotalLine(ranking) {
+        var t = ranking && ranking.totalLine && typeof ranking.totalLine === 'object' ? ranking.totalLine : null;
+        if (!t) return { goal: '', current: '' };
+        return {
+          goal: t.goal != null ? String(t.goal) : '',
+          current: t.current != null ? String(t.current) : ''
+        };
+      }
+
+      function rowGoalNumberForAgg(r) {
+        var g = parseMetricNumber(r.goal) || 0;
+        var indG = r.individualGoal != null ? parseMetricNumber(r.individualGoal) : NaN;
+        if (!isNaN(indG) && indG > 0) g = indG;
+        return g;
+      }
+
+      function sumRankingIndividualCurrents(rows) {
+        var s = 0;
+        (rows || []).forEach(function (r) {
+          s += parseMetricNumber(r.current) || 0;
+        });
+        return s;
+      }
+
+      function sumRankingIndividualGoals(rows) {
+        var s = 0;
+        (rows || []).forEach(function (r) {
+          s += rowGoalNumberForAgg(r);
+        });
+        return s;
+      }
+
+      function rankingRowHasGoalText(r) {
+        if (!r) return false;
+        if (String(r.goal != null ? r.goal : '').trim()) return true;
+        var indG = r.individualGoal != null ? parseMetricNumber(r.individualGoal) : NaN;
+        return !isNaN(indG) && indG > 0;
+      }
+
+      function rankingRowHasCurrentText(r) {
+        return !!(r && String(r.current != null ? r.current : '').trim());
+      }
+
+      function totalCurrentManualMismatch(rows, totalLine) {
+        var tl = ensureTotalLine({ totalLine: totalLine });
+        var manual = String(tl.current || '').trim();
+        if (!manual) return false;
+        var sum = sumRankingIndividualCurrents(rows);
+        var m = parseMetricNumber(manual);
+        if (isNaN(m)) return true;
+        return Math.abs(m - sum) > 0.009;
+      }
+
+      function formatIndividualPairDisplay(it, displayAsPct) {
+        var curStr = String(it.current != null ? it.current : '').trim();
+        var goalStr = String(it.goal != null ? it.goal : '').trim();
+        var curNum = parseMetricNumber(it.current) || 0;
+        var goalNum = parseMetricNumber(it.goal) || 0;
+        var indGoal = it.individualGoal != null ? parseMetricNumber(it.individualGoal) : NaN;
+        if (!isNaN(indGoal) && indGoal > 0) goalNum = indGoal;
+        if (displayAsPct && goalNum > 0) {
+          return String(Math.round((curNum / goalNum) * 100)) + '%';
+        }
+        if (curStr !== '' && goalStr !== '') {
+          return escapeHtml(curStr) + ' / ' + escapeHtml(goalStr);
+        }
+        if (curStr !== '') return escapeHtml(curStr);
+        if (goalStr !== '') return escapeHtml(goalStr);
+        return '';
+      }
+
+      function formatTotalLineDisplay(rows, totalLine, displayAsPct) {
+        var tl = ensureTotalLine({ totalLine: totalLine });
+        var sumC = sumRankingIndividualCurrents(rows);
+        var sumG = sumRankingIndividualGoals(rows);
+        var anyC = (rows || []).some(rankingRowHasCurrentText);
+        var anyG = (rows || []).some(rankingRowHasGoalText);
+        var manualC = String(tl.current || '').trim();
+        var manualG = String(tl.goal || '').trim();
+        var curDisp = manualC || (anyC || sumC !== 0 ? String(sumC) : '');
+        var goalDisp = manualG || (anyG || sumG !== 0 ? String(sumG) : '');
+        if (displayAsPct) {
+          var effG = manualG ? parseMetricNumber(manualG) : sumG;
+          if (effG > 0) {
+            var effC = manualC ? parseMetricNumber(manualC) : sumC;
+            if (isNaN(effC)) effC = sumC;
+            return String(Math.round((effC / effG) * 100)) + '%';
+          }
+        }
+        if (curDisp !== '' && goalDisp !== '') {
+          return escapeHtml(curDisp) + ' / ' + escapeHtml(goalDisp);
+        }
+        if (curDisp !== '') return escapeHtml(curDisp);
+        if (goalDisp !== '') return escapeHtml(goalDisp);
+        return '';
+      }
+
       function normalizeDisplayAccent(raw) {
         var s = String(raw || '').trim();
         if (!s) return '';
@@ -138,23 +235,41 @@
               }
               var displayAsPctAgg = !!(rank.displayAsPercent);
               achieved = totalGoal > 0 && totalCurrent >= totalGoal;
+              var hasAggCur = totalCurrent !== 0 || rows.some(rankingRowHasCurrentText);
+              var hasAggGoal = totalGoal !== 0 || rows.some(rankingRowHasGoalText);
               if (displayAsPctAgg && totalGoal > 0) {
                 var aggPr2 = Math.round((totalCurrent / totalGoal) * 100);
-                valuesText =
-                  '<span class="current">' +
-                  escapeHtml(String(aggPr2)) +
-                  '%</span><span class="result-values-sub">' +
-                  escapeHtml(String(totalCurrent)) +
-                  ' / ' +
-                  escapeHtml(String(totalGoal)) +
-                  '</span>';
+                var subPart = '';
+                if (hasAggCur && hasAggGoal) {
+                  subPart =
+                    '<span class="result-values-sub">' +
+                    escapeHtml(String(totalCurrent)) +
+                    ' / ' +
+                    escapeHtml(String(totalGoal)) +
+                    '</span>';
+                } else if (hasAggCur) {
+                  subPart = '<span class="result-values-sub">' + escapeHtml(String(totalCurrent)) + '</span>';
+                } else if (hasAggGoal) {
+                  subPart = '<span class="result-values-sub">' + escapeHtml(String(totalGoal)) + '</span>';
+                }
+                valuesText = '<span class="current">' + escapeHtml(String(aggPr2)) + '%</span>' + subPart;
               } else {
-                valuesText =
-                  '<span class="current">' +
-                  escapeHtml(String(totalCurrent)) +
-                  '</span> / <span class="goal">' +
-                  escapeHtml(String(totalGoal)) +
-                  '</span>';
+                var curStrAgg = hasAggCur ? String(totalCurrent) : '';
+                var goalStrAgg = hasAggGoal ? String(totalGoal) : '';
+                if (curStrAgg !== '' && goalStrAgg !== '') {
+                  valuesText =
+                    '<span class="current">' +
+                    escapeHtml(curStrAgg) +
+                    '</span> / <span class="goal">' +
+                    escapeHtml(goalStrAgg) +
+                    '</span>';
+                } else if (curStrAgg !== '') {
+                  valuesText = '<span class="current">' + escapeHtml(curStrAgg) + '</span>';
+                } else if (goalStrAgg !== '') {
+                  valuesText = '<span class="goal">' + escapeHtml(goalStrAgg) + '</span>';
+                } else {
+                  valuesText = '';
+                }
               }
             }
             displayed.push({
@@ -287,12 +402,34 @@
               list.className = 'ranking-results' + (hasAggregate ? '' : ' ranking-results-full');
               var ul = document.createElement('ul');
               ul.className = 'ranking-list';
+              var showMissionCol = !!(item.ranking && item.ranking.showIndividualGoal);
+              if (item.showSimpleAggregate && item.rows && item.rows.length > 0) {
+                var tlD = ensureTotalLine(item.ranking);
+                var misD = totalCurrentManualMismatch(item.rows, tlD);
+                var totVal = formatTotalLineDisplay(item.rows, tlD, displayAsPct);
+                var liTot = document.createElement('li');
+                liTot.className =
+                  'ranking-list-item ranking-list-item--total' + (misD ? ' ranking-list-item--total-mismatch' : '');
+                var midTot = showMissionCol
+                  ? '<span class="ranking-mission-slot ranking-mission-slot--empty" aria-hidden="true"></span>'
+                  : '<span class="ranking-mission-slot ranking-mission-slot--empty" aria-hidden="true"></span>';
+                liTot.innerHTML =
+                  '<span class="ranking-name ranking-name--total">Total</span>' +
+                  midTot +
+                  '<span class="ranking-value ranking-value--stack">' +
+                  (totVal ? '<span class="ranking-value-line">' + totVal + '</span>' : '') +
+                  (misD
+                    ? '<span class="ranking-total-mismatch-msg" role="alert">Current info below doesn\'t match this number</span>'
+                    : '') +
+                  '</span>';
+                ul.appendChild(liTot);
+              }
               for (var k = 0; k < withPct.length; k++) {
                 var it = withPct[k];
                 var rawName = it.name != null ? String(it.name).trim() : '';
                 var nameHtml = rawName ? escapeHtml(rawName) : '<span class="ranking-name-empty">—</span>';
                 var indGoalPart = (it.individualGoal != null && String(it.individualGoal).trim()) ? ('<span class="ranking-individual-goal">' + escapeHtml(String(it.individualGoal)) + '</span>') : '';
-                var valText = displayAsPct ? (Math.round(it.pct) + '%') : (escapeHtml(String(it.current)) + ' / ' + escapeHtml(String(it.goal)));
+                var valText = formatIndividualPairDisplay(it, displayAsPct);
                 var mid = indGoalPart
                   ? ('<span class="ranking-mission-slot">' + indGoalPart + '</span>')
                   : ('<span class="ranking-mission-slot ranking-mission-slot--empty" aria-hidden="true"></span>');

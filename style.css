@@ -196,6 +196,23 @@
   width: 100%;
 }
 
+.results-grid.count-1 .result-column {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+}
+
+.results-grid.count-1 .result-column-type-ranking .ranking-list {
+  padding-left: clamp(24px, 6.5vw, 96px);
+  padding-right: clamp(20px, 5vw, 72px);
+  box-sizing: border-box;
+}
+
+.results-grid.count-1 .result-card {
+  padding-left: clamp(20px, 5vw, 64px);
+  padding-right: clamp(20px, 5vw, 64px);
+}
+
 .results-grid.count-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
 .results-grid.count-3 { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr; }
 .results-grid.count-4 { grid-template-columns: 1fr 1fr 1fr 1fr; grid-template-rows: 1fr; }
@@ -461,6 +478,45 @@
   grid-column: auto;
   min-width: 0;
   text-align: left;
+}
+
+.ranking-name--total {
+  font-weight: 800;
+  font-size: clamp(0.95rem, 2.2vw, 1.08rem);
+  letter-spacing: 0.02em;
+}
+
+.ranking-value--stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  gap: 4px;
+}
+
+.result-column-type-ranking .ranking-value--stack {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.ranking-total-mismatch-msg {
+  font-size: clamp(0.68rem, 1.6vw, 0.8rem);
+  font-weight: 600;
+  color: #b91c1c;
+  line-height: 1.3;
+  max-width: min(20rem, 92vw);
+}
+
+.results-theme-dark .ranking-total-mismatch-msg {
+  color: #fca5a5;
+}
+
+.ranking-list-item--total-mismatch .ranking-value-line {
+  color: #b91c1c;
+}
+
+.results-theme-dark .ranking-list-item--total-mismatch .ranking-value-line {
+  color: #fca5a5;
 }
 
 .ranking-individual-goal {
@@ -1467,6 +1523,68 @@ button.metric-final-on-display-badge:focus-visible {
 
 .metric-final-ranking-li:last-child {
   border-bottom: 0;
+}
+
+.metric-final-ranking-li--total {
+  background: #f9fafb;
+}
+
+.metric-final-ranking-li--mismatch .metric-final-rank-value-line {
+  color: #b91c1c;
+}
+
+.metric-final-rank-value--stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
+}
+
+.metric-final-total-mismatch-msg {
+  font-size: 11px;
+  font-weight: 600;
+  color: #b91c1c;
+  max-width: 220px;
+}
+
+.input-page.input-theme-dark .metric-final-ranking-li--total {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.input-page.input-theme-dark .metric-final-total-mismatch-msg,
+.input-page.input-theme-dark .metric-final-ranking-li--mismatch .metric-final-rank-value-line {
+  color: #fca5a5;
+}
+
+.ranking-tfoot-total td {
+  vertical-align: middle;
+  background: rgba(15, 23, 42, 0.03);
+}
+
+.input-theme-dark .ranking-tfoot-total td {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ranking-total-name-cell {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ranking-total-mismatch-msg {
+  margin: 8px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
+.input-theme-dark .ranking-total-mismatch-msg {
+  color: #fca5a5;
+}
+
+.ranking-total-input--mismatch {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.2);
 }
 
 .metric-final-rank-name {
@@ -3797,6 +3915,9 @@ body.mv-super-admin-footer-dot .mv-footer-dot-links .mv-super-admin-dot-link:hov
 
 .results-grid.count-1 .result-column {
   min-height: calc(100vh - 80px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
 }
 
 .results-grid.empty.empty-watermark {
