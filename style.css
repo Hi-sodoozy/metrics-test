@@ -172,7 +172,8 @@
   column-gap: clamp(12px, 2vw, 24px);
   row-gap: 10px;
   list-style: none;
-  padding-left: 0;
+  padding-left: clamp(16px, 4vw, 56px);
+  padding-right: clamp(12px, 3vw, 40px);
 }
 
 .result-column-metric-title {
