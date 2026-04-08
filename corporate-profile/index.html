@@ -6,13 +6,19 @@
   <title>Metrics View – Corporate Admin</title>
   <link rel="stylesheet" href="../style.css" />
 </head>
-<body class="metrics-page mv-landing">
+<body class="metrics-page mv-landing" data-operator-gate="manual">
   <div class="mv-landing-bg" aria-hidden="true"></div>
   <header class="mv-landing-nav">
     <a class="mv-landing-nav-link" href="../input/">Back to Metrics Centre</a>
     <a class="mv-landing-nav-link" href="../user-guide/">User Guide</a>
   </header>
-  <main class="mv-corporate-shell">
+  <div id="operatorOnlyDenied" class="mv-page-shell" style="max-width:720px;margin:0 auto;padding:24px 20px 48px;" hidden>
+    <p id="operatorOnlyDeniedMsg" class="mv-landing-note"></p>
+    <div class="mv-actions-row" style="margin-top:16px;">
+      <a id="operatorOnlySignIn" class="mv-btn mv-btn-primary" hidden href="../auth/">Sign in</a>
+    </div>
+  </div>
+  <main id="operatorOnlyMain" class="mv-corporate-shell" hidden>
     <aside class="mv-corporate-nav" aria-label="Corporate admin sections">
       <h1 class="mv-corporate-nav-title">Corporate Admin</h1>
       <p class="mv-corporate-nav-sub">Manage branding, people, and billing for your organisation in Metrics View.</p>
@@ -107,6 +113,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../super-admin-access.js"></script>
   <script src="../supabase-config.js"></script>
+  <script src="../operator-only-page-gate.js"></script>
   <script>
     (function () {
       var KEY_BUSINESS = 'metricsDashboard';
@@ -716,8 +723,10 @@
       document.getElementById('corporateSaveBrandingBtn').addEventListener('click', saveBranding);
       document.getElementById('billingSaveBtn').addEventListener('click', saveBillingOnly);
 
-      loadProfile().then(function () {
-        return refreshPeopleTable();
+      window.metricsEnsureOperatorOnlyAccess(function () {
+        loadProfile().then(function () {
+          return refreshPeopleTable();
+        });
       });
     })();
   </script>

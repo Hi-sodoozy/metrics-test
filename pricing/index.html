@@ -66,7 +66,14 @@
     <a class="mv-landing-nav-link" href="../">Home</a>
     <a class="mv-landing-nav-link" href="../input/">Metrics Centre</a>
   </header>
-  <main class="mv-pricing-main mv-page-shell">
+  <div id="operatorOnlyDenied" class="mv-pricing-main mv-page-shell" hidden>
+    <p id="operatorOnlyDeniedMsg" class="mv-pricing-note" style="margin-top:8px;"></p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;">
+      <a id="operatorOnlySignIn" class="mv-pricing-cta" hidden href="../auth/">Sign in</a>
+      <a class="mv-pricing-cta" style="background:rgba(255,255,255,0.1);color:#e8eaef;" href="../">Home</a>
+    </div>
+  </div>
+  <main id="operatorOnlyMain" class="mv-pricing-main mv-page-shell" hidden>
     <h1 class="mv-pricing-title">Pricing</h1>
     <p class="mv-pricing-note">This page is not linked in the main navigation. Plans and prices will be published when billing goes live.</p>
     <div class="mv-pricing-grid">
@@ -115,6 +122,9 @@
       <a class="mv-footer-support-text-link" href="../support/">Support</a>
     </div>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../super-admin-access.js"></script>
+  <script src="../supabase-config.js"></script>
+  <script src="../operator-only-page-gate.js"></script>
 </body>
 </html>
