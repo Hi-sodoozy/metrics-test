@@ -16,6 +16,7 @@
     return normalizeUserId(user.id) === normalizeUserId(SUPER_ADMIN_ALLOWED_USER_ID);
   };
 
+  /** Shows footer • links (corporate, pricing, super admin) only for the allowlisted user. */
   window.metricsSyncSuperAdminFooterDot = function () {
     if (!document.body) return;
     var ctx = typeof window.metricsGetUserContext === 'function' ? window.metricsGetUserContext() : null;

@@ -3462,11 +3462,16 @@ button.metric-final-on-display-badge:focus-visible {
   margin-left: 0;
 }
 
+/* Corporate / pricing / super-admin footer dots: only for allowlisted operator (see super-admin-access.js). */
 .mv-footer-dot-links {
-  display: inline-flex;
+  display: none !important;
   align-items: center;
   gap: 2px;
   flex-shrink: 0;
+}
+
+body.mv-super-admin-footer-dot .mv-footer-dot-links {
+  display: inline-flex !important;
 }
 
 .mv-pricing-dot-link {
@@ -3490,11 +3495,7 @@ button.metric-final-on-display-badge:focus-visible {
 }
 
 .mv-footer-dot-links .mv-super-admin-dot-link {
-  display: none !important;
-}
-
-body.mv-super-admin-footer-dot .mv-footer-dot-links .mv-super-admin-dot-link {
-  display: inline-flex !important;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   margin-left: 4px;
@@ -3508,7 +3509,7 @@ body.mv-super-admin-footer-dot .mv-footer-dot-links .mv-super-admin-dot-link {
   line-height: 1;
 }
 
-body.mv-super-admin-footer-dot .mv-footer-dot-links .mv-super-admin-dot-link:hover {
+.mv-footer-dot-links .mv-super-admin-dot-link:hover {
   opacity: 1;
   text-decoration: none;
 }
