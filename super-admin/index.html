@@ -209,31 +209,13 @@
         </div>
       </div>
 
-      <div id="blockPortalGate" class="sa-hidden">
-        <p class="lead" style="margin-top:0">Enter the operator portal password.</p>
-        <form id="formPortalUnlock" autocomplete="off">
-          <div class="sa-field">
-            <label for="portalPassword">Password</label>
-            <div class="sa-password-wrap">
-              <input id="portalPassword" name="portalPassword" type="password" required autocomplete="current-password" />
-              <button type="button" class="sa-password-reveal" data-sa-pw-toggle="portalPassword" aria-label="Show password">Reveal</button>
-            </div>
-          </div>
-          <div class="sa-actions">
-            <button type="submit" class="sa-btn" id="btnUnlock">Continue</button>
-            <button type="button" class="sa-btn secondary" id="btnLockPortalPw">Cancel</button>
-          </div>
-        </form>
-        <p class="sa-msg info" style="margin-top:14px">This page is only available when signed in with the authorised operator account.</p>
-        <div id="msgPortal" class="sa-msg sa-hidden error" role="alert"></div>
-      </div>
+      <div id="msgPageError" class="sa-msg sa-hidden error" role="alert"></div>
 
       <div id="blockAdmin" class="sa-hidden sa-panel">
         <h2>Operator portal</h2>
         <nav class="sa-tabs" aria-label="Portal sections">
           <button type="button" class="sa-btn secondary sa-tab-active" id="tabBtnOverview" data-sa-tab="overview">Overview</button>
           <button type="button" class="sa-btn secondary" id="tabBtnBusiness" data-sa-tab="business">Business</button>
-          <button type="button" class="sa-btn secondary" id="tabBtnSecurity" data-sa-tab="security">Security</button>
         </nav>
 
         <div id="tabOverview" class="sa-tab-panel">
@@ -264,16 +246,6 @@
           </div>
         </div>
 
-        <div id="tabSecurity" class="sa-tab-panel sa-hidden">
-          <p class="lead" style="margin-bottom:12px">
-            The operator portal password and allowlisted user id are set in <strong>super-admin-access.js</strong> (not in Supabase). Edit
-            <code>SUPER_ADMIN_PORTAL_PASSWORD</code> and redeploy to change the password.
-          </p>
-        </div>
-
-        <div class="sa-actions" style="margin-top:22px">
-          <button type="button" class="sa-btn secondary" id="btnLockPortal3">Lock portal (this tab)</button>
-        </div>
       </div>
     </div>
   </main>
@@ -293,9 +265,6 @@
   <script src="../supabase-config.js"></script>
   <script>
     (function () {
-      var PORTAL_KEY = 'mvSuperAdminPortalUnlockUntil';
-      var PORTAL_TTL_MS = 12 * 60 * 60 * 1000;
-
       var el = {
         main: document.getElementById('saMain'),
         heading: document.getElementById('saHeading'),
@@ -303,15 +272,12 @@
         denied: document.getElementById('blockDenied'),
         deniedDetail: document.getElementById('deniedDetail'),
         deniedSignIn: document.getElementById('deniedSignIn'),
-        blockPortalGate: document.getElementById('blockPortalGate'),
         admin: document.getElementById('blockAdmin'),
-        msgPortal: document.getElementById('msgPortal'),
+        msgPageError: document.getElementById('msgPageError'),
         tabOverview: document.getElementById('tabOverview'),
         tabBusiness: document.getElementById('tabBusiness'),
-        tabSecurity: document.getElementById('tabSecurity'),
         tabBtnOverview: document.getElementById('tabBtnOverview'),
         tabBtnBusiness: document.getElementById('tabBtnBusiness'),
-        tabBtnSecurity: document.getElementById('tabBtnSecurity'),
         saBizList: document.getElementById('saBizList'),
         saBizError: document.getElementById('saBizError'),
         saBizPlaceholder: document.getElementById('saBizPlaceholder'),
@@ -360,37 +326,10 @@
         return n || '';
       }
 
-      function getUnlockUntil() {
-        try {
-          var raw = sessionStorage.getItem(PORTAL_KEY);
-          if (!raw) return 0;
-          var t = parseInt(raw, 10);
-          return isNaN(t) ? 0 : t;
-        } catch (e) {
-          return 0;
-        }
-      }
-
-      function isPortalUnlocked() {
-        return Date.now() < getUnlockUntil();
-      }
-
-      function setPortalUnlock() {
-        sessionStorage.setItem(PORTAL_KEY, String(Date.now() + PORTAL_TTL_MS));
-      }
-
-      function lockPortal() {
-        try {
-          sessionStorage.removeItem(PORTAL_KEY);
-        } catch (e) {}
-        window.location.reload();
-      }
-
-      function showPortalError(msg) {
-        el.msgPortal.textContent = msg || '';
-        el.msgPortal.classList.remove('info');
-        el.msgPortal.classList.add('error');
-        el.msgPortal.classList.toggle('sa-hidden', !msg);
+      function showPageError(msg) {
+        if (!el.msgPageError) return;
+        el.msgPageError.textContent = msg || '';
+        el.msgPageError.classList.toggle('sa-hidden', !msg);
       }
 
       function showBizError(msg) {
@@ -402,8 +341,8 @@
         document.title = 'Metrics View';
         el.heading.textContent = 'Metrics View';
         el.lead.classList.add('sa-hidden');
+        showPageError('');
         el.denied.classList.remove('sa-hidden');
-        el.blockPortalGate.classList.add('sa-hidden');
         el.admin.classList.add('sa-hidden');
         if (el.main) el.main.classList.remove('sa-main--wide');
         if (kind === 'notSignedIn') {
@@ -415,22 +354,12 @@
         }
       }
 
-      function showPortalGate() {
-        document.title = 'Metrics View';
-        el.heading.textContent = 'Metrics View';
-        el.lead.classList.add('sa-hidden');
-        el.denied.classList.add('sa-hidden');
-        el.blockPortalGate.classList.remove('sa-hidden');
-        el.admin.classList.add('sa-hidden');
-        if (el.main) el.main.classList.remove('sa-main--wide');
-      }
-
       function showAdminPanel() {
         document.title = 'Super admin – Metrics View';
         el.heading.textContent = 'Super admin';
         el.lead.classList.add('sa-hidden');
+        showPageError('');
         el.denied.classList.add('sa-hidden');
-        el.blockPortalGate.classList.add('sa-hidden');
         el.admin.classList.remove('sa-hidden');
         if (el.main) el.main.classList.add('sa-main--wide');
       }
@@ -438,10 +367,8 @@
       function setTab(which) {
         el.tabOverview.classList.toggle('sa-hidden', which !== 'overview');
         el.tabBusiness.classList.toggle('sa-hidden', which !== 'business');
-        el.tabSecurity.classList.toggle('sa-hidden', which !== 'security');
         el.tabBtnOverview.classList.toggle('sa-tab-active', which === 'overview');
         el.tabBtnBusiness.classList.toggle('sa-tab-active', which === 'business');
-        el.tabBtnSecurity.classList.toggle('sa-tab-active', which === 'security');
         if (which === 'business' && !directoryData) loadDirectory();
       }
 
@@ -670,7 +597,7 @@
       }
 
       function refresh() {
-        showPortalError('');
+        showPageError('');
         var client = window.metricsSupabase;
         if (!client || !client.auth) {
           showDenied('wrongAccount');
@@ -692,17 +619,6 @@
               showDenied('wrongAccount');
               return;
             }
-            if (!window.metricsSuperAdminPortalIsConfigured || !window.metricsSuperAdminPortalIsConfigured()) {
-              showPortalGate();
-              showPortalError(
-                'Portal password is not configured. Set SUPER_ADMIN_PORTAL_PASSWORD in super-admin-access.js (at least 8 characters) and redeploy.'
-              );
-              return;
-            }
-            if (!isPortalUnlocked()) {
-              showPortalGate();
-              return;
-            }
             showAdminPanel();
           });
         }
@@ -710,7 +626,7 @@
         if (hadAuthCode) {
           client.auth.exchangeCodeForSession(window.location.href).then(function (ex) {
             if (ex && ex.error) {
-              showPortalError(String((ex.error && ex.error.message) || ex.error || 'Sign-in link invalid.'));
+              showPageError(String((ex.error && ex.error.message) || ex.error || 'Sign-in link invalid.'));
             }
             var u = new URL(window.location.href);
             u.searchParams.delete('code');
@@ -730,41 +646,10 @@
       el.tabBtnBusiness.addEventListener('click', function () {
         setTab('business');
       });
-      el.tabBtnSecurity.addEventListener('click', function () {
-        setTab('security');
-      });
       document.getElementById('btnRefreshDirectory').addEventListener('click', function () {
         directoryData = null;
         loadDirectory();
       });
-
-      document.getElementById('formPortalUnlock').addEventListener('submit', function (e) {
-        e.preventDefault();
-        showPortalError('');
-        var input = (document.getElementById('portalPassword').value || '').trim();
-        if (!window.metricsSuperAdminVerifyPortalPassword(input)) {
-          showPortalError('Incorrect password.');
-          return;
-        }
-        setPortalUnlock();
-        refresh();
-      });
-
-      var cardRootEl = document.getElementById('cardRoot');
-      cardRootEl.addEventListener('click', function (ev) {
-        var btn = ev.target && ev.target.closest && ev.target.closest('[data-sa-pw-toggle]');
-        if (!btn || !cardRootEl.contains(btn)) return;
-        var id = btn.getAttribute('data-sa-pw-toggle');
-        var inp = id ? document.getElementById(id) : null;
-        if (!inp) return;
-        var show = inp.type === 'password';
-        inp.type = show ? 'text' : 'password';
-        btn.textContent = show ? 'Hide' : 'Reveal';
-        btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
-      });
-
-      document.getElementById('btnLockPortalPw').addEventListener('click', lockPortal);
-      document.getElementById('btnLockPortal3').addEventListener('click', lockPortal);
 
       refresh();
     })();
