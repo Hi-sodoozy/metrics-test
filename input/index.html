@@ -1033,54 +1033,106 @@
           var displaySummary = m.displaySummary !== false;
           var showMainTotalsCard = displaySummary && rows.length > 0 && (showSimpleR || showIndR);
           if (showMainTotalsCard) {
-            var totalGoal = 0;
-            var totalCurrent = 0;
-            var t;
-            for (t = 0; t < rows.length; t++) {
-              var rg = rows[t];
-              var g = parseMetricNumber(rg.goal) || 0;
-              var indG = rg.individualGoal != null ? parseMetricNumber(rg.individualGoal) : NaN;
-              if (!isNaN(indG) && indG > 0) g = indG;
-              totalGoal += g;
-              totalCurrent += parseMetricNumber(rg.current) || 0;
-            }
             var displayAsPctAgg = !!rank.displayAsPercent;
-            var achievedAgg = totalGoal > 0 && totalCurrent >= totalGoal;
             var aggText;
-            var hasAggCur = totalCurrent !== 0 || rows.some(rankingRowHasCurrentText);
-            var hasAggGoal = totalGoal !== 0 || rows.some(rankingRowHasGoalText);
-            if (displayAsPctAgg && totalGoal > 0) {
-              var aggPct = Math.round((totalCurrent / totalGoal) * 100);
-              var subPart = '';
-              if (hasAggCur && hasAggGoal) {
-                subPart =
-                  '<span class="metric-final-pct-sub">' +
-                  escapeHtmlStr(String(totalCurrent)) +
-                  ' <span class="metric-final-sep">/</span> ' +
-                  escapeHtmlStr(String(totalGoal)) +
-                  '</span>';
-              } else if (hasAggCur) {
-                subPart = '<span class="metric-final-pct-sub">' + escapeHtmlStr(String(totalCurrent)) + '</span>';
-              } else if (hasAggGoal) {
-                subPart = '<span class="metric-final-pct-sub">' + escapeHtmlStr(String(totalGoal)) + '</span>';
-              }
-              aggText = '<span class="metric-final-pct">' + aggPct + '%</span>' + subPart;
-            } else {
-              var curStrAgg = hasAggCur ? String(totalCurrent) : '';
-              var goalStrAgg = hasAggGoal ? String(totalGoal) : '';
-              if (curStrAgg !== '' && goalStrAgg !== '') {
-                aggText =
-                  '<span class="metric-final-current">' +
-                  escapeHtmlStr(curStrAgg) +
-                  '</span> <span class="metric-final-sep">/</span> <span class="metric-final-goal">' +
-                  escapeHtmlStr(goalStrAgg) +
-                  '</span>';
-              } else if (curStrAgg !== '') {
-                aggText = '<span class="metric-final-current">' + escapeHtmlStr(curStrAgg) + '</span>';
-              } else if (goalStrAgg !== '') {
-                aggText = '<span class="metric-final-goal">' + escapeHtmlStr(goalStrAgg) + '</span>';
+            var achievedAgg;
+            if (showSimpleR) {
+              var sumCP = sumRankingIndividualCurrents(rows);
+              var sumGP = sumRankingIndividualGoals(rows);
+              var tlP = ensureTotalLine(rank);
+              var manualCP = String(tlP.current || '').trim();
+              var manualGP = String(tlP.goal || '').trim();
+              var anyCP = rows.some(rankingRowHasCurrentText);
+              var anyGP = rows.some(rankingRowHasGoalText);
+              var curDispP = manualCP || (anyCP || sumCP !== 0 ? String(sumCP) : '');
+              var goalDispP = manualGP || (anyGP || sumGP !== 0 ? String(sumGP) : '');
+              var effCP = manualCP ? parseMetricNumber(manualCP) : sumCP;
+              if (isNaN(effCP)) effCP = sumCP;
+              var effGP = manualGP ? parseMetricNumber(manualGP) : sumGP;
+              if (isNaN(effGP)) effGP = sumGP;
+              achievedAgg = effGP > 0 && effCP >= effGP;
+              var hCurP = curDispP !== '';
+              var hGoalP = goalDispP !== '';
+              if (displayAsPctAgg && effGP > 0) {
+                var aggPctP = Math.round((effCP / effGP) * 100);
+                var subPP = '';
+                if (hCurP && hGoalP) {
+                  subPP =
+                    '<span class="metric-final-pct-sub">' +
+                    escapeHtmlStr(curDispP) +
+                    ' <span class="metric-final-sep">/</span> ' +
+                    escapeHtmlStr(goalDispP) +
+                    '</span>';
+                } else if (hCurP) {
+                  subPP = '<span class="metric-final-pct-sub">' + escapeHtmlStr(curDispP) + '</span>';
+                } else if (hGoalP) {
+                  subPP = '<span class="metric-final-pct-sub">' + escapeHtmlStr(goalDispP) + '</span>';
+                }
+                aggText = '<span class="metric-final-pct">' + aggPctP + '%</span>' + subPP;
               } else {
-                aggText = '';
+                if (hCurP && hGoalP) {
+                  aggText =
+                    '<span class="metric-final-current">' +
+                    escapeHtmlStr(curDispP) +
+                    '</span> <span class="metric-final-sep">/</span> <span class="metric-final-goal">' +
+                    escapeHtmlStr(goalDispP) +
+                    '</span>';
+                } else if (hCurP) {
+                  aggText = '<span class="metric-final-current">' + escapeHtmlStr(curDispP) + '</span>';
+                } else if (hGoalP) {
+                  aggText = '<span class="metric-final-goal">' + escapeHtmlStr(goalDispP) + '</span>';
+                } else {
+                  aggText = '';
+                }
+              }
+            } else {
+              var totalGoal = 0;
+              var totalCurrent = 0;
+              var t;
+              for (t = 0; t < rows.length; t++) {
+                var rg = rows[t];
+                var g = parseMetricNumber(rg.goal) || 0;
+                var indG = rg.individualGoal != null ? parseMetricNumber(rg.individualGoal) : NaN;
+                if (!isNaN(indG) && indG > 0) g = indG;
+                totalGoal += g;
+                totalCurrent += parseMetricNumber(rg.current) || 0;
+              }
+              achievedAgg = totalGoal > 0 && totalCurrent >= totalGoal;
+              var hasAggCur = totalCurrent !== 0 || rows.some(rankingRowHasCurrentText);
+              var hasAggGoal = totalGoal !== 0 || rows.some(rankingRowHasGoalText);
+              if (displayAsPctAgg && totalGoal > 0) {
+                var aggPct = Math.round((totalCurrent / totalGoal) * 100);
+                var subPart = '';
+                if (hasAggCur && hasAggGoal) {
+                  subPart =
+                    '<span class="metric-final-pct-sub">' +
+                    escapeHtmlStr(String(totalCurrent)) +
+                    ' <span class="metric-final-sep">/</span> ' +
+                    escapeHtmlStr(String(totalGoal)) +
+                    '</span>';
+                } else if (hasAggCur) {
+                  subPart = '<span class="metric-final-pct-sub">' + escapeHtmlStr(String(totalCurrent)) + '</span>';
+                } else if (hasAggGoal) {
+                  subPart = '<span class="metric-final-pct-sub">' + escapeHtmlStr(String(totalGoal)) + '</span>';
+                }
+                aggText = '<span class="metric-final-pct">' + aggPct + '%</span>' + subPart;
+              } else {
+                var curStrAgg = hasAggCur ? String(totalCurrent) : '';
+                var goalStrAgg = hasAggGoal ? String(totalGoal) : '';
+                if (curStrAgg !== '' && goalStrAgg !== '') {
+                  aggText =
+                    '<span class="metric-final-current">' +
+                    escapeHtmlStr(curStrAgg) +
+                    '</span> <span class="metric-final-sep">/</span> <span class="metric-final-goal">' +
+                    escapeHtmlStr(goalStrAgg) +
+                    '</span>';
+                } else if (curStrAgg !== '') {
+                  aggText = '<span class="metric-final-current">' + escapeHtmlStr(curStrAgg) + '</span>';
+                } else if (goalStrAgg !== '') {
+                  aggText = '<span class="metric-final-goal">' + escapeHtmlStr(goalStrAgg) + '</span>';
+                } else {
+                  aggText = '';
+                }
               }
             }
             parts.push(
@@ -1113,7 +1165,7 @@
             }
             var displayAsPct = !!rank.displayAsPercent;
             parts.push('<div class="metric-final-ranking-list"><ul class="metric-final-ranking-ul">');
-            if (showSimpleR && showIndR && rows.length > 0) {
+            if (showSimpleR && showIndR && rows.length > 0 && !showMainTotalsCard) {
               var tlPv = ensureTotalLine(rank);
               var misPv = totalCurrentManualMismatch(rows, tlPv);
               var totValHtml = formatTotalLinePairForPreview(rows, tlPv, displayAsPct);
