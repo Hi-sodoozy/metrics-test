@@ -3498,18 +3498,46 @@ body.mv-super-admin-footer-dot .mv-footer-dot-links {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-left: 4px;
-  width: 20px;
-  height: 20px;
+  margin-left: 8px;
+  padding: 0 10px;
+  min-height: 24px;
   border-radius: 999px;
   color: #cbd5e1;
   text-decoration: none;
   opacity: 0.8;
-  font-size: 18px;
-  line-height: 1;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .mv-footer-dot-links .mv-super-admin-dot-link:hover {
+  opacity: 1;
+  text-decoration: none;
+}
+
+.mv-footer-dot-links .mv-sport-dot-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  padding: 0 10px;
+  min-height: 24px;
+  border-radius: 999px;
+  color: #cbd5e1;
+  text-decoration: none;
+  opacity: 0.8;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.mv-footer-dot-links .mv-sport-dot-link:hover {
   opacity: 1;
   text-decoration: none;
 }

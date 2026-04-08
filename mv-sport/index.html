@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MV Sport</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .mv-sport-shell { max-width: 1100px; margin: 0 auto; padding: 28px 20px 56px; }
+    .mv-sport-title { margin: 0 0 8px; font-size: 1.8rem; font-weight: 800; color: #f3f4f6; }
+    .mv-sport-sub { margin: 0 0 18px; color: #9aa3b2; }
+    .mv-sport-menu { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .mv-sport-menu-btn {
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.06);
+      color: #dbeafe;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .mv-sport-menu-btn.active { border-color: #7dd3fc; box-shadow: 0 0 0 1px rgba(125,211,252,0.35); }
+    .mv-sport-panel { display: none; }
+    .mv-sport-panel.active { display: block; }
+    .mv-sport-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 900px) { .mv-sport-grid { grid-template-columns: 1fr; } }
+    .mv-sport-card {
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.04);
+      border-radius: 12px;
+      padding: 14px 14px 12px;
+    }
+    .mv-sport-kpi { font-size: 12px; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+    .mv-sport-value { font-size: 1.65rem; font-weight: 800; color: #f8fafc; line-height: 1.15; }
+    .mv-sport-note { margin-top: 4px; color: #94a3b8; font-size: 12px; }
+  </style>
+</head>
+<body class="metrics-page mv-landing">
+  <div class="mv-landing-bg" aria-hidden="true"></div>
+  <header class="mv-landing-nav">
+    <a class="mv-landing-nav-link" href="../super-admin/">Operator Portal</a>
+    <a class="mv-landing-nav-link" href="../input/">Metrics Centre</a>
+  </header>
+
+  <div id="operatorOnlyDenied" class="mv-sport-shell" hidden>
+    <h1 class="mv-sport-title">MV Sport</h1>
+    <p id="operatorOnlyDeniedMsg" class="mv-sport-sub"></p>
+    <a id="operatorOnlySignIn" class="mv-btn mv-btn-primary" hidden href="../auth/">Sign in</a>
+  </div>
+
+  <main id="operatorOnlyMain" class="mv-sport-shell" hidden>
+    <h1 class="mv-sport-title">MV Sport</h1>
+    <p class="mv-sport-sub">Placeholder landing page for sport-focused metrics boards. Track live and monthly snapshots across sports.</p>
+    <div class="mv-sport-menu">
+      <button class="mv-sport-menu-btn active" type="button" data-sport="cycling">Cycling</button>
+      <button class="mv-sport-menu-btn" type="button" data-sport="running">Running</button>
+      <button class="mv-sport-menu-btn" type="button" data-sport="basketball">Basketball</button>
+    </div>
+
+    <section class="mv-sport-panel active" data-panel="cycling">
+      <div class="mv-sport-grid">
+        <article class="mv-sport-card"><div class="mv-sport-kpi">Distance (Monthly)</div><div class="mv-sport-value">1,284 km</div><div class="mv-sport-note">Target: 1,500 km</div></article>
+        <article class="mv-sport-card"><div class="mv-sport-kpi">Average Speed</div><div class="mv-sport-value">31.7 km/h</div><div class="mv-sport-note">Road sessions only</div></article>
+        <article class="mv-sport-card"><div class="mv-sport-kpi">Total Elevation</div><div class="mv-sport-value">18,420 m</div><div class="mv-sport-note">Climb consistency +6%</div></article>
+      </div>
+    </section>
+
+    <section class="mv-sport-panel" data-panel="running">
+      <div class="mv-sport-grid">
+        <article class="mv-sport-card"><div class="mv-sport-kpi">Distance (Monthly)</div><div class="mv-sport-value">362 km</div><div class="mv-sport-note">Target: 420 km</div></article>
+        <article class="mv-sport-card"><div class="mv-sport-kpi">Avg Pace</div><div class="mv-sport-value">4:38 /km</div><div class="mv-sport-note">Tempo days included</div></article>
+        <article class="mv-sport-card"><div class="mv-sport-kpi">Longest Run</div><div class="mv-sport-value">34.2 km</div><div class="mv-sport-note">Marathon block</div></article>
+      </div>
+    </section>
+
+    <section class="mv-sport-panel" data-panel="basketball">
+      <div class="mv-sport-grid">
+        <article class="mv-sport-card"><div class="mv-sport-kpi">Points Per Game</div><div class="mv-sport-value">104.6</div><div class="mv-sport-note">Last 10 games: +4.1</div></article>
+        <article class="mv-sport-card"><div class="mv-sport-kpi">Assist / Turnover</div><div class="mv-sport-value">1.88</div><div class="mv-sport-note">Ball movement efficiency</div></article>
+        <article class="mv-sport-card"><div class="mv-sport-kpi">Rebound %</div><div class="mv-sport-value">52.3%</div><div class="mv-sport-note">Defensive boards trending up</div></article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mv-site-footer">
+    <div class="mv-site-footer-top">
+      <a class="mv-site-footer-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+      <span class="mv-footer-dot-links">
+        <a class="mv-corporate-dot-link" href="../corporate-profile/" aria-label="Corporate profile" title="Corporate profile">•</a>
+        <a class="mv-pricing-dot-link" href="../pricing/" aria-label="Pricing" title="Pricing">•</a>
+        <a class="mv-super-admin-dot-link" href="../super-admin/" aria-label="Super admin" title="Super admin">•</a>
+      </span>
+      <a class="mv-footer-support-text-link" href="../support/">Support</a>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../super-admin-access.js"></script>
+  <script src="../supabase-config.js"></script>
+  <script src="../operator-only-page-gate.js"></script>
+  <script>
+    (function () {
+      var btns = document.querySelectorAll('[data-sport]');
+      var panels = document.querySelectorAll('[data-panel]');
+      function setSport(key) {
+        var i;
+        for (i = 0; i < btns.length; i++) btns[i].classList.toggle('active', btns[i].getAttribute('data-sport') === key);
+        for (i = 0; i < panels.length; i++) panels[i].classList.toggle('active', panels[i].getAttribute('data-panel') === key);
+      }
+      var j;
+      for (j = 0; j < btns.length; j++) {
+        btns[j].addEventListener('click', function () { setSport(this.getAttribute('data-sport')); });
+      }
+    })();
+  </script>
+</body>
+</html>
