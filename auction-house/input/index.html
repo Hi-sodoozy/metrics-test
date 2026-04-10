@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Auction House – Property</title>
+  <link rel="stylesheet" href="../../style.css" />
+  <link rel="stylesheet" href="../../auction-house.css" />
+</head>
+<body class="metrics-page mv-landing ah-page">
+  <div class="mv-landing-bg" aria-hidden="true"></div>
+
+  <div id="operatorOnlyDenied" class="ah-denied-wrap" hidden>
+    <h1 class="mv-landing-title">Auction House</h1>
+    <p id="operatorOnlyDeniedMsg" class="mv-landing-lead" style="margin-top: 12px;"></p>
+    <a id="operatorOnlySignIn" class="mv-btn mv-btn-primary" style="margin-top: 12px;" hidden href="../../auth/">Sign in</a>
+  </div>
+
+  <main id="operatorOnlyMain" class="ah-main" hidden>
+    <header class="ah-header">
+      <span class="ah-brand">Auction House</span>
+      <nav class="ah-header-links" aria-label="Auction House navigation">
+        <a href="../final/">Final board</a>
+        <a href="../day/">Auction Display</a>
+      </nav>
+    </header>
+
+    <section class="ah-card" aria-labelledby="ah-prop-h">
+      <h2 id="ah-prop-h">Property details</h2>
+      <div class="ah-field">
+        <label for="ahAddress">Address</label>
+        <textarea id="ahAddress" rows="3" maxlength="500" placeholder="Street, suburb" autocomplete="street-address"></textarea>
+      </div>
+      <div class="ah-field-row">
+        <div class="ah-field">
+          <label for="ahBeds">Bed #</label>
+          <input id="ahBeds" type="text" inputmode="numeric" maxlength="8" placeholder="e.g. 4" />
+        </div>
+        <div class="ah-field">
+          <label for="ahBaths">Bath #</label>
+          <input id="ahBaths" type="text" inputmode="numeric" maxlength="8" placeholder="e.g. 2" />
+        </div>
+        <div class="ah-field">
+          <label for="ahCars">Car #</label>
+          <input id="ahCars" type="text" inputmode="numeric" maxlength="8" placeholder="e.g. 2" />
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mv-site-footer">
+    <div class="mv-site-footer-top">
+      <a class="mv-site-footer-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+      <span class="mv-footer-dot-links">
+        <a class="mv-corporate-dot-link" href="../../corporate-profile/">•</a>
+        <a class="mv-pricing-dot-link" href="../../pricing/">•</a>
+        <a class="mv-super-admin-dot-link" href="../../super-admin/">•</a>
+      </span>
+      <a class="mv-footer-support-text-link" href="../../support/">Support</a>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../super-admin-access.js"></script>
+  <script src="../../supabase-config.js"></script>
+  <script src="../../operator-only-page-gate.js"></script>
+  <script src="../../auction-sync.js"></script>
+  <script>
+    (function () {
+      function bind() {
+        var addr = document.getElementById('ahAddress');
+        var beds = document.getElementById('ahBeds');
+        var baths = document.getElementById('ahBaths');
+        var cars = document.getElementById('ahCars');
+        if (!addr || !window.mvAuctionSync) return;
+
+        function push() {
+          window.mvAuctionSync.update({
+            address: (addr.value || '').trim(),
+            beds: (beds.value || '').trim(),
+            baths: (baths.value || '').trim(),
+            cars: (cars.value || '').trim()
+          });
+        }
+
+        var s = window.mvAuctionSync.load();
+        addr.value = s.address || '';
+        beds.value = s.beds || '';
+        baths.value = s.baths || '';
+        cars.value = s.cars || '';
+
+        ['input', 'change'].forEach(function (ev) {
+          addr.addEventListener(ev, push);
+          beds.addEventListener(ev, push);
+          baths.addEventListener(ev, push);
+          cars.addEventListener(ev, push);
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bind);
+      } else {
+        bind();
+      }
+      if (window.metricsSyncSuperAdminFooterDot) window.metricsSyncSuperAdminFooterDot();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Auction Display</title>
+  <link rel="stylesheet" href="../../style.css" />
+  <link rel="stylesheet" href="../../auction-house.css" />
+</head>
+<body class="ah-day-body">
+  <div id="operatorOnlyDenied" class="ah-denied-wrap" style="color:#e2e8f0;" hidden>
+    <h1 style="margin:0 0 8px;font-size:1.5rem;">Auction Display</h1>
+    <p id="operatorOnlyDeniedMsg" style="color:#94a3b8;"></p>
+    <a id="operatorOnlySignIn" class="mv-btn mv-btn-primary" style="margin-top:12px;display:inline-block;" hidden href="../../auth/">Sign in</a>
+  </div>
+
+  <div id="operatorOnlyMain" hidden>
+    <div class="ah-day-overlay" id="ahOverlay" aria-hidden="true"></div>
+    <main class="ah-day-root">
+      <div class="ah-day-address" id="ahAddr"></div>
+      <div class="ah-day-meta" id="ahMeta"></div>
+      <div class="ah-day-price" id="ahPrice">$0</div>
+      <div class="ah-day-sold" id="ahSoldLabel" hidden>SOLD</div>
+    </main>
+    <footer class="ah-day-dock">
+      <a href="../input/">Auction House</a>
+      <span style="color:#475569;margin:0 8px;">·</span>
+      <a href="../final/">Final board</a>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../super-admin-access.js"></script>
+  <script src="../../supabase-config.js"></script>
+  <script src="../../operator-only-page-gate.js"></script>
+  <script src="../../auction-sync.js"></script>
+  <script>
+    (function () {
+      var sync = window.mvAuctionSync;
+      if (!sync) return;
+
+      var overlay = document.getElementById('ahOverlay');
+      var addrEl = document.getElementById('ahAddr');
+      var metaEl = document.getElementById('ahMeta');
+      var priceEl = document.getElementById('ahPrice');
+      var soldEl = document.getElementById('ahSoldLabel');
+
+      function escapeHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = s == null ? '' : String(s);
+        return d.innerHTML;
+      }
+
+      function overlayClassForState(s) {
+        var now = Date.now();
+        var t = now - (s.statusAt || 0);
+        if (s.passedIn) return { cls: 'ah-ol-passed ah-show', show: true };
+        if (s.sold || s.status === 'sold') return { cls: 'ah-ol-sold ah-show', show: true };
+        if (s.status === 'on_market' && t >= 0 && t < 3000) return { cls: 'ah-ol-green ah-show', show: true };
+        if (s.status === 'going_once' && t >= 0 && t < 1000) return { cls: 'ah-ol-green ah-show', show: true };
+        if (s.status === 'going_twice' && t >= 0 && t < 1000) return { cls: 'ah-ol-orange ah-show', show: true };
+        if (s.status === 'going_three' && t >= 0 && t < 1000) return { cls: 'ah-ol-red ah-show', show: true };
+        return { cls: '', show: false };
+      }
+
+      function applyState(s) {
+        addrEl.innerHTML = s.address ? escapeHtml(s.address).replace(/\n/g, '<br>') : '';
+        var bits = [];
+        if (s.beds) bits.push('Bed ' + escapeHtml(s.beds));
+        if (s.baths) bits.push('Bath ' + escapeHtml(s.baths));
+        if (s.cars) bits.push('Car ' + escapeHtml(s.cars));
+        metaEl.textContent = bits.join(' · ');
+        priceEl.textContent = sync.formatCurrencyAUD(s.price);
+        var soldVisible = !!(s.sold || s.status === 'sold');
+        soldEl.hidden = !soldVisible;
+        var o = overlayClassForState(s);
+        overlay.className = 'ah-day-overlay ' + (o.cls || '');
+      }
+
+      sync.listen(applyState);
+
+      function tick() {
+        applyState(sync.load());
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+
+      if (window.metricsSyncSuperAdminFooterDot) window.metricsSyncSuperAdminFooterDot();
+    })();
+  </script>
+</body>
+</html>
