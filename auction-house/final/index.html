@@ -51,6 +51,11 @@
           <button type="button" class="ah-pill-btn ah-status-sold" data-status="sold">SOLD</button>
           <button type="button" class="ah-pill-btn ah-status-pass" data-status="passed_in">Passed in</button>
         </div>
+        <p class="ah-section-label">Session tools</p>
+        <div class="ah-status-row">
+          <button type="button" class="ah-pill-btn" id="ahResetBtn">Reset auction</button>
+          <a class="ah-pill-btn" href="../input/" style="text-decoration:none;">Edit house content</a>
+        </div>
       </section>
 
       <section class="ah-card">
@@ -183,6 +188,22 @@
           sync.update(patch);
         });
       });
+      var resetBtn = document.getElementById('ahResetBtn');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', function () {
+          sync.update({
+            address: '',
+            beds: '',
+            baths: '',
+            cars: '',
+            price: 0,
+            status: '',
+            statusAt: Date.now(),
+            sold: false,
+            passedIn: false
+          });
+        });
+      }
 
       sync.listen(onState);
 
