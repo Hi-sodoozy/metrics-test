@@ -25,31 +25,42 @@
       </nav>
     </header>
 
-    <section class="ah-card">
-      <h2>Final board</h2>
-      <div class="ah-readout" id="ahReadout" aria-live="polite"></div>
+    <section class="ah-grid">
+      <section class="ah-card">
+        <h2>Final board controls</h2>
+        <div class="ah-readout" id="ahReadout" aria-live="polite"></div>
 
-      <p class="ah-section-label">Starting bid (8 digits)</p>
-      <div class="ah-digit-row" id="ahDigitRow" role="group" aria-label="Bid digits"></div>
+        <p class="ah-section-label">Starting bid (8 digits)</p>
+        <div class="ah-digit-row" id="ahDigitRow" role="group" aria-label="Bid digits"></div>
 
-      <p class="ah-section-label">Quick add</p>
-      <div class="ah-increment-row">
-        <button type="button" class="ah-pill-btn" data-add="100000">+$100K</button>
-        <button type="button" class="ah-pill-btn" data-add="50000">+$50K</button>
-        <button type="button" class="ah-pill-btn" data-add="10000">+$10K</button>
-        <button type="button" class="ah-pill-btn" data-add="5000">+$5,000</button>
-        <button type="button" class="ah-pill-btn" data-add="1000">+$1,000</button>
-      </div>
+        <p class="ah-section-label">Quick add</p>
+        <div class="ah-increment-row">
+          <button type="button" class="ah-pill-btn" data-add="100000">+$100K</button>
+          <button type="button" class="ah-pill-btn" data-add="50000">+$50K</button>
+          <button type="button" class="ah-pill-btn" data-add="10000">+$10K</button>
+          <button type="button" class="ah-pill-btn" data-add="5000">+$5,000</button>
+          <button type="button" class="ah-pill-btn" data-add="1000">+$1,000</button>
+        </div>
 
-      <p class="ah-section-label">Auction call</p>
-      <div class="ah-status-row">
-        <button type="button" class="ah-pill-btn" data-status="on_market">On the market</button>
-        <button type="button" class="ah-pill-btn" data-status="going_once">Going once</button>
-        <button type="button" class="ah-pill-btn" data-status="going_twice">Going twice</button>
-        <button type="button" class="ah-pill-btn" data-status="going_three">Going three times</button>
-        <button type="button" class="ah-pill-btn ah-status-sold" data-status="sold">SOLD</button>
-        <button type="button" class="ah-pill-btn ah-status-pass" data-status="passed_in">Passed in</button>
-      </div>
+        <p class="ah-section-label">Auction call</p>
+        <div class="ah-status-row">
+          <button type="button" class="ah-pill-btn" data-status="on_market">On the market</button>
+          <button type="button" class="ah-pill-btn" data-status="going_once">Going once</button>
+          <button type="button" class="ah-pill-btn" data-status="going_twice">Going twice</button>
+          <button type="button" class="ah-pill-btn" data-status="going_three">Going three times</button>
+          <button type="button" class="ah-pill-btn ah-status-sold" data-status="sold">SOLD</button>
+          <button type="button" class="ah-pill-btn ah-status-pass" data-status="passed_in">Passed in</button>
+        </div>
+      </section>
+
+      <section class="ah-card">
+        <h2>Live auction summary</h2>
+        <p class="ah-preview-title">Current property</p>
+        <div class="ah-preview-main" id="ahSummaryAddress">No address entered</div>
+        <div class="ah-preview-sub" id="ahSummaryMeta">Beds — · Baths — · Cars —</div>
+        <div class="ah-live-price" id="ahSummaryPrice">$0</div>
+        <div class="ah-live-call" id="ahSummaryCall">No call yet</div>
+      </section>
     </section>
   </main>
 
@@ -77,6 +88,10 @@
 
       var row = document.getElementById('ahDigitRow');
       var readout = document.getElementById('ahReadout');
+      var summaryAddress = document.getElementById('ahSummaryAddress');
+      var summaryMeta = document.getElementById('ahSummaryMeta');
+      var summaryPrice = document.getElementById('ahSummaryPrice');
+      var summaryCall = document.getElementById('ahSummaryCall');
 
       function renderReadout(state) {
         if (!readout) return;
@@ -137,6 +152,10 @@
       function onState(state) {
         renderReadout(state);
         buildDigits(state);
+        if (summaryAddress) summaryAddress.textContent = state.address || 'No address entered';
+        if (summaryMeta) summaryMeta.textContent = 'Beds ' + (state.beds || '—') + ' · Baths ' + (state.baths || '—') + ' · Cars ' + (state.cars || '—');
+        if (summaryPrice) summaryPrice.textContent = sync.formatCurrencyAUD(state.price || 0);
+        if (summaryCall) summaryCall.textContent = state.passedIn ? 'Passed in' : (state.sold ? 'SOLD' : (state.status || 'No call yet').replace(/_/g, ' '));
       }
 
       document.querySelectorAll('[data-add]').forEach(function (btn) {

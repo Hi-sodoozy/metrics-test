@@ -25,26 +25,37 @@
       </nav>
     </header>
 
-    <section class="ah-card" aria-labelledby="ah-prop-h">
-      <h2 id="ah-prop-h">Property details</h2>
-      <div class="ah-field">
-        <label for="ahAddress">Address</label>
-        <textarea id="ahAddress" rows="3" maxlength="500" placeholder="Street, suburb" autocomplete="street-address"></textarea>
-      </div>
-      <div class="ah-field-row">
+    <section class="ah-grid">
+      <section class="ah-card" aria-labelledby="ah-prop-h">
+        <h2 id="ah-prop-h">Auction House setup</h2>
         <div class="ah-field">
-          <label for="ahBeds">Bed #</label>
-          <input id="ahBeds" type="text" inputmode="numeric" maxlength="8" placeholder="e.g. 4" />
+          <label for="ahAddress">Address</label>
+          <textarea id="ahAddress" rows="3" maxlength="500" placeholder="Street, suburb" autocomplete="street-address"></textarea>
         </div>
-        <div class="ah-field">
-          <label for="ahBaths">Bath #</label>
-          <input id="ahBaths" type="text" inputmode="numeric" maxlength="8" placeholder="e.g. 2" />
+        <div class="ah-field-row">
+          <div class="ah-field">
+            <label for="ahBeds">Bed #</label>
+            <input id="ahBeds" type="text" inputmode="numeric" maxlength="8" placeholder="e.g. 4" />
+          </div>
+          <div class="ah-field">
+            <label for="ahBaths">Bath #</label>
+            <input id="ahBaths" type="text" inputmode="numeric" maxlength="8" placeholder="e.g. 2" />
+          </div>
+          <div class="ah-field">
+            <label for="ahCars">Car #</label>
+            <input id="ahCars" type="text" inputmode="numeric" maxlength="8" placeholder="e.g. 2" />
+          </div>
         </div>
-        <div class="ah-field">
-          <label for="ahCars">Car #</label>
-          <input id="ahCars" type="text" inputmode="numeric" maxlength="8" placeholder="e.g. 2" />
-        </div>
-      </div>
+      </section>
+
+      <section class="ah-card" aria-labelledby="ah-live-h">
+        <h2 id="ah-live-h">Live preview</h2>
+        <p class="ah-preview-title">Current property</p>
+        <div class="ah-preview-main" id="ahPreviewAddress">No address entered</div>
+        <div class="ah-preview-sub" id="ahPreviewMeta">Beds — · Baths — · Cars —</div>
+        <div class="ah-kv"><span>Current bid</span><strong id="ahPreviewPrice">$0</strong></div>
+        <div class="ah-kv"><span>Status</span><strong id="ahPreviewStatus">No call yet</strong></div>
+      </section>
     </section>
   </main>
 
@@ -83,11 +94,36 @@
           });
         }
 
+        var previewAddress = document.getElementById('ahPreviewAddress');
+        var previewMeta = document.getElementById('ahPreviewMeta');
+        var previewPrice = document.getElementById('ahPreviewPrice');
+        var previewStatus = document.getElementById('ahPreviewStatus');
+
+        function toStatusLabel(st) {
+          if (st === 'on_market') return 'On the market';
+          if (st === 'going_once') return 'Going once';
+          if (st === 'going_twice') return 'Going twice';
+          if (st === 'going_three') return 'Going three times';
+          if (st === 'sold') return 'SOLD';
+          if (st === 'passed_in') return 'Passed in';
+          return 'No call yet';
+        }
+
+        function renderPreview(s) {
+          if (previewAddress) previewAddress.textContent = s.address || 'No address entered';
+          if (previewMeta) {
+            previewMeta.textContent = 'Beds ' + (s.beds || '—') + ' · Baths ' + (s.baths || '—') + ' · Cars ' + (s.cars || '—');
+          }
+          if (previewPrice) previewPrice.textContent = window.mvAuctionSync.formatCurrencyAUD(s.price || 0);
+          if (previewStatus) previewStatus.textContent = s.passedIn ? 'Passed in' : (s.sold ? 'SOLD' : toStatusLabel(s.status));
+        }
+
         var s = window.mvAuctionSync.load();
         addr.value = s.address || '';
         beds.value = s.beds || '';
         baths.value = s.baths || '';
         cars.value = s.cars || '';
+        renderPreview(s);
 
         ['input', 'change'].forEach(function (ev) {
           addr.addEventListener(ev, push);
@@ -95,6 +131,7 @@
           baths.addEventListener(ev, push);
           cars.addEventListener(ev, push);
         });
+        window.mvAuctionSync.listen(renderPreview);
       }
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', bind);

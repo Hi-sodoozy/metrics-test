@@ -97,8 +97,75 @@
   gap: 12px;
 }
 
+.ah-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 14px;
+}
+
+.ah-preview-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ah-preview-main {
+  font-size: 1.1rem;
+  color: #f8fafc;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.ah-preview-sub {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+}
+
+.ah-preview-status {
+  color: #93c5fd;
+  font-size: 13px;
+}
+
+.ah-kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: #cbd5e1;
+  padding: 8px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.16);
+}
+
+.ah-kv:last-child {
+  border-bottom: 0;
+}
+
+.ah-kv strong {
+  color: #e2e8f0;
+}
+
+.ah-live-price {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #f8fafc;
+  font-variant-numeric: tabular-nums;
+  margin-top: 6px;
+}
+
+.ah-live-call {
+  margin-top: 6px;
+  color: #93c5fd;
+  font-weight: 700;
+}
+
 @media (max-width: 540px) {
   .ah-field-row {
+    grid-template-columns: 1fr;
+  }
+  .ah-grid {
     grid-template-columns: 1fr;
   }
 }
