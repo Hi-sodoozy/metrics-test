@@ -57,8 +57,20 @@
     .metrics-page.mv-landing .mv-pricing-card h2 { color: #e8eaef; }
     .metrics-page.mv-landing .mv-pricing-card ul { color: #cbd5e1; }
     .metrics-page.mv-landing .mv-pricing-price { color: #94a3b8; }
-    .metrics-page.mv-landing .mv-pricing-trial { color: #5eead4; }
+    .metrics-page.mv-landing     .mv-pricing-trial { color: #5eead4; }
+    .mv-pricing-stripe-wrap {
+      margin-top: auto;
+      padding-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .mv-pricing-stripe-wrap stripe-buy-button {
+      --stripe-buy-button-border-radius: 10px;
+    }
   </style>
+  <script async src="https://js.stripe.com/v3/buy-button.js"></script>
 </head>
 <body class="metrics-page mv-landing">
   <div class="mv-landing-bg" aria-hidden="true"></div>
@@ -99,15 +111,26 @@
         <a class="mv-pricing-cta" href="../auth/?mode=signup">Get started</a>
       </section>
       <section class="mv-pricing-card" aria-labelledby="plan3">
-        <h2 id="plan3">Column 3</h2>
+        <h2 id="plan3">Beta</h2>
         <ul>
           <li>Track up to 10 metrics</li>
           <li>Unlimited collaborators</li>
           <li>Unlimited viewers</li>
           <li>Customisable branding (name, display picture, colour scheme)</li>
         </ul>
-        <p class="mv-pricing-price">X per month or Y per year</p>
-        <a class="mv-pricing-cta" href="../auth/?mode=signup">Get started</a>
+        <p class="mv-pricing-price">Beta pricing via Stripe Checkout</p>
+        <div class="mv-pricing-stripe-wrap">
+          <a
+            class="mv-pricing-cta"
+            href="https://buy.stripe.com/fZu9ASa4QfMo7T08QL0co07"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Subscribe with Stripe</a>
+          <stripe-buy-button
+            buy-button-id="buy_btn_1TKVDyAfEYnOWKobAJtI97vu"
+            publishable-key="pk_live_GaIEzojUnPrFlRChoA3BJmcY00wh2yPEvN"
+          ></stripe-buy-button>
+        </div>
       </section>
     </div>
   </main>
