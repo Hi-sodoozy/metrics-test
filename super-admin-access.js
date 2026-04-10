@@ -68,13 +68,18 @@
         if (!auctionLink) {
           auctionLink = document.createElement('a');
           auctionLink.className = 'mv-auction-dot-link mv-footer-admin-menu-link';
-          auctionLink.textContent = 'Auction Display';
-          auctionLink.setAttribute('title', 'Auction Display');
-          auctionLink.setAttribute('aria-label', 'Auction Display');
+          auctionLink.textContent = 'Auction House';
+          auctionLink.setAttribute('title', 'Auction House');
+          auctionLink.setAttribute('aria-label', 'Auction House');
           group.appendChild(auctionLink);
         }
         var auctionHref = deriveAuctionHref(operatorLink && operatorLink.getAttribute('href'));
-        if (auctionHref) auctionLink.setAttribute('href', auctionHref);
+        if (!auctionHref) {
+          auctionHref = /super-admin\.html/i.test(String((operatorLink && operatorLink.getAttribute('href')) || ''))
+            ? 'auction-house-input.html'
+            : '../auction-house/input/';
+        }
+        auctionLink.setAttribute('href', auctionHref);
       } else {
         if (sportLink) sportLink.remove();
         if (auctionLink) auctionLink.remove();

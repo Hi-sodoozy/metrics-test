@@ -1679,6 +1679,11 @@
         row.querySelector('input[name="showOnMainScreen"]').addEventListener('change', function () {
           syncShowMainLabel(row);
           touch();
+          if (isSharedBoardRow(row)) {
+            persistSharedRowNow(row).catch(function () {});
+          } else {
+            persistRemoteNow().catch(function () {});
+          }
           signalDisplayRefresh('toggle-display');
           renderFinalPanelIntoCard(row);
           updateEditSaveToggleLabels(row);
