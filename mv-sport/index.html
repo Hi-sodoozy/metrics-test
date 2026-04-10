@@ -3,37 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MV Sport</title>
+  <title>MV Sport – Welcome</title>
   <link rel="stylesheet" href="../style.css" />
   <style>
-    .mv-sport-shell { max-width: 1100px; margin: 0 auto; padding: 28px 20px 56px; }
-    .mv-sport-title { margin: 0 0 8px; font-size: 1.8rem; font-weight: 800; color: #f3f4f6; }
-    .mv-sport-sub { margin: 0 0 18px; color: #9aa3b2; }
-    .mv-sport-menu { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
-    .mv-sport-menu-btn {
-      border: 1px solid rgba(255,255,255,0.2);
-      background: rgba(255,255,255,0.06);
-      color: #dbeafe;
-      border-radius: 10px;
-      padding: 8px 12px;
-      font: inherit;
+    .mv-sport-landing-sports {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin: 0 0 22px;
+    }
+    .mv-sport-landing-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+      font-size: 13px;
       font-weight: 700;
-      cursor: pointer;
+      letter-spacing: 0.02em;
     }
-    .mv-sport-menu-btn.active { border-color: #7dd3fc; box-shadow: 0 0 0 1px rgba(125,211,252,0.35); }
-    .mv-sport-panel { display: none; }
-    .mv-sport-panel.active { display: block; }
-    .mv-sport-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-    @media (max-width: 900px) { .mv-sport-grid { grid-template-columns: 1fr; } }
-    .mv-sport-card {
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.04);
-      border-radius: 12px;
-      padding: 14px 14px 12px;
+    .mv-sport-landing-denied {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 20px 56px;
     }
-    .mv-sport-kpi { font-size: 12px; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
-    .mv-sport-value { font-size: 1.65rem; font-weight: 800; color: #f8fafc; line-height: 1.15; }
-    .mv-sport-note { margin-top: 4px; color: #94a3b8; font-size: 12px; }
   </style>
 </head>
 <body class="metrics-page mv-landing">
@@ -43,46 +39,65 @@
     <a class="mv-landing-nav-link" href="../input/">Metrics Centre</a>
   </header>
 
-  <div id="operatorOnlyDenied" class="mv-sport-shell" hidden>
-    <h1 class="mv-sport-title">MV Sport</h1>
-    <p id="operatorOnlyDeniedMsg" class="mv-sport-sub"></p>
-    <a id="operatorOnlySignIn" class="mv-btn mv-btn-primary" hidden href="../auth/">Sign in</a>
+  <div id="operatorOnlyDenied" class="mv-sport-landing-denied" hidden>
+    <h1 class="mv-landing-title">MV Sport</h1>
+    <p id="operatorOnlyDeniedMsg" class="mv-landing-lead" style="margin-top: 12px;"></p>
+    <a id="operatorOnlySignIn" class="mv-btn mv-btn-primary" style="margin-top: 12px;" hidden href="../auth/">Sign in</a>
   </div>
 
-  <main id="operatorOnlyMain" class="mv-sport-shell" hidden>
-    <h1 class="mv-sport-title">MV Sport</h1>
-    <p class="mv-sport-sub">Placeholder landing page for sport-focused metrics boards. Track live and monthly snapshots across sports.</p>
-    <div class="mv-sport-menu">
-      <button class="mv-sport-menu-btn active" type="button" data-sport="cycling">Cycling</button>
-      <button class="mv-sport-menu-btn" type="button" data-sport="running">Running</button>
-      <button class="mv-sport-menu-btn" type="button" data-sport="basketball">Basketball</button>
-    </div>
-
-    <section class="mv-sport-panel active" data-panel="cycling">
-      <div class="mv-sport-grid">
-        <article class="mv-sport-card"><div class="mv-sport-kpi">Distance (Monthly)</div><div class="mv-sport-value">1,284 km</div><div class="mv-sport-note">Target: 1,500 km</div></article>
-        <article class="mv-sport-card"><div class="mv-sport-kpi">Average Speed</div><div class="mv-sport-value">31.7 km/h</div><div class="mv-sport-note">Road sessions only</div></article>
-        <article class="mv-sport-card"><div class="mv-sport-kpi">Total Elevation</div><div class="mv-sport-value">18,420 m</div><div class="mv-sport-note">Climb consistency +6%</div></article>
+  <main id="operatorOnlyMain" class="mv-landing-main" hidden>
+    <section class="mv-landing-hero">
+      <p class="mv-landing-eyebrow">Your edge in performance</p>
+      <h1 class="mv-landing-title">Welcome to MV Sport</h1>
+      <p class="mv-landing-lead">
+        Set targets, track momentum, and put the numbers that matter for your squad on a real-time display—whether you are on the road, the track, or the court.
+      </p>
+      <div class="mv-sport-landing-sports" aria-label="Sports covered">
+        <span class="mv-sport-landing-pill">Cycling</span>
+        <span class="mv-sport-landing-pill">Running</span>
+        <span class="mv-sport-landing-pill">Basketball</span>
       </div>
+      <div class="mv-landing-cta-row">
+        <a class="mv-btn mv-btn-primary" href="../input/">Open Metrics Centre</a>
+        <a class="mv-btn mv-btn-ghost" href="../super-admin/">Operator Portal</a>
+      </div>
+      <p class="mv-landing-note">
+        Coaches and leaders choose the metrics; athletes and staff see progress against goals in a workspace tuned for endurance and team sport.
+      </p>
     </section>
 
-    <section class="mv-sport-panel" data-panel="running">
-      <div class="mv-sport-grid">
-        <article class="mv-sport-card"><div class="mv-sport-kpi">Distance (Monthly)</div><div class="mv-sport-value">362 km</div><div class="mv-sport-note">Target: 420 km</div></article>
-        <article class="mv-sport-card"><div class="mv-sport-kpi">Avg Pace</div><div class="mv-sport-value">4:38 /km</div><div class="mv-sport-note">Tempo days included</div></article>
-        <article class="mv-sport-card"><div class="mv-sport-kpi">Longest Run</div><div class="mv-sport-value">34.2 km</div><div class="mv-sport-note">Marathon block</div></article>
-      </div>
+    <section class="mv-landing-features" aria-label="Highlights">
+      <article class="mv-landing-card">
+        <h2 class="mv-landing-card-title">Pace, distance, and court stats</h2>
+        <p class="mv-landing-card-text">
+          From monthly kilometres and climbing on the bike, to pace blocks and long runs, to points, rebounding, and efficiency on the hardwood—surface the KPIs that fit your sport.
+        </p>
+      </article>
+      <article class="mv-landing-card">
+        <h2 class="mv-landing-card-title">One board for the squad</h2>
+        <p class="mv-landing-card-text">
+          Align the club or team on the same targets. Edit who contributes, who sees what, and keep everyone focused on the next milestone.
+        </p>
+      </article>
+      <article class="mv-landing-card">
+        <h2 class="mv-landing-card-title">Seasons and snapshots</h2>
+        <p class="mv-landing-card-text">
+          Roll up training blocks, game weeks, and monthly totals so you can celebrate progress and spot gaps before race day or tip-off.
+        </p>
+      </article>
     </section>
 
-    <section class="mv-sport-panel" data-panel="basketball">
-      <div class="mv-sport-grid">
-        <article class="mv-sport-card"><div class="mv-sport-kpi">Points Per Game</div><div class="mv-sport-value">104.6</div><div class="mv-sport-note">Last 10 games: +4.1</div></article>
-        <article class="mv-sport-card"><div class="mv-sport-kpi">Assist / Turnover</div><div class="mv-sport-value">1.88</div><div class="mv-sport-note">Ball movement efficiency</div></article>
-        <article class="mv-sport-card"><div class="mv-sport-kpi">Rebound %</div><div class="mv-sport-value">52.3%</div><div class="mv-sport-note">Defensive boards trending up</div></article>
-      </div>
+    <section class="mv-landing-strip">
+      <p class="mv-landing-strip-text">
+        Built for athletes, coaches, and clubs who want performance on display.
+      </p>
     </section>
   </main>
 
+  <footer class="mv-landing-footer">
+    <span class="mv-landing-footer-brand">Developed by Iain Duguid.</span>
+    <span class="mv-landing-footer-meta">Metrics View is a helpful tool to track and display metrics. Please do not rely on Metrics View as your only data collection point and do not store sensitive data on this platform.</span>
+  </footer>
   <footer class="mv-site-footer">
     <div class="mv-site-footer-top">
       <a class="mv-site-footer-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
@@ -101,17 +116,7 @@
   <script src="../operator-only-page-gate.js"></script>
   <script>
     (function () {
-      var btns = document.querySelectorAll('[data-sport]');
-      var panels = document.querySelectorAll('[data-panel]');
-      function setSport(key) {
-        var i;
-        for (i = 0; i < btns.length; i++) btns[i].classList.toggle('active', btns[i].getAttribute('data-sport') === key);
-        for (i = 0; i < panels.length; i++) panels[i].classList.toggle('active', panels[i].getAttribute('data-panel') === key);
-      }
-      var j;
-      for (j = 0; j < btns.length; j++) {
-        btns[j].addEventListener('click', function () { setSport(this.getAttribute('data-sport')); });
-      }
+      if (window.metricsSyncSuperAdminFooterDot) window.metricsSyncSuperAdminFooterDot();
     })();
   </script>
 </body>
