@@ -25,6 +25,36 @@
       font-weight: 700;
       letter-spacing: 0.02em;
     }
+    a.ah-landing-pill {
+      text-decoration: none;
+      color: #cbd5e1;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+    a.ah-landing-pill:hover {
+      border-color: rgba(125, 211, 252, 0.45);
+      background: rgba(125, 211, 252, 0.1);
+      color: #e2e8f0;
+    }
+    a.ah-landing-pill:focus-visible {
+      outline: 2px solid rgba(125, 211, 252, 0.85);
+      outline-offset: 2px;
+    }
+    a.ah-landing-step-card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.15s, background 0.15s, transform 0.12s;
+    }
+    a.ah-landing-step-card:hover {
+      border-color: rgba(125, 211, 252, 0.28);
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateY(-2px);
+    }
+    a.ah-landing-step-card:focus-visible {
+      outline: 2px solid rgba(125, 211, 252, 0.85);
+      outline-offset: 3px;
+    }
     .ah-landing-denied {
       max-width: 720px;
       margin: 0 auto;
@@ -36,7 +66,7 @@
   <div class="mv-landing-bg" aria-hidden="true"></div>
   <header class="mv-landing-nav">
     <a class="mv-landing-nav-link" href="../super-admin/">Operator Portal</a>
-    <a class="mv-landing-nav-link" href="./input/">MV Auction</a>
+    <a class="mv-landing-nav-link" href="./input/">Property details</a>
     <a class="mv-landing-nav-link" href="./final/">Final board</a>
     <a class="mv-landing-nav-link" href="./day/">Auction Display</a>
   </header>
@@ -55,38 +85,39 @@
         Capture the listing, run the call, and drive the big screen from a dedicated flow—separate from Metrics View—so auction night stays focused and unmistakable.
       </p>
       <div class="ah-landing-pills" aria-label="Auction flow">
-        <span class="ah-landing-pill">Property details</span>
-        <span class="ah-landing-pill">Final board</span>
-        <span class="ah-landing-pill">Auction Display</span>
+        <a class="ah-landing-pill" href="./input/">Property details</a>
+        <a class="ah-landing-pill" href="./final/">Final board</a>
+        <a class="ah-landing-pill" href="./day/">Auction Display</a>
       </div>
       <div class="mv-landing-cta-row">
-        <a class="mv-btn mv-btn-primary" href="./input/">MV Auction</a>
-        <a class="mv-btn mv-btn-ghost" href="../super-admin/">Operator Portal</a>
+        <a class="mv-btn mv-btn-primary" href="./input/">Property details</a>
+        <a class="mv-btn mv-btn-ghost" href="./final/">Final board</a>
       </div>
       <p class="mv-landing-note">
-        Use MV Auction for address and lot details, Final board for bids and auction call buttons, and Auction Display on the wall for the crowd.
+        Enter address and lot details on Property details, run bids and auction call buttons on Final board, and open Auction Display on the wall for the crowd.
+        Use the <a href="../super-admin/" style="color:#93c5fd;">Operator Portal</a> for account and access settings.
       </p>
     </section>
 
-    <section class="mv-landing-features" aria-label="Highlights">
-      <article class="mv-landing-card">
-        <h2 class="mv-landing-card-title">Purpose-built for auction night</h2>
+    <section class="mv-landing-features" aria-label="Auction House steps">
+      <a class="mv-landing-card ah-landing-step-card" href="./input/">
+        <h2 class="mv-landing-card-title">1 · Property details</h2>
         <p class="mv-landing-card-text">
-          Property fields, eight-digit bidding, quick increments, and call-state cues designed for a live room—not a generic metrics grid.
+          Address, beds, baths, and car spaces sync to the board and display. Open this step first for each lot.
         </p>
-      </article>
-      <article class="mv-landing-card">
-        <h2 class="mv-landing-card-title">Separate from Metrics View</h2>
+      </a>
+      <a class="mv-landing-card ah-landing-step-card" href="./final/">
+        <h2 class="mv-landing-card-title">2 · Final board</h2>
         <p class="mv-landing-card-text">
-          Auction House runs its own screens and storage keys so you never mix auction flow with business dashboards.
+          Eight-digit bidding, quick increments, reset, and auction call controls for the operator during the call.
         </p>
-      </article>
-      <article class="mv-landing-card">
-        <h2 class="mv-landing-card-title">Reset between lots</h2>
+      </a>
+      <a class="mv-landing-card ah-landing-step-card" href="./day/">
+        <h2 class="mv-landing-card-title">3 · Auction Display</h2>
         <p class="mv-landing-card-text">
-          Clear the board from Final board when you move to the next property, then push fresh details from MV Auction.
+          Full-screen readout for the room: property line, meta, current bid, and sold state—driven from the same live state.
         </p>
-      </article>
+      </a>
     </section>
 
     <section class="mv-landing-strip">
