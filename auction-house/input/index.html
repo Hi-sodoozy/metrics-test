@@ -55,11 +55,35 @@
         </div>
       </section>
 
+      <section class="ah-card" aria-labelledby="ah-more-h">
+        <h2 id="ah-more-h">Property descriptions</h2>
+        <div class="ah-field-row ah-field-row-2">
+          <div class="ah-field">
+            <label for="ahPropertyType">Property type</label>
+            <input id="ahPropertyType" type="text" maxlength="80" placeholder="e.g. House, Unit, Townhouse" autocomplete="off" />
+          </div>
+          <div class="ah-field">
+            <label for="ahLandSize">Land size</label>
+            <input id="ahLandSize" type="text" maxlength="40" placeholder="e.g. 620m²" autocomplete="off" />
+          </div>
+        </div>
+        <div class="ah-field">
+          <label for="ahBuildingSize">Building size</label>
+          <input id="ahBuildingSize" type="text" maxlength="40" placeholder="e.g. 210m² internal" autocomplete="off" />
+        </div>
+        <div class="ah-field">
+          <label for="ahDescription">Key features / description</label>
+          <textarea id="ahDescription" rows="4" maxlength="800" placeholder="Typical highlights: renovated kitchen, north-facing yard, walk to transport..."></textarea>
+        </div>
+      </section>
+
       <section class="ah-card" aria-labelledby="ah-live-h">
         <h2 id="ah-live-h">Live preview</h2>
         <p class="ah-preview-title">Current property</p>
         <div class="ah-preview-main" id="ahPreviewAddress">No address entered</div>
         <div class="ah-preview-sub" id="ahPreviewMeta">Beds — · Baths — · Cars —</div>
+        <div class="ah-preview-sub" id="ahPreviewTypeLine">Type — · Land — · Building —</div>
+        <p class="ah-field-hint" id="ahPreviewDescription" style="margin: 0 0 10px;">No additional description entered.</p>
         <div class="ah-kv"><span>Current bid</span><strong id="ahPreviewPrice">$0</strong></div>
         <div class="ah-kv"><span>Status</span><strong id="ahPreviewStatus">No call yet</strong></div>
       </section>
@@ -79,6 +103,14 @@
           <label for="ahListedPrice">Price</label>
           <input id="ahListedPrice" type="text" inputmode="numeric" maxlength="14" placeholder="e.g. 1,250,000" autocomplete="off" />
         </div>
+        <div class="ah-field">
+          <label for="ahListedType">Property type</label>
+          <input id="ahListedType" type="text" maxlength="80" placeholder="e.g. House" autocomplete="off" />
+        </div>
+        <div class="ah-field">
+          <label for="ahListedDesc">Short description</label>
+          <input id="ahListedDesc" type="text" maxlength="180" placeholder="e.g. Renovated 4-bed family home" autocomplete="off" />
+        </div>
         <div class="ah-listed-actions">
           <button type="button" class="ah-pill-btn" id="ahListedAddBtn">Add listed property</button>
           <button type="button" class="ah-pill-btn" id="ahListedAddCurrentBtn">Add current property details</button>
@@ -90,6 +122,7 @@
             <tr>
               <th scope="col">Address</th>
               <th scope="col">Price</th>
+              <th scope="col">Description</th>
               <th scope="col">Actions</th>
             </tr>
           </thead>
@@ -141,12 +174,18 @@
         var beds = document.getElementById('ahBeds');
         var baths = document.getElementById('ahBaths');
         var cars = document.getElementById('ahCars');
+        var propertyTypeEl = document.getElementById('ahPropertyType');
+        var landSizeEl = document.getElementById('ahLandSize');
+        var buildingSizeEl = document.getElementById('ahBuildingSize');
+        var descriptionEl = document.getElementById('ahDescription');
         var listedAddress = document.getElementById('ahListedAddress');
         var listedPrice = document.getElementById('ahListedPrice');
+        var listedType = document.getElementById('ahListedType');
+        var listedDesc = document.getElementById('ahListedDesc');
         var listedAddBtn = document.getElementById('ahListedAddBtn');
         var listedAddCurrentBtn = document.getElementById('ahListedAddCurrentBtn');
         var listedBody = document.getElementById('ahListedBody');
-        if (!addr || !priceEl || !window.mvAuctionSync) return;
+        if (!addr || !priceEl || !propertyTypeEl || !descriptionEl || !window.mvAuctionSync) return;
         var listedStorageKey = 'mvAuctionListedProperties_v1';
         var listedRows = [];
 
@@ -178,7 +217,11 @@
             price: window.mvAuctionSync.clampPrice(row.price),
             beds: String(row.beds != null ? row.beds : '').trim(),
             baths: String(row.baths != null ? row.baths : '').trim(),
-            cars: String(row.cars != null ? row.cars : '').trim()
+            cars: String(row.cars != null ? row.cars : '').trim(),
+            propertyType: String(row.propertyType != null ? row.propertyType : '').trim(),
+            landSize: String(row.landSize != null ? row.landSize : '').trim(),
+            buildingSize: String(row.buildingSize != null ? row.buildingSize : '').trim(),
+            description: String(row.description != null ? row.description : '').trim()
           };
         }
 
@@ -210,7 +253,11 @@
             price: row.price,
             beds: row.beds,
             baths: row.baths,
-            cars: row.cars
+            cars: row.cars,
+            propertyType: row.propertyType,
+            landSize: row.landSize,
+            buildingSize: row.buildingSize,
+            description: row.description
           }).then(function (saved) {
             var merged = normalizeListedRow(saved || row);
             merged.clientId = row.clientId || merged.clientId;
@@ -249,6 +296,10 @@
             row.beds = saved.beds;
             row.baths = saved.baths;
             row.cars = saved.cars;
+            row.propertyType = saved.propertyType;
+            row.landSize = saved.landSize;
+            row.buildingSize = saved.buildingSize;
+            row.description = saved.description;
             return true;
           });
         }
@@ -259,7 +310,7 @@
           if (!listedRows.length) {
             var emptyTr = document.createElement('tr');
             var emptyTd = document.createElement('td');
-            emptyTd.colSpan = 3;
+            emptyTd.colSpan = 4;
             emptyTd.className = 'ah-listed-empty';
             emptyTd.textContent = 'No listed properties yet.';
             emptyTr.appendChild(emptyTd);
@@ -305,6 +356,23 @@
             });
             tdPrice.appendChild(priceInput);
 
+            var tdDescription = document.createElement('td');
+            var descInput = document.createElement('input');
+            descInput.type = 'text';
+            descInput.maxLength = 180;
+            descInput.placeholder = 'Property type / short description';
+            descInput.value = row.description || row.propertyType || '';
+            descInput.addEventListener('input', function () {
+              row.description = (descInput.value || '').trim();
+              saveListedLocal(listedRows);
+            });
+            descInput.addEventListener('blur', function () {
+              commitListedRow(row).catch(function () {}).then(function () {
+                saveListedLocal(listedRows);
+              });
+            });
+            tdDescription.appendChild(descInput);
+
             var tdActions = document.createElement('td');
             tdActions.className = 'ah-listed-row-actions';
             var useBtn = document.createElement('button');
@@ -317,6 +385,10 @@
               if (row.beds) beds.value = row.beds;
               if (row.baths) baths.value = row.baths;
               if (row.cars) cars.value = row.cars;
+              propertyTypeEl.value = row.propertyType || '';
+              landSizeEl.value = row.landSize || '';
+              buildingSizeEl.value = row.buildingSize || '';
+              descriptionEl.value = row.description || '';
               push();
             });
             var removeBtn = document.createElement('button');
@@ -334,12 +406,13 @@
 
             tr.appendChild(tdAddress);
             tr.appendChild(tdPrice);
+            tr.appendChild(tdDescription);
             tr.appendChild(tdActions);
             listedBody.appendChild(tr);
           });
         }
 
-        function addListedRow(addressVal, priceVal) {
+        function addListedRow(addressVal, priceVal, typeVal, descVal) {
           var cleanAddress = String(addressVal || '').trim();
           var cleanPrice = parsePriceInput(priceVal);
           if (!cleanAddress && !cleanPrice) return;
@@ -350,7 +423,11 @@
             price: cleanPrice,
             beds: (beds.value || '').trim(),
             baths: (baths.value || '').trim(),
-            cars: (cars.value || '').trim()
+            cars: (cars.value || '').trim(),
+            propertyType: String(typeVal || '').trim(),
+            landSize: (landSizeEl.value || '').trim(),
+            buildingSize: (buildingSizeEl.value || '').trim(),
+            description: String(descVal || '').trim()
           });
           var newest = listedRows[listedRows.length - 1];
           saveListedLocal(listedRows);
@@ -367,12 +444,18 @@
             beds: (beds.value || '').trim(),
             baths: (baths.value || '').trim(),
             cars: (cars.value || '').trim(),
+            propertyType: (propertyTypeEl.value || '').trim(),
+            landSize: (landSizeEl.value || '').trim(),
+            buildingSize: (buildingSizeEl.value || '').trim(),
+            description: (descriptionEl.value || '').trim(),
             price: parsePriceInput(priceEl.value)
           });
         }
 
         var previewAddress = document.getElementById('ahPreviewAddress');
         var previewMeta = document.getElementById('ahPreviewMeta');
+        var previewTypeLine = document.getElementById('ahPreviewTypeLine');
+        var previewDescription = document.getElementById('ahPreviewDescription');
         var previewPrice = document.getElementById('ahPreviewPrice');
         var previewStatus = document.getElementById('ahPreviewStatus');
 
@@ -391,6 +474,12 @@
           if (previewMeta) {
             previewMeta.textContent = 'Beds ' + (s.beds || '—') + ' · Baths ' + (s.baths || '—') + ' · Cars ' + (s.cars || '—');
           }
+          if (previewTypeLine) {
+            previewTypeLine.textContent = 'Type ' + (s.propertyType || '—') + ' · Land ' + (s.landSize || '—') + ' · Building ' + (s.buildingSize || '—');
+          }
+          if (previewDescription) {
+            previewDescription.textContent = s.description || 'No additional description entered.';
+          }
           if (previewPrice) previewPrice.textContent = window.mvAuctionSync.formatCurrencyAUD(s.price || 0);
           if (previewStatus) previewStatus.textContent = s.passedIn ? 'Passed in' : (s.sold ? 'SOLD' : toStatusLabel(s.status));
           if (priceEl && document.activeElement !== priceEl) {
@@ -404,6 +493,10 @@
         beds.value = s.beds || '';
         baths.value = s.baths || '';
         cars.value = s.cars || '';
+        propertyTypeEl.value = s.propertyType || '';
+        landSizeEl.value = s.landSize || '';
+        buildingSizeEl.value = s.buildingSize || '';
+        descriptionEl.value = s.description || '';
         renderPreview(s);
 
         ['input', 'change'].forEach(function (ev) {
@@ -411,6 +504,10 @@
           beds.addEventListener(ev, push);
           baths.addEventListener(ev, push);
           cars.addEventListener(ev, push);
+          propertyTypeEl.addEventListener(ev, push);
+          landSizeEl.addEventListener(ev, push);
+          buildingSizeEl.addEventListener(ev, push);
+          descriptionEl.addEventListener(ev, push);
           priceEl.addEventListener(ev, push);
         });
         priceEl.addEventListener('blur', function () {
@@ -420,14 +517,21 @@
         });
         if (listedAddBtn) {
           listedAddBtn.addEventListener('click', function () {
-            addListedRow(listedAddress && listedAddress.value, listedPrice && listedPrice.value);
+            addListedRow(
+              listedAddress && listedAddress.value,
+              listedPrice && listedPrice.value,
+              listedType && listedType.value,
+              listedDesc && listedDesc.value
+            );
             if (listedAddress) listedAddress.value = '';
             if (listedPrice) listedPrice.value = '';
+            if (listedType) listedType.value = '';
+            if (listedDesc) listedDesc.value = '';
           });
         }
         if (listedAddCurrentBtn) {
           listedAddCurrentBtn.addEventListener('click', function () {
-            addListedRow(addr.value, priceEl.value);
+            addListedRow(addr.value, priceEl.value, propertyTypeEl.value, descriptionEl.value);
           });
         }
         listedRows = loadListedLocal();

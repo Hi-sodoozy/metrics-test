@@ -203,6 +203,10 @@
         beds: String(r.beds != null ? r.beds : '').trim(),
         baths: String(r.baths != null ? r.baths : '').trim(),
         cars: String(r.cars != null ? r.cars : '').trim(),
+        propertyType: String(r.property_type != null ? r.property_type : r.propertyType != null ? r.propertyType : '').trim(),
+        landSize: String(r.land_size != null ? r.land_size : r.landSize != null ? r.landSize : '').trim(),
+        buildingSize: String(r.building_size != null ? r.building_size : r.buildingSize != null ? r.buildingSize : '').trim(),
+        description: String(r.description != null ? r.description : '').trim(),
         created_at: r.created_at || null,
         updated_at: r.updated_at || null,
       };
@@ -214,7 +218,7 @@
       }
       return window.metricsSupabase
         .from('auction_listed_properties')
-        .select('id,address,price,beds,baths,cars,created_at,updated_at')
+        .select('id,address,price,beds,baths,cars,property_type,land_size,building_size,description,created_at,updated_at')
         .order('created_at', { ascending: true })
         .then(function (res) {
           if (res && res.error) throw res.error;
@@ -236,12 +240,16 @@
         beds: clean.beds || null,
         baths: clean.baths || null,
         cars: clean.cars || null,
+        property_type: clean.propertyType || null,
+        land_size: clean.landSize || null,
+        building_size: clean.buildingSize || null,
+        description: clean.description || null,
       };
       if (clean.id) row.id = clean.id;
       return window.metricsSupabase
         .from('auction_listed_properties')
         .upsert(row, { onConflict: 'id' })
-        .select('id,address,price,beds,baths,cars,created_at,updated_at')
+        .select('id,address,price,beds,baths,cars,property_type,land_size,building_size,description,created_at,updated_at')
         .single()
         .then(function (res) {
           if (res && res.error) throw res.error;

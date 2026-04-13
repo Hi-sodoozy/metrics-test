@@ -128,9 +128,13 @@ a.ah-brand:hover {
   gap: 12px;
 }
 
+.ah-field-row.ah-field-row-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .ah-listed-create {
   display: grid;
-  grid-template-columns: 1fr 220px;
+  grid-template-columns: 1fr 220px 180px 1fr;
   gap: 12px;
 }
 
@@ -180,6 +184,7 @@ a.ah-brand:hover {
 
 .ah-listed-row-actions {
   min-width: 140px;
+  white-space: nowrap;
 }
 
 .ah-listed-btn {
@@ -272,6 +277,9 @@ a.ah-brand:hover {
 
 @media (max-width: 540px) {
   .ah-field-row {
+    grid-template-columns: 1fr;
+  }
+  .ah-field-row.ah-field-row-2 {
     grid-template-columns: 1fr;
   }
   .ah-listed-create {

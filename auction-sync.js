@@ -12,6 +12,10 @@
       beds: '',
       baths: '',
       cars: '',
+      propertyType: '',
+      landSize: '',
+      buildingSize: '',
+      description: '',
       price: 0,
       status: '',
       statusAt: 0,
@@ -40,6 +44,10 @@
           d.beds = String(o.beds != null ? o.beds : '');
           d.baths = String(o.baths != null ? o.baths : '');
           d.cars = String(o.cars != null ? o.cars : '');
+          d.propertyType = String(o.propertyType != null ? o.propertyType : '');
+          d.landSize = String(o.landSize != null ? o.landSize : '');
+          d.buildingSize = String(o.buildingSize != null ? o.buildingSize : '');
+          d.description = String(o.description != null ? o.description : '');
           d.price = clampPrice(o.price);
           d.status = String(o.status != null ? o.status : '');
           d.statusAt = Number(o.statusAt) || 0;
