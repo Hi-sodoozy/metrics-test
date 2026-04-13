@@ -66,7 +66,7 @@
   <div class="mv-landing-bg" aria-hidden="true"></div>
   <header class="mv-landing-nav">
     <a class="mv-landing-nav-link" href="../super-admin/">Operator Portal</a>
-    <a class="mv-landing-nav-link" href="./input/">Property details</a>
+    <a class="mv-landing-nav-link" href="./input/">Properties</a>
     <a class="mv-landing-nav-link" href="./final/">Final board</a>
     <a class="mv-landing-nav-link" href="./day/">Auction Display</a>
   </header>
@@ -85,23 +85,23 @@
         Capture the listing, run the call, and drive the big screen from a dedicated flow—separate from Metrics View—so auction night stays focused and unmistakable.
       </p>
       <div class="ah-landing-pills" aria-label="Auction flow">
-        <a class="ah-landing-pill" href="./input/">Property details</a>
+        <a class="ah-landing-pill" href="./input/">Properties</a>
         <a class="ah-landing-pill" href="./final/">Final board</a>
         <a class="ah-landing-pill" href="./day/">Auction Display</a>
       </div>
       <div class="mv-landing-cta-row">
-        <a class="mv-btn mv-btn-primary" href="./input/">Property details</a>
+        <a class="mv-btn mv-btn-primary" href="./input/">Properties</a>
         <a class="mv-btn mv-btn-ghost" href="./final/">Final board</a>
       </div>
       <p class="mv-landing-note">
-        Enter address and lot details on Property details, run bids and auction call buttons on Final board, and open Auction Display on the wall for the crowd.
+        Enter address and lot details on Properties, run bids and auction call buttons on Final board, and open Auction Display on the wall for the crowd.
         Use the <a href="../super-admin/" style="color:#93c5fd;">Operator Portal</a> for account and access settings.
       </p>
     </section>
 
     <section class="mv-landing-features" aria-label="Auction House steps">
       <a class="mv-landing-card ah-landing-step-card" href="./input/">
-        <h2 class="mv-landing-card-title">1 · Property details</h2>
+        <h2 class="mv-landing-card-title">1 · Properties</h2>
         <p class="mv-landing-card-text">
           Address, beds, baths, and car spaces sync to the board and display. Open this step first for each lot.
         </p>
@@ -146,9 +146,50 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../super-admin-access.js"></script>
   <script src="../supabase-config.js"></script>
-  <script src="../operator-only-page-gate.js"></script>
   <script>
     (function () {
+      function showDenied(message, showSignIn) {
+        var denied = document.getElementById('operatorOnlyDenied');
+        var main = document.getElementById('operatorOnlyMain');
+        var msg = document.getElementById('operatorOnlyDeniedMsg');
+        var signIn = document.getElementById('operatorOnlySignIn');
+        if (main) main.hidden = true;
+        if (denied) denied.hidden = false;
+        if (msg) msg.textContent = message || '';
+        if (signIn) signIn.hidden = !showSignIn;
+      }
+
+      function showMain() {
+        var denied = document.getElementById('operatorOnlyDenied');
+        var main = document.getElementById('operatorOnlyMain');
+        if (denied) denied.hidden = true;
+        if (main) main.hidden = false;
+      }
+
+      function ensureSignedIn() {
+        showDenied('Checking access…', false);
+        if (!window.metricsSupabase || !window.metricsSupabase.auth) {
+          showDenied('This page is not available.', false);
+          return;
+        }
+        window.metricsSupabase.auth.getSession().then(function (res) {
+          var user = res && res.data && res.data.session && res.data.session.user;
+          if (!user) {
+            showDenied('Sign in to continue.', true);
+            return;
+          }
+          showMain();
+          if (typeof window.metricsSyncContextFromSession === 'function') window.metricsSyncContextFromSession();
+        }).catch(function () {
+          showDenied('Sign in to continue.', true);
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', ensureSignedIn);
+      } else {
+        ensureSignedIn();
+      }
       if (window.metricsSyncSuperAdminFooterDot) window.metricsSyncSuperAdminFooterDot();
     })();
   </script>

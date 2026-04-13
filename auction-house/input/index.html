@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Auction House – Property</title>
+  <title>Auction House – Properties</title>
   <link rel="stylesheet" href="../../style.css" />
   <link rel="stylesheet" href="../../auction-house.css" />
 </head>
@@ -21,7 +21,7 @@
       <a class="ah-brand" href="../" style="text-decoration:none;color:inherit;">Auction House</a>
       <nav class="ah-header-links" aria-label="Auction House navigation">
         <a class="ah-super-only-link" href="../" hidden>Home</a>
-        <span class="ah-nav-current" aria-current="page">Property details</span>
+        <span class="ah-nav-current" aria-current="page">Properties</span>
         <a class="ah-super-only-link" href="../final/" hidden>Final board</a>
         <a class="ah-super-only-link" href="../day/" hidden>Auction Display</a>
       </nav>
@@ -29,7 +29,7 @@
 
     <section class="ah-grid">
       <section class="ah-card" aria-labelledby="ah-prop-h">
-        <h2 id="ah-prop-h">Property details</h2>
+        <h2 id="ah-prop-h">Properties</h2>
         <div class="ah-field">
           <label for="ahAddress">Property address</label>
           <textarea id="ahAddress" rows="3" maxlength="500" placeholder="Street, suburb, state" autocomplete="street-address"></textarea>
@@ -90,7 +90,7 @@
     </section>
 
     <section class="ah-card" aria-labelledby="ah-listed-h">
-      <h2 id="ah-listed-h">Listed properties</h2>
+      <h2 id="ah-listed-h">Properties</h2>
       <p class="ah-field-hint" style="margin-top:-6px;margin-bottom:14px;">
         All signed-in users can add and edit rows here. Super admin links remain hidden for non-admin accounts.
       </p>
@@ -112,12 +112,12 @@
           <input id="ahListedDesc" type="text" maxlength="180" placeholder="e.g. Renovated 4-bed family home" autocomplete="off" />
         </div>
         <div class="ah-listed-actions">
-          <button type="button" class="ah-pill-btn" id="ahListedAddBtn">Add listed property</button>
-          <button type="button" class="ah-pill-btn" id="ahListedAddCurrentBtn">Add current property details</button>
+          <button type="button" class="ah-pill-btn" id="ahListedAddBtn">Add Property</button>
+          <button type="button" class="ah-pill-btn" id="ahListedAddCurrentBtn">Add Current Property</button>
         </div>
       </div>
       <div class="ah-listed-table-wrap">
-        <table class="ah-listed-table" aria-label="Listed properties">
+        <table class="ah-listed-table" aria-label="Properties">
           <thead>
             <tr>
               <th scope="col">Address</th>

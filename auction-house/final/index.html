@@ -21,7 +21,7 @@
       <a class="ah-brand" href="../" style="text-decoration:none;color:inherit;">Auction House</a>
       <nav class="ah-header-links" aria-label="Auction House navigation">
         <a href="../">Home</a>
-        <a href="../input/">Property details</a>
+        <a href="../input/">Properties</a>
         <span class="ah-nav-current" aria-current="page">Final board</span>
         <a href="../day/">Auction Display</a>
       </nav>
@@ -56,7 +56,7 @@
         <p class="ah-section-label">Session tools</p>
         <div class="ah-status-row">
           <button type="button" class="ah-pill-btn" id="ahResetBtn">Reset auction</button>
-          <a class="ah-pill-btn" href="../input/" style="text-decoration:none;">Edit property details</a>
+          <a class="ah-pill-btn" href="../input/" style="text-decoration:none;">Edit properties</a>
           <a class="ah-pill-btn" href="../" style="text-decoration:none;">Auction home</a>
         </div>
       </section>
@@ -87,10 +87,28 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../../super-admin-access.js"></script>
   <script src="../../supabase-config.js"></script>
-  <script src="../../operator-only-page-gate.js"></script>
   <script src="../../auction-sync.js"></script>
   <script>
     (function () {
+      function showDenied(message, showSignIn) {
+        var denied = document.getElementById('operatorOnlyDenied');
+        var main = document.getElementById('operatorOnlyMain');
+        var msg = document.getElementById('operatorOnlyDeniedMsg');
+        var signIn = document.getElementById('operatorOnlySignIn');
+        if (main) main.hidden = true;
+        if (denied) denied.hidden = false;
+        if (msg) msg.textContent = message || '';
+        if (signIn) signIn.hidden = !showSignIn;
+      }
+
+      function showMain() {
+        var denied = document.getElementById('operatorOnlyDenied');
+        var main = document.getElementById('operatorOnlyMain');
+        if (denied) denied.hidden = true;
+        if (main) main.hidden = false;
+      }
+
+      function start() {
       var sync = window.mvAuctionSync;
       if (!sync) return;
 
@@ -211,6 +229,33 @@
       sync.listen(onState);
 
       if (window.metricsSyncSuperAdminFooterDot) window.metricsSyncSuperAdminFooterDot();
+      }
+
+      function ensureSignedIn() {
+        showDenied('Checking access…', false);
+        if (!window.metricsSupabase || !window.metricsSupabase.auth) {
+          showDenied('This page is not available.', false);
+          return;
+        }
+        window.metricsSupabase.auth.getSession().then(function (res) {
+          var user = res && res.data && res.data.session && res.data.session.user;
+          if (!user) {
+            showDenied('Sign in to continue.', true);
+            return;
+          }
+          showMain();
+          if (typeof window.metricsSyncContextFromSession === 'function') window.metricsSyncContextFromSession();
+          start();
+        }).catch(function () {
+          showDenied('Sign in to continue.', true);
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', ensureSignedIn);
+      } else {
+        ensureSignedIn();
+      }
     })();
   </script>
 </body>
