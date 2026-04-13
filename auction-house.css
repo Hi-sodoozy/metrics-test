@@ -1,6 +1,9 @@
 /* Auction House – input / final / Auction Day (scoped ah-) */
 
-.ah-page .ah-main {
+body.ah-page main#operatorOnlyMain,
+body.ah-page main.ah-main,
+.ah-page .ah-main,
+main.ah-main {
   max-width: 720px;
   margin: 0 auto;
   padding: 28px 20px 56px;

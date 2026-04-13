@@ -26,6 +26,26 @@
     return href.replace(/super-admin\/?/i, 'auction-house/input/');
   }
 
+  /** Resolves to the Auction House property input page from any footer context. */
+  function auctionHouseInputHref(operatorHref) {
+    var op = String(operatorHref || '').trim();
+    var derived = deriveAuctionHref(op);
+    var rel = 'auction-house/input/';
+    if (/auction-house-input\.html/i.test(derived) || /super-admin\.html/i.test(op)) rel = 'auction-house-input.html';
+    if (typeof window.metricsAbsoluteAppUrl === 'function') {
+      try {
+        var relUrl = window.metricsAbsoluteAppUrl(rel);
+        return new URL(relUrl, window.location.href).href;
+      } catch (e) {}
+    }
+    if (derived) return derived;
+    try {
+      return new URL('/' + String(rel).replace(/^\/+/, ''), window.location.origin).href;
+    } catch (e2) {
+      return rel;
+    }
+  }
+
   function syncOperatorFooterLinks(isAllowed) {
     var groups = document.querySelectorAll('.mv-footer-dot-links');
     var i;
@@ -73,13 +93,7 @@
           auctionLink.setAttribute('aria-label', 'Auction House');
           group.appendChild(auctionLink);
         }
-        var auctionHref = deriveAuctionHref(operatorLink && operatorLink.getAttribute('href'));
-        if (!auctionHref) {
-          auctionHref = /super-admin\.html/i.test(String((operatorLink && operatorLink.getAttribute('href')) || ''))
-            ? 'auction-house-input.html'
-            : '../auction-house/input/';
-        }
-        auctionLink.setAttribute('href', auctionHref);
+        auctionLink.setAttribute('href', auctionHouseInputHref(operatorLink && operatorLink.getAttribute('href')));
       } else {
         if (sportLink) sportLink.remove();
         if (auctionLink) auctionLink.remove();
