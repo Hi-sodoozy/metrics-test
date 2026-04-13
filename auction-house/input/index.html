@@ -31,8 +31,13 @@
       <section class="ah-card" aria-labelledby="ah-prop-h">
         <h2 id="ah-prop-h">Property details</h2>
         <div class="ah-field">
-          <label for="ahAddress">Address</label>
-          <textarea id="ahAddress" rows="3" maxlength="500" placeholder="Street, suburb" autocomplete="street-address"></textarea>
+          <label for="ahAddress">Property address</label>
+          <textarea id="ahAddress" rows="3" maxlength="500" placeholder="Street, suburb, state" autocomplete="street-address"></textarea>
+        </div>
+        <div class="ah-field">
+          <label for="ahPrice">Price</label>
+          <input id="ahPrice" type="text" inputmode="numeric" maxlength="14" placeholder="e.g. 1250000 or 1,250,000" autocomplete="off" aria-describedby="ahPriceHint" />
+          <p id="ahPriceHint" class="ah-field-hint">Whole dollars in AUD. This is the same amount as the opening bid on the final board (up to $99,999,999).</p>
         </div>
         <div class="ah-field-row">
           <div class="ah-field">
@@ -82,17 +87,27 @@
     (function () {
       function bind() {
         var addr = document.getElementById('ahAddress');
+        var priceEl = document.getElementById('ahPrice');
         var beds = document.getElementById('ahBeds');
         var baths = document.getElementById('ahBaths');
         var cars = document.getElementById('ahCars');
-        if (!addr || !window.mvAuctionSync) return;
+        if (!addr || !priceEl || !window.mvAuctionSync) return;
+
+        function parsePriceInput(val) {
+          var t = String(val || '').replace(/[$,\s]/g, '');
+          if (t === '') return 0;
+          var n = parseInt(t, 10);
+          if (isNaN(n)) return window.mvAuctionSync.load().price;
+          return window.mvAuctionSync.clampPrice(n);
+        }
 
         function push() {
           window.mvAuctionSync.update({
             address: (addr.value || '').trim(),
             beds: (beds.value || '').trim(),
             baths: (baths.value || '').trim(),
-            cars: (cars.value || '').trim()
+            cars: (cars.value || '').trim(),
+            price: parsePriceInput(priceEl.value)
           });
         }
 
@@ -118,10 +133,14 @@
           }
           if (previewPrice) previewPrice.textContent = window.mvAuctionSync.formatCurrencyAUD(s.price || 0);
           if (previewStatus) previewStatus.textContent = s.passedIn ? 'Passed in' : (s.sold ? 'SOLD' : toStatusLabel(s.status));
+          if (priceEl && document.activeElement !== priceEl) {
+            priceEl.value = s.price ? String(s.price) : '';
+          }
         }
 
         var s = window.mvAuctionSync.load();
         addr.value = s.address || '';
+        priceEl.value = s.price ? String(s.price) : '';
         beds.value = s.beds || '';
         baths.value = s.baths || '';
         cars.value = s.cars || '';
@@ -132,6 +151,12 @@
           beds.addEventListener(ev, push);
           baths.addEventListener(ev, push);
           cars.addEventListener(ev, push);
+          priceEl.addEventListener(ev, push);
+        });
+        priceEl.addEventListener('blur', function () {
+          var n = parsePriceInput(priceEl.value);
+          priceEl.value = n ? String(n) : '';
+          window.mvAuctionSync.update({ price: n });
         });
         window.mvAuctionSync.listen(renderPreview);
       }
