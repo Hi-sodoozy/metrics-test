@@ -1,0 +1,94 @@
+/* MV Sport – basketball roster input (scoped .mv-sb-) */
+
+.mv-sb-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 16px 56px;
+}
+
+.mv-sb-title {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.mv-sb-sub {
+  margin: 0 0 20px;
+  color: #94a3b8;
+  font-size: 14px;
+  max-width: 70ch;
+}
+
+.mv-sb-table-wrap {
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.mv-sb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 880px;
+}
+
+.mv-sb-table th,
+.mv-sb-table td {
+  padding: 8px 6px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  vertical-align: middle;
+}
+
+.mv-sb-table thead th {
+  font-weight: 800;
+  color: #93c5fd;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.mv-sb-table th.mv-sb-col-name,
+.mv-sb-table td.mv-sb-col-name {
+  text-align: left;
+  min-width: 120px;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: rgba(15, 23, 42, 0.96);
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+}
+
+.mv-sb-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.mv-sb-table tbody tr:hover td.mv-sb-col-name {
+  background: rgba(15, 23, 42, 0.98);
+}
+
+.mv-sb-table input[type="text"] {
+  width: 100%;
+  max-width: 72px;
+  box-sizing: border-box;
+  padding: 6px 4px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.25);
+  color: #f8fafc;
+  font-size: 12px;
+  text-align: center;
+}
+
+.mv-sb-table input.mv-sb-name {
+  max-width: 140px;
+  text-align: left;
+}
+
+.mv-sb-hint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #64748b;
+}

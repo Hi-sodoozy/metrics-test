@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MV Sport – Basketball input</title>
+  <link rel="stylesheet" href="../../style.css" />
+  <link rel="stylesheet" href="../mv-sport-input.css" />
+  <style>
+    .mv-sport-landing-denied { max-width: 720px; margin: 0 auto; padding: 48px 20px 56px; }
+  </style>
+</head>
+<body class="metrics-page mv-landing">
+  <div class="mv-landing-bg" aria-hidden="true"></div>
+  <header class="mv-landing-nav">
+    <a class="mv-landing-nav-link" href="../">MV Sport home</a>
+    <a class="mv-landing-nav-link" href="../../super-admin/">Operator Portal</a>
+  </header>
+
+  <div id="operatorOnlyDenied" class="mv-sport-landing-denied" hidden>
+    <h1 class="mv-landing-title">MV Sport</h1>
+    <p id="operatorOnlyDeniedMsg" class="mv-landing-lead" style="margin-top: 12px;"></p>
+    <a id="operatorOnlySignIn" class="mv-btn mv-btn-primary" style="margin-top: 12px;" hidden href="../../auth/">Sign in</a>
+  </div>
+
+  <main id="operatorOnlyMain" class="mv-sb-main" hidden>
+    <h1 class="mv-sb-title">Basketball roster</h1>
+    <p class="mv-sb-sub">
+      Enter five player names and the ten most common box-score stats. Values save automatically in this browser.
+    </p>
+    <div class="mv-sb-table-wrap">
+      <table class="mv-sb-table" aria-label="Basketball player stats">
+        <thead>
+          <tr>
+            <th class="mv-sb-col-name" scope="col">Player</th>
+            <th scope="col" title="Points">PTS</th>
+            <th scope="col" title="Rebounds">REB</th>
+            <th scope="col" title="Assists">AST</th>
+            <th scope="col" title="Steals">STL</th>
+            <th scope="col" title="Blocks">BLK</th>
+            <th scope="col" title="Field goal percentage">FG%</th>
+            <th scope="col" title="Three-point percentage">3P%</th>
+            <th scope="col" title="Free throw percentage">FT%</th>
+            <th scope="col" title="Turnovers">TOV</th>
+            <th scope="col" title="Minutes">MIN</th>
+          </tr>
+        </thead>
+        <tbody id="mvSbBody"></tbody>
+      </table>
+    </div>
+    <p class="mv-sb-hint" id="mvSbStatus" aria-live="polite"></p>
+  </main>
+
+  <footer class="mv-site-footer">
+    <div class="mv-site-footer-top">
+      <a class="mv-site-footer-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+      <span class="mv-footer-dot-links">
+        <a class="mv-corporate-dot-link" href="../../corporate-profile/">•</a>
+        <a class="mv-pricing-dot-link" href="../../pricing/">•</a>
+        <a class="mv-super-admin-dot-link" href="../../super-admin/">•</a>
+      </span>
+      <a class="mv-footer-support-text-link" href="../../support/">Support</a>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../super-admin-access.js"></script>
+  <script src="../../supabase-config.js"></script>
+  <script src="../../operator-only-page-gate.js"></script>
+  <script>
+    (function () {
+      var STORAGE_KEY = 'mvSportBasketballRoster_v1';
+      var STAT_KEYS = ['pts', 'reb', 'ast', 'stl', 'blk', 'fgPct', 'tpPct', 'ftPct', 'tov', 'min'];
+      var ROWS = 5;
+
+      function defaultState() {
+        var players = [];
+        var i;
+        for (i = 0; i < ROWS; i++) {
+          var p = { name: '' };
+          STAT_KEYS.forEach(function (k) {
+            p[k] = '';
+          });
+          players.push(p);
+        }
+        return { players: players };
+      }
+
+      function loadState() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return defaultState();
+          var o = JSON.parse(raw);
+          if (!o || !o.players || !Array.isArray(o.players)) return defaultState();
+          while (o.players.length < ROWS) o.players.push({ name: '' });
+          o.players = o.players.slice(0, ROWS);
+          o.players.forEach(function (pl) {
+            if (!pl || typeof pl !== 'object') return;
+            STAT_KEYS.forEach(function (k) {
+              if (pl[k] == null) pl[k] = '';
+            });
+          });
+          return o;
+        } catch (e) {
+          return defaultState();
+        }
+      }
+
+      function saveState(state) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {}
+        var st = document.getElementById('mvSbStatus');
+        if (st) {
+          st.textContent = 'Saved';
+          clearTimeout(saveState._t);
+          saveState._t = setTimeout(function () {
+            st.textContent = '';
+          }, 1200);
+        }
+      }
+
+      function wireTable() {
+        var tbody = document.getElementById('mvSbBody');
+        if (!tbody) return;
+        var state = loadState();
+        var r;
+        tbody.innerHTML = '';
+        for (r = 0; r < ROWS; r++) {
+          (function (rowIndex) {
+            var tr = document.createElement('tr');
+            var tdName = document.createElement('td');
+            tdName.className = 'mv-sb-col-name';
+            var nameIn = document.createElement('input');
+            nameIn.type = 'text';
+            nameIn.className = 'mv-sb-name';
+            nameIn.setAttribute('aria-label', 'Player ' + (rowIndex + 1) + ' name');
+            nameIn.placeholder = 'Player ' + (rowIndex + 1);
+            nameIn.value = (state.players[rowIndex] && state.players[rowIndex].name) || '';
+            nameIn.addEventListener('input', function () {
+              var s = loadState();
+              s.players[rowIndex].name = nameIn.value;
+              saveState(s);
+            });
+            tdName.appendChild(nameIn);
+            tr.appendChild(tdName);
+
+            STAT_KEYS.forEach(function (key) {
+              var td = document.createElement('td');
+              var inp = document.createElement('input');
+              inp.type = 'text';
+              inp.inputMode = 'decimal';
+              inp.setAttribute('aria-label', key + ' player ' + (rowIndex + 1));
+              inp.value = (state.players[rowIndex] && state.players[rowIndex][key]) || '';
+              inp.addEventListener('input', function () {
+                var s = loadState();
+                s.players[rowIndex][key] = inp.value;
+                saveState(s);
+              });
+              td.appendChild(inp);
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          })(r);
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', wireTable);
+      } else {
+        wireTable();
+      }
+      if (window.metricsSyncSuperAdminFooterDot) window.metricsSyncSuperAdminFooterDot();
+    })();
+  </script>
+</body>
+</html>

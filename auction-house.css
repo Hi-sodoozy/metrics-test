@@ -14,6 +14,11 @@ main.ah-main {
   font-weight: 800;
   letter-spacing: 0.02em;
   color: #e8eaef;
+  cursor: pointer;
+}
+
+a.ah-brand:hover {
+  color: #f1f5f9;
 }
 
 .ah-header {
@@ -46,6 +51,18 @@ main.ah-main {
 
 .ah-header-links a:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+
+.ah-header-links .ah-nav-current {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid rgba(125, 211, 252, 0.45);
+  background: rgba(125, 211, 252, 0.12);
+  color: #e0f2fe;
 }
 
 .ah-card {
