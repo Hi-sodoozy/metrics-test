@@ -53,6 +53,10 @@ a.ah-brand:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
+.ah-header-links a[hidden] {
+  display: none !important;
+}
+
 .ah-header-links .ah-nav-current {
   display: inline-flex;
   align-items: center;
@@ -111,10 +115,95 @@ a.ah-brand:hover {
   resize: vertical;
 }
 
+.ah-field-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #64748b;
+}
+
 .ah-field-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
+}
+
+.ah-listed-create {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 12px;
+}
+
+.ah-listed-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -4px 0 2px;
+}
+
+.ah-listed-table-wrap {
+  margin-top: 10px;
+  overflow-x: auto;
+}
+
+.ah-listed-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ah-listed-table th,
+.ah-listed-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 10px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.ah-listed-table th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+
+.ah-listed-table td input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.22);
+  color: #f8fafc;
+  font-size: 14px;
+}
+
+.ah-listed-row-actions {
+  min-width: 140px;
+}
+
+.ah-listed-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  margin-right: 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(125, 211, 252, 0.16);
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ah-listed-btn.ah-listed-btn-danger {
+  background: rgba(239, 68, 68, 0.18);
+}
+
+.ah-listed-empty {
+  color: #94a3b8;
+  font-size: 13px;
 }
 
 .ah-grid {
@@ -183,6 +272,9 @@ a.ah-brand:hover {
 
 @media (max-width: 540px) {
   .ah-field-row {
+    grid-template-columns: 1fr;
+  }
+  .ah-listed-create {
     grid-template-columns: 1fr;
   }
   .ah-grid {

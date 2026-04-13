@@ -187,6 +187,84 @@
       });
     };
 
+    function clampAuctionListedPrice(n) {
+      n = Math.floor(Number(n) || 0);
+      if (n < 0) return 0;
+      if (n > 99999999) return 99999999;
+      return n;
+    }
+
+    function normalizeAuctionListedRow(row) {
+      var r = row && typeof row === 'object' ? row : {};
+      return {
+        id: r.id != null ? String(r.id) : '',
+        address: String(r.address != null ? r.address : '').trim(),
+        price: clampAuctionListedPrice(r.price),
+        beds: String(r.beds != null ? r.beds : '').trim(),
+        baths: String(r.baths != null ? r.baths : '').trim(),
+        cars: String(r.cars != null ? r.cars : '').trim(),
+        created_at: r.created_at || null,
+        updated_at: r.updated_at || null,
+      };
+    }
+
+    window.metricsFetchAuctionListedProperties = function () {
+      if (!window.metricsSupabase) {
+        return Promise.reject(new Error('Supabase is not initialized.'));
+      }
+      return window.metricsSupabase
+        .from('auction_listed_properties')
+        .select('id,address,price,beds,baths,cars,created_at,updated_at')
+        .order('created_at', { ascending: true })
+        .then(function (res) {
+          if (res && res.error) throw res.error;
+          return (res && res.data ? res.data : []).map(normalizeAuctionListedRow);
+        });
+    };
+
+    window.metricsUpsertAuctionListedProperty = function (payload) {
+      if (!window.metricsSupabase) {
+        return Promise.reject(new Error('Supabase is not initialized.'));
+      }
+      var clean = normalizeAuctionListedRow(payload);
+      if (!clean.address && !clean.price) {
+        return Promise.reject(new Error('Address or price is required.'));
+      }
+      var row = {
+        address: clean.address,
+        price: clean.price,
+        beds: clean.beds || null,
+        baths: clean.baths || null,
+        cars: clean.cars || null,
+      };
+      if (clean.id) row.id = clean.id;
+      return window.metricsSupabase
+        .from('auction_listed_properties')
+        .upsert(row, { onConflict: 'id' })
+        .select('id,address,price,beds,baths,cars,created_at,updated_at')
+        .single()
+        .then(function (res) {
+          if (res && res.error) throw res.error;
+          return normalizeAuctionListedRow(res && res.data ? res.data : row);
+        });
+    };
+
+    window.metricsDeleteAuctionListedProperty = function (id) {
+      if (!window.metricsSupabase) {
+        return Promise.reject(new Error('Supabase is not initialized.'));
+      }
+      var rid = String(id || '').trim();
+      if (!rid) return Promise.resolve(true);
+      return window.metricsSupabase
+        .from('auction_listed_properties')
+        .delete()
+        .eq('id', rid)
+        .then(function (res) {
+          if (res && res.error) throw res.error;
+          return true;
+        });
+    };
+
     function defaultMetricPayload() {
       return {
         showOnMainScreen: false,

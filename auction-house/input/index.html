@@ -20,10 +20,10 @@
     <header class="ah-header">
       <a class="ah-brand" href="../" style="text-decoration:none;color:inherit;">Auction House</a>
       <nav class="ah-header-links" aria-label="Auction House navigation">
-        <a href="../">Home</a>
+        <a class="ah-super-only-link" href="../" hidden>Home</a>
         <span class="ah-nav-current" aria-current="page">Property details</span>
-        <a href="../final/">Final board</a>
-        <a href="../day/">Auction Display</a>
+        <a class="ah-super-only-link" href="../final/" hidden>Final board</a>
+        <a class="ah-super-only-link" href="../day/" hidden>Auction Display</a>
       </nav>
     </header>
 
@@ -64,6 +64,39 @@
         <div class="ah-kv"><span>Status</span><strong id="ahPreviewStatus">No call yet</strong></div>
       </section>
     </section>
+
+    <section class="ah-card" aria-labelledby="ah-listed-h">
+      <h2 id="ah-listed-h">Listed properties</h2>
+      <p class="ah-field-hint" style="margin-top:-6px;margin-bottom:14px;">
+        All signed-in users can add and edit rows here. Super admin links remain hidden for non-admin accounts.
+      </p>
+      <div class="ah-listed-create">
+        <div class="ah-field">
+          <label for="ahListedAddress">Property address</label>
+          <input id="ahListedAddress" type="text" maxlength="500" placeholder="Street, suburb, state" autocomplete="street-address" />
+        </div>
+        <div class="ah-field">
+          <label for="ahListedPrice">Price</label>
+          <input id="ahListedPrice" type="text" inputmode="numeric" maxlength="14" placeholder="e.g. 1,250,000" autocomplete="off" />
+        </div>
+        <div class="ah-listed-actions">
+          <button type="button" class="ah-pill-btn" id="ahListedAddBtn">Add listed property</button>
+          <button type="button" class="ah-pill-btn" id="ahListedAddCurrentBtn">Add current property details</button>
+        </div>
+      </div>
+      <div class="ah-listed-table-wrap">
+        <table class="ah-listed-table" aria-label="Listed properties">
+          <thead>
+            <tr>
+              <th scope="col">Address</th>
+              <th scope="col">Price</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ahListedBody"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
 
   <footer class="mv-site-footer">
@@ -81,17 +114,48 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../../super-admin-access.js"></script>
   <script src="../../supabase-config.js"></script>
-  <script src="../../operator-only-page-gate.js"></script>
   <script src="../../auction-sync.js"></script>
   <script>
     (function () {
+      function showDenied(message, showSignIn) {
+        var denied = document.getElementById('operatorOnlyDenied');
+        var main = document.getElementById('operatorOnlyMain');
+        var msg = document.getElementById('operatorOnlyDeniedMsg');
+        var signIn = document.getElementById('operatorOnlySignIn');
+        if (main) main.hidden = true;
+        if (denied) denied.hidden = false;
+        if (msg) msg.textContent = message || '';
+        if (signIn) signIn.hidden = !showSignIn;
+      }
+
+      function showMain() {
+        var denied = document.getElementById('operatorOnlyDenied');
+        var main = document.getElementById('operatorOnlyMain');
+        if (denied) denied.hidden = true;
+        if (main) main.hidden = false;
+      }
+
       function bind() {
         var addr = document.getElementById('ahAddress');
         var priceEl = document.getElementById('ahPrice');
         var beds = document.getElementById('ahBeds');
         var baths = document.getElementById('ahBaths');
         var cars = document.getElementById('ahCars');
+        var listedAddress = document.getElementById('ahListedAddress');
+        var listedPrice = document.getElementById('ahListedPrice');
+        var listedAddBtn = document.getElementById('ahListedAddBtn');
+        var listedAddCurrentBtn = document.getElementById('ahListedAddCurrentBtn');
+        var listedBody = document.getElementById('ahListedBody');
         if (!addr || !priceEl || !window.mvAuctionSync) return;
+        var listedStorageKey = 'mvAuctionListedProperties_v1';
+        var listedRows = [];
+
+        function setSuperOnlyLinksVisible(isSuper) {
+          var links = document.querySelectorAll('.ah-super-only-link');
+          var i;
+          for (i = 0; i < links.length; i++) links[i].hidden = !isSuper;
+        }
+        setSuperOnlyLinksVisible(false);
 
         function parsePriceInput(val) {
           var t = String(val || '').replace(/[$,\s]/g, '');
@@ -99,6 +163,202 @@
           var n = parseInt(t, 10);
           if (isNaN(n)) return window.mvAuctionSync.load().price;
           return window.mvAuctionSync.clampPrice(n);
+        }
+
+        function makeClientId() {
+          return 'c_' + String(Date.now()) + '_' + String(Math.random()).slice(2);
+        }
+
+        function normalizeListedRow(item) {
+          var row = item && typeof item === 'object' ? item : {};
+          return {
+            id: row.id != null ? String(row.id) : '',
+            clientId: row.clientId ? String(row.clientId) : makeClientId(),
+            address: String(row.address != null ? row.address : '').trim(),
+            price: window.mvAuctionSync.clampPrice(row.price),
+            beds: String(row.beds != null ? row.beds : '').trim(),
+            baths: String(row.baths != null ? row.baths : '').trim(),
+            cars: String(row.cars != null ? row.cars : '').trim()
+          };
+        }
+
+        function loadListedLocal() {
+          var raw = '';
+          try {
+            raw = localStorage.getItem(listedStorageKey) || '[]';
+            var arr = JSON.parse(raw);
+            if (!Array.isArray(arr)) return [];
+            return arr.map(normalizeListedRow);
+          } catch (e) {
+            return [];
+          }
+        }
+
+        function saveListedLocal(rows) {
+          try {
+            localStorage.setItem(listedStorageKey, JSON.stringify(rows || []));
+          } catch (e) {}
+        }
+
+        function upsertListedRemote(row) {
+          if (typeof window.metricsUpsertAuctionListedProperty !== 'function') {
+            return Promise.resolve(normalizeListedRow(row));
+          }
+          return window.metricsUpsertAuctionListedProperty({
+            id: row.id || null,
+            address: row.address,
+            price: row.price,
+            beds: row.beds,
+            baths: row.baths,
+            cars: row.cars
+          }).then(function (saved) {
+            var merged = normalizeListedRow(saved || row);
+            merged.clientId = row.clientId || merged.clientId;
+            return merged;
+          });
+        }
+
+        function deleteListedRemote(id) {
+          if (!id || typeof window.metricsDeleteAuctionListedProperty !== 'function') {
+            return Promise.resolve(true);
+          }
+          return window.metricsDeleteAuctionListedProperty(id);
+        }
+
+        function fetchListedRemote() {
+          if (typeof window.metricsFetchAuctionListedProperties !== 'function') {
+            return Promise.resolve(loadListedLocal());
+          }
+          return window.metricsFetchAuctionListedProperties().then(function (rows) {
+            return (rows || []).map(normalizeListedRow);
+          }).catch(function () {
+            return loadListedLocal();
+          });
+        }
+
+        function commitListedRow(row) {
+          var hasData = !!(row.address || row.price);
+          if (!hasData) {
+            if (!row.id) return Promise.resolve(true);
+            return deleteListedRemote(row.id);
+          }
+          return upsertListedRemote(row).then(function (saved) {
+            row.id = saved.id;
+            row.address = saved.address;
+            row.price = saved.price;
+            row.beds = saved.beds;
+            row.baths = saved.baths;
+            row.cars = saved.cars;
+            return true;
+          });
+        }
+
+        function renderListed() {
+          if (!listedBody) return;
+          listedBody.innerHTML = '';
+          if (!listedRows.length) {
+            var emptyTr = document.createElement('tr');
+            var emptyTd = document.createElement('td');
+            emptyTd.colSpan = 3;
+            emptyTd.className = 'ah-listed-empty';
+            emptyTd.textContent = 'No listed properties yet.';
+            emptyTr.appendChild(emptyTd);
+            listedBody.appendChild(emptyTr);
+            return;
+          }
+          listedRows.forEach(function (row) {
+            var tr = document.createElement('tr');
+
+            var tdAddress = document.createElement('td');
+            var addressInput = document.createElement('input');
+            addressInput.type = 'text';
+            addressInput.value = row.address || '';
+            addressInput.maxLength = 500;
+            addressInput.placeholder = 'Property address';
+            addressInput.addEventListener('input', function () {
+              row.address = (addressInput.value || '').trim();
+              saveListedLocal(listedRows);
+            });
+            addressInput.addEventListener('blur', function () {
+              commitListedRow(row).catch(function () {}).then(function () {
+                saveListedLocal(listedRows);
+              });
+            });
+            tdAddress.appendChild(addressInput);
+
+            var tdPrice = document.createElement('td');
+            var priceInput = document.createElement('input');
+            priceInput.type = 'text';
+            priceInput.inputMode = 'numeric';
+            priceInput.maxLength = 14;
+            priceInput.placeholder = 'Price';
+            priceInput.value = row.price ? String(row.price) : '';
+            priceInput.addEventListener('input', function () {
+              row.price = parsePriceInput(priceInput.value);
+              saveListedLocal(listedRows);
+            });
+            priceInput.addEventListener('blur', function () {
+              priceInput.value = row.price ? String(row.price) : '';
+              commitListedRow(row).catch(function () {}).then(function () {
+                saveListedLocal(listedRows);
+              });
+            });
+            tdPrice.appendChild(priceInput);
+
+            var tdActions = document.createElement('td');
+            tdActions.className = 'ah-listed-row-actions';
+            var useBtn = document.createElement('button');
+            useBtn.type = 'button';
+            useBtn.className = 'ah-listed-btn';
+            useBtn.textContent = 'Use';
+            useBtn.addEventListener('click', function () {
+              addr.value = row.address || '';
+              priceEl.value = row.price ? String(row.price) : '';
+              if (row.beds) beds.value = row.beds;
+              if (row.baths) baths.value = row.baths;
+              if (row.cars) cars.value = row.cars;
+              push();
+            });
+            var removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'ah-listed-btn ah-listed-btn-danger';
+            removeBtn.textContent = 'Remove';
+            removeBtn.addEventListener('click', function () {
+              listedRows = listedRows.filter(function (r) { return r.clientId !== row.clientId; });
+              saveListedLocal(listedRows);
+              renderListed();
+              deleteListedRemote(row.id).catch(function () {});
+            });
+            tdActions.appendChild(useBtn);
+            tdActions.appendChild(removeBtn);
+
+            tr.appendChild(tdAddress);
+            tr.appendChild(tdPrice);
+            tr.appendChild(tdActions);
+            listedBody.appendChild(tr);
+          });
+        }
+
+        function addListedRow(addressVal, priceVal) {
+          var cleanAddress = String(addressVal || '').trim();
+          var cleanPrice = parsePriceInput(priceVal);
+          if (!cleanAddress && !cleanPrice) return;
+          listedRows.push({
+            id: '',
+            clientId: makeClientId(),
+            address: cleanAddress,
+            price: cleanPrice,
+            beds: (beds.value || '').trim(),
+            baths: (baths.value || '').trim(),
+            cars: (cars.value || '').trim()
+          });
+          var newest = listedRows[listedRows.length - 1];
+          saveListedLocal(listedRows);
+          commitListedRow(newest).catch(function () {}).then(function () {
+            saveListedLocal(listedRows);
+            renderListed();
+          });
+          renderListed();
         }
 
         function push() {
@@ -158,12 +418,61 @@
           priceEl.value = n ? String(n) : '';
           window.mvAuctionSync.update({ price: n });
         });
+        if (listedAddBtn) {
+          listedAddBtn.addEventListener('click', function () {
+            addListedRow(listedAddress && listedAddress.value, listedPrice && listedPrice.value);
+            if (listedAddress) listedAddress.value = '';
+            if (listedPrice) listedPrice.value = '';
+          });
+        }
+        if (listedAddCurrentBtn) {
+          listedAddCurrentBtn.addEventListener('click', function () {
+            addListedRow(addr.value, priceEl.value);
+          });
+        }
+        listedRows = loadListedLocal();
+        renderListed();
+        fetchListedRemote().then(function (rows) {
+          listedRows = rows;
+          saveListedLocal(listedRows);
+          renderListed();
+        });
         window.mvAuctionSync.listen(renderPreview);
+
+        if (window.metricsSupabase && window.metricsSupabase.auth) {
+          window.metricsSupabase.auth.getSession().then(function (res) {
+            var user = res && res.data && res.data.session && res.data.session.user;
+            setSuperOnlyLinksVisible(!!(window.metricsIsSuperAdminUser && window.metricsIsSuperAdminUser(user)));
+          });
+        }
       }
+
+      function ensureSignedInAndBind() {
+        showDenied('Checking access…', false);
+        if (!window.metricsSupabase || !window.metricsSupabase.auth) {
+          showDenied('This page is not available.', false);
+          return;
+        }
+        window.metricsSupabase.auth.getSession().then(function (res) {
+          var user = res && res.data && res.data.session && res.data.session.user;
+          if (!user) {
+            showDenied('Sign in to continue.', true);
+            return;
+          }
+          showMain();
+          bind();
+          if (typeof window.metricsSyncContextFromSession === 'function') {
+            window.metricsSyncContextFromSession();
+          }
+        }).catch(function () {
+          showDenied('Sign in to continue.', true);
+        });
+      }
+
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bind);
+        document.addEventListener('DOMContentLoaded', ensureSignedInAndBind);
       } else {
-        bind();
+        ensureSignedInAndBind();
       }
       if (window.metricsSyncSuperAdminFooterDot) window.metricsSyncSuperAdminFooterDot();
     })();
