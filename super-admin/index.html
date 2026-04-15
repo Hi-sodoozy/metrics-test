@@ -409,6 +409,7 @@
           html += '<dt>Contact email</dt><dd>' + escapeHtml(contactEmail) + '</dd>';
           html += '<dt>Phone</dt><dd>' + phone + '</dd>';
           html += '<dt>Owner sign-up</dt><dd>' + escapeHtml(formatDate(row.owner_created_at)) + '</dd>';
+          html += '<dt>Owner last login</dt><dd>' + escapeHtml(formatDate(row.owner_last_sign_in_at) || 'Never logged in') + '</dd>';
           html += '<dt>Boards in use</dt><dd>' + escapeHtml(String(row.board_count != null ? row.board_count : 0)) + '</dd>';
           html += '<dt>Plan expires</dt><dd>' + escapeHtml(row.plan_expires_at ? formatDate(row.plan_expires_at) : 'Not set') + '</dd>';
           html += '<dt>Plan column</dt><dd>' + escapeHtml(String(row.plan_column != null ? row.plan_column : '—')) + '</dd>';
@@ -428,10 +429,14 @@
               var linked = firstRow.linked_user_id
                 ? formatDate(firstRow.linked_user_created_at)
                 : 'No linked login yet';
+              var linkedLast = firstRow.linked_user_id
+                ? (formatDate(firstRow.linked_user_last_sign_in_at) || 'Never logged in')
+                : 'No linked login yet';
               html += '<div class="sa-member-block">';
               html += '<strong>' + escapeHtml(g.email) + '</strong>';
               html += '<div class="sa-member-meta">Name (from invite): ' + escapeHtml(nm) + '</div>';
               html += '<div class="sa-member-meta">Account sign-up: ' + escapeHtml(linked) + '</div>';
+              html += '<div class="sa-member-meta">Last login/active: ' + escapeHtml(linkedLast) + '</div>';
               html += '<ul class="sa-member-slots">';
               g.rows.forEach(function (r) {
                 html +=
@@ -459,6 +464,7 @@
           html += '<dt>Email</dt><dd>' + escapeHtml(row.email || '—') + '</dd>';
           html += '<dt>Phone</dt><dd>' + indPhone + '</dd>';
           html += '<dt>Sign-up</dt><dd>' + escapeHtml(formatDate(row.created_at)) + '</dd>';
+          html += '<dt>Last login/active</dt><dd>' + escapeHtml(formatDate(row.last_sign_in_at) || 'Never logged in') + '</dd>';
           html += '<dt>Boards in use</dt><dd>' + escapeHtml(String(row.board_count != null ? row.board_count : 0)) + '</dd>';
           html += '<dt>Plan expires</dt><dd>Not applicable</dd>';
           html += '</dl>';
