@@ -306,6 +306,11 @@
 
       function formatDate(iso) {
         if (!iso) return '—';
+        var tz = 'Australia/Melbourne';
+        try {
+          var resolvedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          if (resolvedTz && typeof resolvedTz === 'string') tz = resolvedTz;
+        } catch (e) {}
         try {
           var d = new Date(iso);
           if (isNaN(d.getTime())) return '—';
@@ -314,7 +319,9 @@
             month: 'short',
             day: 'numeric',
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
+            timeZone: tz,
+            timeZoneName: 'short'
           });
         } catch (e) {
           return '—';
