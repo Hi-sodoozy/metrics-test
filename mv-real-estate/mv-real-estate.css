@@ -1,0 +1,98 @@
+/* MV Real Estate – listings dashboard (aligns with Metrics View input cards) */
+
+.mre-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  padding: 16px 20px 8px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.mre-cards {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 8px 20px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mre-card.metric-card {
+  padding: 20px 22px 18px;
+}
+
+.mre-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mre-card-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.mre-field {
+  margin-bottom: 12px;
+}
+
+.mre-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.mre-field input,
+.mre-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  color: #111827;
+  background: #fff;
+}
+
+.mre-field textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+
+.mre-field-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px 12px;
+}
+
+.mre-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+@media (max-width: 720px) {
+  .mre-field-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .mre-field-row {
+    grid-template-columns: 1fr;
+  }
+}

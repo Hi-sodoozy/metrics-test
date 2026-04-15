@@ -187,84 +187,78 @@
       });
     };
 
-    function clampAuctionListedPrice(n) {
+    function clampMvrePrice(n) {
       n = Math.floor(Number(n) || 0);
       if (n < 0) return 0;
-      if (n > 99999999) return 99999999;
+      if (n > 999999999) return 999999999;
       return n;
     }
 
-    function normalizeAuctionListedRow(row) {
+    function normalizeMvRealEstateRow(row) {
       var r = row && typeof row === 'object' ? row : {};
       return {
         id: r.id != null ? String(r.id) : '',
+        owner_user_id: r.owner_user_id != null ? String(r.owner_user_id) : '',
         address: String(r.address != null ? r.address : '').trim(),
-        price: clampAuctionListedPrice(r.price),
         beds: String(r.beds != null ? r.beds : '').trim(),
         baths: String(r.baths != null ? r.baths : '').trim(),
+        study: String(r.study != null ? r.study : '').trim(),
         cars: String(r.cars != null ? r.cars : '').trim(),
-        propertyType: String(r.property_type != null ? r.property_type : r.propertyType != null ? r.propertyType : '').trim(),
-        landSize: String(r.land_size != null ? r.land_size : r.landSize != null ? r.landSize : '').trim(),
-        buildingSize: String(r.building_size != null ? r.building_size : r.buildingSize != null ? r.buildingSize : '').trim(),
         description: String(r.description != null ? r.description : '').trim(),
+        asking_price: clampMvrePrice(r.asking_price != null ? r.asking_price : r.askingPrice),
         created_at: r.created_at || null,
         updated_at: r.updated_at || null,
       };
     }
 
-    window.metricsFetchAuctionListedProperties = function () {
+    window.metricsFetchMvRealEstateListings = function () {
       if (!window.metricsSupabase) {
         return Promise.reject(new Error('Supabase is not initialized.'));
       }
       return window.metricsSupabase
-        .from('auction_listed_properties')
-        .select('id,address,price,beds,baths,cars,property_type,land_size,building_size,description,created_at,updated_at')
+        .from('mv_real_estate_listings')
+        .select('id,owner_user_id,address,beds,baths,study,cars,description,asking_price,created_at,updated_at')
         .order('created_at', { ascending: true })
         .then(function (res) {
           if (res && res.error) throw res.error;
-          return (res && res.data ? res.data : []).map(normalizeAuctionListedRow);
+          return (res && res.data ? res.data : []).map(normalizeMvRealEstateRow);
         });
     };
 
-    window.metricsUpsertAuctionListedProperty = function (payload) {
+    window.metricsUpsertMvRealEstateListing = function (payload) {
       if (!window.metricsSupabase) {
         return Promise.reject(new Error('Supabase is not initialized.'));
       }
-      var clean = normalizeAuctionListedRow(payload);
-      if (!clean.address && !clean.price) {
-        return Promise.reject(new Error('Address or price is required.'));
-      }
+      var clean = normalizeMvRealEstateRow(payload);
       var row = {
         address: clean.address,
-        price: clean.price,
         beds: clean.beds || null,
         baths: clean.baths || null,
+        study: clean.study || null,
         cars: clean.cars || null,
-        property_type: clean.propertyType || null,
-        land_size: clean.landSize || null,
-        building_size: clean.buildingSize || null,
         description: clean.description || null,
+        asking_price: clean.asking_price,
       };
       if (clean.id) row.id = clean.id;
       return window.metricsSupabase
-        .from('auction_listed_properties')
+        .from('mv_real_estate_listings')
         .upsert(row, { onConflict: 'id' })
-        .select('id,address,price,beds,baths,cars,property_type,land_size,building_size,description,created_at,updated_at')
+        .select('id,owner_user_id,address,beds,baths,study,cars,description,asking_price,created_at,updated_at')
         .single()
         .then(function (res) {
           if (res && res.error) throw res.error;
-          return normalizeAuctionListedRow(res && res.data ? res.data : row);
+          return normalizeMvRealEstateRow(res && res.data ? res.data : row);
         });
     };
 
-    window.metricsDeleteAuctionListedProperty = function (id) {
+    window.metricsDeleteMvRealEstateListing = function (id) {
       if (!window.metricsSupabase) {
         return Promise.reject(new Error('Supabase is not initialized.'));
       }
       var rid = String(id || '').trim();
       if (!rid) return Promise.resolve(true);
       return window.metricsSupabase
-        .from('auction_listed_properties')
+        .from('mv_real_estate_listings')
         .delete()
         .eq('id', rid)
         .then(function (res) {

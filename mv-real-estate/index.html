@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MV Real Estate – Welcome</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .mv-re-landing-denied {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 20px 56px;
+    }
+  </style>
+</head>
+<body class="metrics-page mv-landing">
+  <div class="mv-landing-bg" aria-hidden="true"></div>
+  <header class="mv-landing-nav">
+    <a class="mv-landing-nav-link" href="../super-admin/">Operator Portal</a>
+    <a class="mv-landing-nav-link" href="./listings/">Listings dashboard</a>
+  </header>
+
+  <div id="operatorOnlyDenied" class="mv-re-landing-denied" hidden>
+    <h1 class="mv-landing-title">MV Real Estate</h1>
+    <p id="operatorOnlyDeniedMsg" class="mv-landing-lead" style="margin-top: 12px;"></p>
+    <a id="operatorOnlySignIn" class="mv-btn mv-btn-primary" style="margin-top: 12px;" hidden href="../auth/">Sign in</a>
+  </div>
+
+  <main id="operatorOnlyMain" class="mv-landing-main" hidden>
+    <section class="mv-landing-hero">
+      <p class="mv-landing-eyebrow">Listings workspace</p>
+      <h1 class="mv-landing-title">MV Real Estate</h1>
+      <p class="mv-landing-lead">
+        Capture addresses, key counts, descriptions, and asking prices in a dashboard that matches the Metrics View look and feel—reserved for the operator account.
+      </p>
+      <div class="mv-landing-cta-row">
+        <a class="mv-btn mv-btn-primary" href="./listings/">Open listings dashboard</a>
+        <a class="mv-btn mv-btn-ghost" href="../super-admin/">Operator Portal</a>
+      </div>
+      <p class="mv-landing-note">
+        Use <strong>List property</strong> on the dashboard to add a new card for each listing you are selling.
+      </p>
+    </section>
+
+    <section class="mv-landing-strip">
+      <p class="mv-landing-strip-text">
+        Part of Metrics View—separate from core metric boards.
+      </p>
+    </section>
+  </main>
+
+  <footer class="mv-landing-footer">
+    <span class="mv-landing-footer-brand">Developed by Iain Duguid.</span>
+    <span class="mv-landing-footer-meta">Metrics View is a helpful tool to track and display metrics. Please do not rely on Metrics View as your only data collection point and do not store sensitive data on this platform.</span>
+  </footer>
+  <footer class="mv-site-footer">
+    <div class="mv-site-footer-top">
+      <a class="mv-site-footer-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+      <span class="mv-footer-dot-links">
+        <a class="mv-corporate-dot-link" href="../corporate-profile/" aria-label="Corporate profile" title="Corporate profile">•</a>
+        <a class="mv-pricing-dot-link" href="../pricing/" aria-label="Pricing" title="Pricing">•</a>
+        <a class="mv-super-admin-dot-link" href="../super-admin/" aria-label="Super admin" title="Super admin">•</a>
+      </span>
+      <a class="mv-footer-support-text-link" href="../support/">Support</a>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../super-admin-access.js"></script>
+  <script src="../supabase-config.js"></script>
+  <script src="../operator-only-page-gate.js"></script>
+  <script>
+    (function () {
+      if (window.metricsSyncSuperAdminFooterDot) window.metricsSyncSuperAdminFooterDot();
+    })();
+  </script>
+</body>
+</html>

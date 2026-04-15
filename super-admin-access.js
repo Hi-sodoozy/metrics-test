@@ -18,35 +18,13 @@
     return '';
   }
 
-  function deriveAuctionHref(operatorHref) {
+  function deriveMvRealEstateHref(operatorHref) {
     var href = String(operatorHref || '').trim();
     if (!href) return '';
-    if (/super-admin\.html(?:$|[?#])/i.test(href)) return href.replace(/super-admin\.html/i, 'auction-house-input.html');
-    if (/^\.\/?(?:$|[?#])/i.test(href)) return '../auction-house/input/';
-    return href.replace(/super-admin\/?/i, 'auction-house/input/');
-  }
-
-  /** Resolves to the Auction House landing page from any footer context. */
-  function auctionHouseLandingHref(operatorHref) {
-    var op = String(operatorHref || '').trim();
-    var rel = 'auction-house/';
-    if (/super-admin\.html/i.test(op)) rel = 'auction-house.html';
-    if (typeof window.metricsAbsoluteAppUrl === 'function') {
-      try {
-        var relUrl = window.metricsAbsoluteAppUrl(rel);
-        return new URL(relUrl, window.location.href).href;
-      } catch (e) {}
-    }
-    var derived = deriveAuctionHref(op);
-    if (derived) {
-      if (/auction-house-input\.html/i.test(derived)) return derived.replace(/auction-house-input\.html/i, 'auction-house.html');
-      if (/\/auction-house\/input\/?$/i.test(derived)) return derived.replace(/\/input\/?$/i, '/');
-    }
-    try {
-      return new URL('/' + String(rel).replace(/^\/+/, ''), window.location.origin).href;
-    } catch (e2) {
-      return rel;
-    }
+    if (/super-admin\.html(?:$|[?#])/i.test(href)) return href.replace(/super-admin\.html/i, 'mv-real-estate-listings.html');
+    if (/^\.\/?(?:$|[?#])/i.test(href)) return '../mv-real-estate/listings/';
+    if (/super-admin\/?(?:$|[?#])/i.test(href)) return href.replace(/super-admin\/?/i, 'mv-real-estate/listings/');
+    return '';
   }
 
   function syncOperatorFooterLinks(isAllowed) {
@@ -76,7 +54,7 @@
         operatorLink.classList.add('mv-operator-portal-link', 'mv-footer-admin-menu-link');
       }
       var sportLink = group.querySelector('.mv-sport-dot-link');
-      var auctionLink = group.querySelector('.mv-auction-dot-link');
+      var mvreLink = group.querySelector('.mv-re-dot-link');
       if (isAllowed) {
         if (!sportLink) {
           sportLink = document.createElement('a');
@@ -88,18 +66,19 @@
         }
         var sportHref = deriveSportHref(operatorLink && operatorLink.getAttribute('href'));
         if (sportHref) sportLink.setAttribute('href', sportHref);
-        if (!auctionLink) {
-          auctionLink = document.createElement('a');
-          auctionLink.className = 'mv-auction-dot-link mv-footer-admin-menu-link';
-          auctionLink.textContent = 'Auction House';
-          auctionLink.setAttribute('title', 'Auction House');
-          auctionLink.setAttribute('aria-label', 'Auction House');
-          group.appendChild(auctionLink);
+        if (!mvreLink) {
+          mvreLink = document.createElement('a');
+          mvreLink.className = 'mv-re-dot-link mv-footer-admin-menu-link';
+          mvreLink.textContent = 'MV Real Estate';
+          mvreLink.setAttribute('title', 'MV Real Estate');
+          mvreLink.setAttribute('aria-label', 'MV Real Estate');
+          group.appendChild(mvreLink);
         }
-        auctionLink.setAttribute('href', auctionHouseLandingHref(operatorLink && operatorLink.getAttribute('href')));
+        var mvreHref = deriveMvRealEstateHref(operatorLink && operatorLink.getAttribute('href'));
+        if (mvreHref) mvreLink.setAttribute('href', mvreHref);
       } else {
         if (sportLink) sportLink.remove();
-        if (auctionLink) auctionLink.remove();
+        if (mvreLink) mvreLink.remove();
       }
     }
   }

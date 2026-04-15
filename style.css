@@ -1424,16 +1424,16 @@
 }
 
 .metric-final-on-display-badge {
-  font-size: calc(0.4375rem * 0.75);
+  font-size: 0.4375rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: calc(0.015em * 0.75);
-  padding: 0 calc(3px * 0.75);
+  letter-spacing: 0.015em;
+  padding: 0 3px;
   border-radius: 999px;
   background: #ecfdf5;
   color: #047857;
   border: 1px solid #a7f3d0;
-  line-height: 1.3;
+  line-height: 1.35;
   flex-shrink: 0;
 }
 
@@ -3543,9 +3543,32 @@ body.mv-super-admin-footer-dot .mv-footer-dot-links {
   text-decoration: none;
 }
 
+.mv-footer-dot-links .mv-re-dot-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  padding: 0 10px;
+  min-height: 24px;
+  border-radius: 999px;
+  color: #cbd5e1;
+  text-decoration: none;
+  opacity: 0.8;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.mv-footer-dot-links .mv-re-dot-link:hover {
+  opacity: 1;
+  text-decoration: none;
+}
+
 .mv-footer-dot-links .mv-corporate-dot-link,
-.mv-footer-dot-links .mv-pricing-dot-link,
-.mv-footer-dot-links .mv-auction-dot-link {
+.mv-footer-dot-links .mv-pricing-dot-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3567,8 +3590,7 @@ body.mv-super-admin-footer-dot .mv-footer-dot-links {
 }
 
 .mv-footer-dot-links .mv-corporate-dot-link:hover,
-.mv-footer-dot-links .mv-pricing-dot-link:hover,
-.mv-footer-dot-links .mv-auction-dot-link:hover {
+.mv-footer-dot-links .mv-pricing-dot-link:hover {
   opacity: 1;
   text-decoration: none;
 }

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MV Real Estate – Listings</title>
+  <link rel="stylesheet" href="../../style.css" />
+  <link rel="stylesheet" href="../../style-redesign.css" />
+  <link rel="stylesheet" href="../mv-real-estate.css" />
+</head>
+<body class="metrics-page input-page">
+  <div id="operatorOnlyDenied" class="mv-re-landing-denied" style="max-width:720px;margin:0 auto;padding:48px 20px;" hidden>
+    <h1 class="mv-landing-title">MV Real Estate</h1>
+    <p id="operatorOnlyDeniedMsg" class="mv-landing-lead" style="margin-top:12px;"></p>
+    <a id="operatorOnlySignIn" class="mv-btn mv-btn-primary" style="margin-top:12px;" hidden href="../../auth/">Sign in</a>
+  </div>
+
+  <main id="operatorOnlyMain" class="input-main" hidden>
+    <header class="input-header">
+      <span class="app-brand" aria-label="MV Real Estate">MV Real Estate</span>
+      <div class="input-header-actions">
+        <a href="../" class="back-link">MV Real Estate home</a>
+        <a href="../../input/" class="back-link back-link-prominent">Metrics input</a>
+      </div>
+    </header>
+
+    <div class="mre-toolbar">
+      <button type="button" class="btn-add-metric-board" id="btnListProperty">List property</button>
+      <span class="input-hint-inline" id="mreStatus" aria-live="polite"></span>
+    </div>
+    <div id="mreCards" class="mre-cards" aria-label="Property listings"></div>
+  </main>
+
+  <footer class="mv-site-footer">
+    <div class="mv-site-footer-top">
+      <a class="mv-site-footer-link" href="https://www.metricsview.com.au/" target="_blank" rel="noopener">Metricsview.com.au</a>
+      <span class="mv-footer-dot-links">
+        <a class="mv-corporate-dot-link" href="../../corporate-profile/">•</a>
+        <a class="mv-pricing-dot-link" href="../../pricing/">•</a>
+        <a class="mv-super-admin-dot-link" href="../../super-admin/">•</a>
+      </span>
+      <a class="mv-footer-support-text-link" href="../../support/">Support</a>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../../super-admin-access.js"></script>
+  <script src="../../supabase-config.js"></script>
+  <script src="../../operator-only-page-gate.js"></script>
+  <script>
+    (function () {
+      function setStatus(t) {
+        var el = document.getElementById('mreStatus');
+        if (el) el.textContent = t || '';
+      }
+
+      function parsePrice(val) {
+        var t = String(val || '').replace(/[$,\s]/g, '');
+        if (t === '') return 0;
+        var n = parseInt(t, 10);
+        if (isNaN(n)) return 0;
+        if (n < 0) return 0;
+        if (n > 999999999) return 999999999;
+        return n;
+      }
+
+      function fmtMoney(n) {
+        var parts = String(Math.floor(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return '$' + parts;
+      }
+
+      var listings = [];
+      var host = document.getElementById('mreCards');
+
+      function rowFromForm(card) {
+        return {
+          id: card.getAttribute('data-id') || '',
+          address: (card.querySelector('[data-f="address"]') || {}).value != null
+            ? String(card.querySelector('[data-f="address"]').value).trim()
+            : '',
+          beds: (card.querySelector('[data-f="beds"]') || {}).value != null
+            ? String(card.querySelector('[data-f="beds"]').value).trim()
+            : '',
+          baths: (card.querySelector('[data-f="baths"]') || {}).value != null
+            ? String(card.querySelector('[data-f="baths"]').value).trim()
+            : '',
+          study: (card.querySelector('[data-f="study"]') || {}).value != null
+            ? String(card.querySelector('[data-f="study"]').value).trim()
+            : '',
+          cars: (card.querySelector('[data-f="cars"]') || {}).value != null
+            ? String(card.querySelector('[data-f="cars"]').value).trim()
+            : '',
+          description: (card.querySelector('[data-f="description"]') || {}).value != null
+            ? String(card.querySelector('[data-f="description"]').value).trim()
+            : '',
+          asking_price: parsePrice((card.querySelector('[data-f="asking_price"]') || {}).value)
+        };
+      }
+
+      function reload() {
+        if (!window.metricsFetchMvRealEstateListings) {
+          setStatus('Database helpers not loaded.');
+          return Promise.resolve();
+        }
+        setStatus('Loading…');
+        return window.metricsFetchMvRealEstateListings().then(function (rows) {
+          listings = rows || [];
+          render();
+          setStatus('');
+        }).catch(function (e) {
+          setStatus((e && e.message) ? e.message : 'Could not load listings. Run the MV Real Estate migration in Supabase.');
+        });
+      }
+
+      function render() {
+        if (!host) return;
+        host.innerHTML = '';
+        if (!listings.length) {
+          var p = document.createElement('p');
+          p.className = 'input-hint-inline';
+          p.style.padding = '0 4px';
+          p.textContent = 'No properties yet. Click “List property” to add your first card.';
+          host.appendChild(p);
+          return;
+        }
+        listings.forEach(function (li) {
+          host.appendChild(buildCard(li));
+        });
+      }
+
+      function buildCard(li) {
+        var card = document.createElement('article');
+        card.className = 'metric-card mre-card';
+        card.setAttribute('data-id', li.id || '');
+
+        var head = document.createElement('div');
+        head.className = 'mre-card-head';
+        var h = document.createElement('h2');
+        h.className = 'mre-card-title';
+        h.textContent = li.address ? li.address : 'New listing';
+        head.appendChild(h);
+        card.appendChild(head);
+
+        function field(label, name, value, multiline) {
+          var wrap = document.createElement('div');
+          wrap.className = 'mre-field';
+          var lab = document.createElement('label');
+          lab.textContent = label;
+          var input;
+          if (multiline) {
+            input = document.createElement('textarea');
+            input.rows = 4;
+            input.maxLength = 1200;
+          } else {
+            input = document.createElement('input');
+            input.type = 'text';
+          }
+          input.className = 'metric-single-line-input';
+          input.setAttribute('data-f', name);
+          input.value = value != null ? String(value) : '';
+          wrap.appendChild(lab);
+          wrap.appendChild(input);
+          return wrap;
+        }
+
+        card.appendChild(field('Address', 'address', li.address, false));
+        var row = document.createElement('div');
+        row.className = 'mre-field-row';
+        [['Bed', 'beds'], ['Bath', 'baths'], ['Study', 'study'], ['Car spaces', 'cars']].forEach(function (pair) {
+          var w = document.createElement('div');
+          w.className = 'mre-field';
+          var lab = document.createElement('label');
+          lab.textContent = pair[0];
+          var inp = document.createElement('input');
+          inp.type = 'text';
+          inp.className = 'metric-single-line-input';
+          inp.setAttribute('data-f', pair[1]);
+          inp.value = li[pair[1]] != null ? String(li[pair[1]]) : '';
+          w.appendChild(lab);
+          w.appendChild(inp);
+          row.appendChild(w);
+        });
+        card.appendChild(row);
+        card.appendChild(field('Description', 'description', li.description, true));
+        var priceWrap = document.createElement('div');
+        priceWrap.className = 'mre-field';
+        var plab = document.createElement('label');
+        plab.textContent = 'Asking price (whole dollars)';
+        var pin = document.createElement('input');
+        pin.type = 'text';
+        pin.inputMode = 'numeric';
+        pin.className = 'metric-single-line-input';
+        pin.setAttribute('data-f', 'asking_price');
+        pin.value = li.asking_price ? String(li.asking_price) : '';
+        priceWrap.appendChild(plab);
+        priceWrap.appendChild(pin);
+        card.appendChild(priceWrap);
+
+        var actions = document.createElement('div');
+        actions.className = 'mre-card-actions metric-actions';
+        var saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'btn-save';
+        saveBtn.textContent = 'Save';
+        saveBtn.addEventListener('click', function () {
+          var payload = rowFromForm(card);
+          if (!payload.address) {
+            setStatus('Address is required before save.');
+            return;
+          }
+          setStatus('Saving…');
+          window.metricsUpsertMvRealEstateListing(payload).then(function (saved) {
+            card.setAttribute('data-id', saved.id);
+            h.textContent = saved.address || 'Listing';
+            setStatus('Saved.');
+            setTimeout(function () { setStatus(''); }, 1500);
+          }).catch(function (e) {
+            setStatus((e && e.message) ? e.message : 'Save failed.');
+          });
+        });
+        var delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'btn-remove-metric';
+        delBtn.textContent = 'Remove listing';
+        delBtn.addEventListener('click', function () {
+          var id = card.getAttribute('data-id');
+          if (!id) {
+            card.remove();
+            return;
+          }
+          if (!window.confirm('Remove this listing?')) return;
+          window.metricsDeleteMvRealEstateListing(id).then(function () {
+            reload();
+          }).catch(function (e) {
+            setStatus((e && e.message) ? e.message : 'Remove failed.');
+          });
+        });
+        actions.appendChild(saveBtn);
+        actions.appendChild(delBtn);
+        card.appendChild(actions);
+
+        return card;
+      }
+
+      function addProperty() {
+        if (!window.metricsSupabase) {
+          setStatus('Supabase not available.');
+          return;
+        }
+        setStatus('Adding…');
+        window.metricsSupabase
+          .from('mv_real_estate_listings')
+          .insert({ address: '', asking_price: 0 })
+          .select('id,owner_user_id,address,beds,baths,study,cars,description,asking_price,created_at,updated_at')
+          .single()
+          .then(function (res) {
+            if (res && res.error) throw res.error;
+            var row = res && res.data ? res.data : null;
+            if (!row) return;
+            listings.push({
+              id: String(row.id),
+              owner_user_id: row.owner_user_id,
+              address: row.address || '',
+              beds: row.beds || '',
+              baths: row.baths || '',
+              study: row.study || '',
+              cars: row.cars || '',
+              description: row.description || '',
+              asking_price: row.asking_price || 0
+            });
+            render();
+            setStatus('');
+          })
+          .catch(function (e) {
+            setStatus((e && e.message) ? e.message : 'Could not add listing. Run the MV Real Estate migration in Supabase.');
+          });
+      }
+
+      function startApp() {
+        var btn = document.getElementById('btnListProperty');
+        if (btn) btn.addEventListener('click', addProperty);
+        reload();
+        if (window.metricsSyncSuperAdminFooterDot) window.metricsSyncSuperAdminFooterDot();
+      }
+
+      window.metricsEnsureOperatorOnlyAccess(function () {
+        startApp();
+      });
+    })();
+  </script>
+</body>
+</html>
