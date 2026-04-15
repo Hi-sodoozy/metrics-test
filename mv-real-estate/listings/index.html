@@ -26,6 +26,7 @@
 
     <div class="mre-toolbar">
       <button type="button" class="btn-add-metric-board" id="btnListProperty">List property</button>
+      <button type="button" class="btn-save" id="btnAuctionDay">Auction Day</button>
       <span class="input-hint-inline" id="mreStatus" aria-live="polite"></span>
     </div>
     <div id="mreCards" class="mre-cards" aria-label="Property listings"></div>
@@ -71,6 +72,50 @@
 
       var listings = [];
       var host = document.getElementById('mreCards');
+      var AUCTION_ROUTES = {
+        app: [
+          '../auction-day/',
+          '../auction-house/',
+          '../auction-day-display/',
+          '../../display/?mode=auction-day'
+        ]
+      };
+
+      function pingRoute(url) {
+        return fetch(url, { method: 'HEAD', cache: 'no-store' })
+          .then(function (res) {
+            return !!(res && res.ok);
+          })
+          .catch(function () {
+            return false;
+          });
+      }
+
+      function openAuctionDay() {
+        var override = (window.MV_AUCTION_DAY_URL || '').trim();
+        var routes = override ? [override] : AUCTION_ROUTES.app.slice();
+        var params = new URLSearchParams();
+        params.set('source', 'property-listings');
+
+        function tryNext(i) {
+          if (i >= routes.length) {
+            setStatus('Auction Day route not found. Set window.MV_AUCTION_DAY_URL to your Auction House page URL.');
+            return;
+          }
+          var base = routes[i];
+          var target = base + (base.indexOf('?') >= 0 ? '&' : '?') + params.toString();
+          pingRoute(target).then(function (ok) {
+            if (ok) {
+              window.location.href = target;
+            } else {
+              tryNext(i + 1);
+            }
+          });
+        }
+
+        setStatus('Opening Auction Day…');
+        tryNext(0);
+      }
 
       function rowFromForm(card) {
         return {
@@ -279,6 +324,8 @@
       function startApp() {
         var btn = document.getElementById('btnListProperty');
         if (btn) btn.addEventListener('click', addProperty);
+        var auctionBtn = document.getElementById('btnAuctionDay');
+        if (auctionBtn) auctionBtn.addEventListener('click', openAuctionDay);
         reload();
         if (window.metricsSyncSuperAdminFooterDot) window.metricsSyncSuperAdminFooterDot();
       }
